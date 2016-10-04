@@ -39,12 +39,14 @@ THIRD_PARTY_APPS = (
     'allauth',  # registration
     'allauth.account',  # registration
     'allauth.socialaccount',  # registration
+    "taggit",
 )
 
 # Apps specific for this project go here.
 LOCAL_APPS = (
     # custom users app
     'mupi_question_database.users.apps.UsersConfig',
+    'mupi_question_database.questions',
     # Your stuff: custom apps go here
 )
 

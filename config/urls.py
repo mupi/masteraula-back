@@ -20,7 +20,7 @@ urlpatterns = [
     url(r'^accounts/', include('allauth.urls')),
 
     # Your stuff: custom urls includes go here
-
+    url(r'^questions/', include('mupi_question_database.questions.urls', namespace='questions')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

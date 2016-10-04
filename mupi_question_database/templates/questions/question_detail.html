@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Question: {{ object.question_header }}{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="row">
+    <div class="col-sm-12">
+      {% for tag in question.tags.all %}
+        <span class="tag tag-primary">{{ tag.name }}</span>
+      {% endfor %}
+      <p>(<b>{{ question.question_header }}</b>) {{ question.question_text }}</p>
+
+      <ul>
+      {% for answer in question.answer_set.all %}
+        <input type="radio" name="{{answer}}" value="{{answer.pk}}"> {{answer.answer_text}}</input><br>
+      {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+</div>
+{% endblock content %}
