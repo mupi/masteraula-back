@@ -1,0 +1,4 @@
+{{ object.question_header }}
+{{ object.question_text }}
+{{ object.user.get_full_name }}
+{{ object.resolution}}

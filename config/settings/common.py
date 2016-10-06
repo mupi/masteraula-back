@@ -12,6 +12,7 @@ from __future__ import absolute_import, unicode_literals
 
 import environ
 
+
 ROOT_DIR = environ.Path(__file__) - 3  # (mupi_question_database/config/settings/common.py - 3 = mupi_question_database/)
 APPS_DIR = ROOT_DIR.path('mupi_question_database')
 
@@ -39,7 +40,8 @@ THIRD_PARTY_APPS = (
     'allauth',  # registration
     'allauth.account',  # registration
     'allauth.socialaccount',  # registration
-    "taggit",
+    'taggit',
+    'haystack'
 )
 
 # Apps specific for this project go here.
@@ -253,3 +255,8 @@ ADMIN_URL = r'^admin/'
 
 # Your common stuff: Below this line define 3rd party library settings
 # ------------------------------------------------------------------------------
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.simple_backend.SimpleEngine',
+    },
+}
