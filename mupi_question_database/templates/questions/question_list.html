@@ -41,14 +41,14 @@
 
     function clearQuestions() {
         $(document).on("click", "a.deleteText", function() {
-    if (confirm('Are you sure ?')) {
-        $(this).prev('span.text').remove();
-    }
-});
-        console.log(checked)
-        $.ajax({
-            url : "check_question/",
-            type : "POST",
+            if (confirm('Voce tem certeza que quer limpar a lista de questoes ?')) {
+                $(this).prev('span.text').remove();
+                console.log("POST")
+                $.ajax({
+                    url : "check_question/",
+                    type : "POST",
+                });
+            }
         });
     };
     </script>
@@ -69,8 +69,8 @@
             </span>
         </div>
     {% endif %}
-
-    <a href="/questions/question_selectedList"><button class="btn btn-success">Terminar Lista</button></a>
     <!-- Fim da Paginacao -->
+    <a href="/questions/question_selectedList"><button class="btn btn-success">Terminar Lista</button></a>
+
 </div>
 {% endblock content %}

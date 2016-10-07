@@ -1,7 +1,13 @@
 from django.views.generic import DetailView, ListView, RedirectView, UpdateView, TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
+
+from docx import *
+from docx.shared import Inches
+
 import json
+import datetime
+import io
 
 from .models import Question
 
@@ -60,3 +66,44 @@ class SelectedQuetionsView(LoginRequiredMixin, TemplateView):
 
         context['checked_questions'] = Question.objects.filter(pk__in=checked_questions)
         return context
+
+
+def list_generator(request):
+    if not 'checked_questions' in request.session or not request.session['checked_questions']:
+        print('No questions selected')
+        # no checked questions
+    checked_questions = request.session['checked_questions']
+    checked_questions = Question.objects.filter(pk__in=checked_questions)
+
+    document = Document()
+    docx_title="Test_List.docx"
+    document.add_paragraph(
+        "Lista gerada em {:s} as {:s}.".format(
+            datetime.date.today().strftime('%d/%m/%Y'),
+            datetime.datetime.today().strftime('%X')
+        )
+    )
+
+    questionCounter = 1
+    for question in checked_questions:
+        document.add_heading('Question ' + str(questionCounter), level=2)
+        p = document.add_paragraph('(')
+        p.add_run(question.question_header).bold = True
+        p.add_run(')'+question.question_text)
+        itemChar = 'a'
+        for answer in question.answer_set.all():
+            document.add_paragraph(itemChar + ') ' + answer.answer_text)
+            itemChar = chr(ord(itemChar) + 1)
+        questionCounter = questionCounter + 1
+        p = document.add_paragraph()
+
+    document.add_page_break()
+
+    document.save(docx_title)
+    data = open(docx_title, "rb").read()
+
+    response = HttpResponse(
+        data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
+    response['Content-Disposition'] = 'attachment; filename=' + docx_title
+    return response
