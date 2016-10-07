@@ -3,24 +3,8 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
-    url(
-        regex=r'^$',
-        view=views.QuestionListView.as_view(),
-        name='list'
-    ),
-    # url(
-    #     regex=r'^~redirect/$',
-    #     view=views.UserRedirectView.as_view(),
-    #     name='redirect'
-    # ),
-    url(
-        regex=r'^(?P<pk>[\d]+)/$',
-        view=views.QuestionDetailView.as_view(),
-        name='detail'
-    ),
-    # url(
-    #     regex=r'^~update/$',
-    #     view=views.UserUpdateView.as_view(),
-    #     name='update'
-    # ),
+    url(r'^$', views.QuestionListView.as_view(), name='list'),
+    url(r'^(?P<pk>[\d]+)/$',views.QuestionDetailView.as_view(), name='detail'),
+    url(r'^question_selectedList$',views.SelectedQuetionsView.as_view(), name='question_selectedList'),
+    url(r'^check_question/$',views.check_question, name='check_question'),
 ]

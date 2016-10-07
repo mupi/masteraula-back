@@ -6,20 +6,30 @@
 {% block content %}
 <div class="container">
 
-  <div class="row">
-    <div class="col-sm-12">
-      {% for tag in question.tags.all %}
-        <span class="tag tag-primary">{{ tag.name }}</span>
-      {% endfor %}
-      <p>(<b>{{ question.question_header }}</b>) {{ question.question_text }}</p>
+    <div class="row">
+        <div class="col-sm-12">
+        {% for tag in question.tags.all %}
+            <span class="tag tag-primary">{{ tag.name }}</span>
+        {% endfor %}
+        <p>
+            <b>{{ question.question_header }}</b> {{ question.question_text }}
+        </p>
 
-      <ul>
-      {% for answer in question.answer_set.all %}
-        <input type="radio" name="{{answer}}" value="{{answer.pk}}"> {{answer.answer_text}}</input><br>
-      {% endfor %}
-      </ul>
+        <ol type="a">
+        {% for answer in question.answer_set.all %}
+            {% if answer.is_correct %}
+                <b><li> {{answer.answer_text}} </li></b>
+            {% else %}
+                <li> {{answer.answer_text}} </li>
+            {% endif %}
+        {% endfor %}
+        </ol>
+        {% if question.resolution is not None %}
+            <p>
+                <b>Resposta esperada do autor</b>: {{ question.resolution }}
+            </p>
+        {% endif %}
+        </div>
     </div>
-  </div>
-
 </div>
 {% endblock content %}

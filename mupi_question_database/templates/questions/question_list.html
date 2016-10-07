@@ -1,18 +1,76 @@
 {% extends "base.html" %}
 {% load static i18n %}
-{% block title %}Questions{% endblock %}
+{% block title %}Questões{% endblock %}
 
 {% block content %}
 <div class="container">
-  <h2>Questions</h2>
+    <h2>Questões</h2>
+    <form method="POST">
+        <!-- {% csrf_token %} -->
+        <div class="list-group">
+            {% for question in question_list %}
+                <div class="list-group-item">
+                    <a href="{% url 'questions:detail' question.pk %}">
+                        <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
+                    </a>
+                        {% if question.pk in request.session.checked_questions %}
+                            <input type="checkbox" checked id="chkquestion{{question.pk}}" onchange="checkQuestion({{question.pk}})"></input>
+                        {% else %}
+                            <input type="checkbox" id="chkquestion{{question.pk}}" onchange="checkQuestion({{question.pk}})"></input>
+                        {% endif %}
+                    <font>{{ question.question_text }}</font>
+                    <br>
+                    {% for tag in question.tags.all %}
+                        <span class="tag tag-primary">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    </form>
 
-  <div class="list-group">
-    {% for question in question_list %}
-      <a href="{% url 'questions:detail' question.pk %}" class="list-group-item">
-        <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
-        <p>{{ question.question_text }}</p>
-      </a>
-    {% endfor %}
-  </div>
+    <script>
+    function checkQuestion(questionPK) {
+        checked = $("#chkquestion"+questionPK).is(":checked");
+        console.log(checked)
+        $.ajax({
+            url : "check_question/",
+            type : "POST",
+            data : { questionPK : questionPK, checked : checked, csrfmiddlewaretoken: '{{csrf_token}}'}, // data sent with the post request
+        });
+    };
+
+    function clearQuestions() {
+        $(document).on("click", "a.deleteText", function() {
+    if (confirm('Are you sure ?')) {
+        $(this).prev('span.text').remove();
+    }
+});
+        console.log(checked)
+        $.ajax({
+            url : "check_question/",
+            type : "POST",
+        });
+    };
+    </script>
+
+    <!-- Paginacao -->
+    {% if is_paginated %}
+        <div class="pagination">
+            <span class="page-links">
+                {% if page_obj.has_previous %}
+                    <a href="/questions?page={{ page_obj.previous_page_number }}">Anterior</a>
+                {% endif %}
+                <span class="page-current">
+                    Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}.
+                </span>
+                {% if page_obj.has_next %}
+
+                {% endif %}
+            </span>
+        </div>
+    {% endif %}
+
+    <a href="/questions/question_selectedList"><button class="btn btn-success">Terminar Lista</button></a>
+    <!-- Fim da Paginacao -->
 </div>
 {% endblock content %}
