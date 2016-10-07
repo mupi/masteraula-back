@@ -45,3 +45,5 @@ redis>=2.10.5
 
 
 # Your custom requirements go here
+python-docx==0.8.6
+django-taggit==0.21.2
