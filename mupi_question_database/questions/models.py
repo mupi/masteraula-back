@@ -1,8 +1,6 @@
 import datetime
-
 from django.db import models
 from mupi_question_database.users.models import User
-from haystack import indexes
 from taggit.managers import TaggableManager
 
 class Question(models.Model):
@@ -53,16 +51,3 @@ class Question_List(models.Model):
     def __str__(self):
         return u'ListId: %d Header: %d' % (self.pk, self.question_list_header)
 
-class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
-
-    text = indexes.CharField(document=True,use_template=True)
-    author = indexes.CharField(model_attr='author')
-    create_date = indexes.DateTimeField(model_attr='create_date')
-    level = indexes.CharField(model_attr='level')
-
-    def get_model(self):
-        return Question
-    
-    def index_queryset(self, using=None):
-        """Used when the entire index for model is updated."""
-        return self.get_model().objects.filter(create_date__lte=datetime.datetime.now())
