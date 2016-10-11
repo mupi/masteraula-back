@@ -8,6 +8,13 @@
 
     <div class="row">
         <div class="col-sm-12">
+        {% if question.level == 'E' %}
+            <span class="tag tag-success">Facil</span>
+        {% elif question.level == 'M' %}
+            <span class="tag tag-warning">Medio</span>
+        {% elif question.level == 'H' %}
+            <span class="tag tag-danger">Dificil</span>
+        {% endif %}
         {% for tag in question.tags.all %}
             <span class="tag tag-primary">{{ tag.name }}</span>
         {% endfor %}
@@ -24,7 +31,7 @@
             {% endif %}
         {% endfor %}
         </ol>
-        {% if question.resolution is not None %}
+        {% if question.resolution is not None and question.resolution != ""%}
             <p>
                 <b>Resposta esperada do autor</b>: {{ question.resolution }}
             </p>

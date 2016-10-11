@@ -1,6 +1,6 @@
-from django.views.generic import DetailView, ListView, RedirectView, UpdateView, TemplateView, View
+from django.views.generic import DetailView, ListView, RedirectView, UpdateView, TemplateView, CreateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 
 from docx import *
 from docx.shared import Inches
@@ -9,8 +9,7 @@ import json
 import datetime
 import io
 
-from .models import Question
-
+from .models import Question, Question_List
 
 class QuestionDetailView(LoginRequiredMixin, DetailView):
     model = Question
@@ -23,9 +22,45 @@ class QuestionListView(LoginRequiredMixin, ListView):
     context_object_name = "question_list"
     paginate_by = 10
 
-class QuestionCheckAnswerView(LoginRequiredMixin, DetailView):
-    model = Question
-    template_name = 'questions/question_checkAnswer.html'
+class QuestionListDetailDeleteView(LoginRequiredMixin, DeleteView):
+    model = Question_List
+    template_name = "questions/question_list_detail.html"
+    context_object_name = "question_list"
+    success_url = "/questions"
+
+class CreateQuestionListView(LoginRequiredMixin, CreateView):
+    model = Question_List
+    fields = ['question_list_header']
+    template_name = "questions/question_selectedList.html"
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(CreateQuestionListView, self).get_context_data(**kwargs)
+        if not 'checked_questions' in self.request.session or not self.request.session['checked_questions']:
+            checked_questions = []
+        else:
+            checked_questions = self.request.session['checked_questions']
+
+        context['checked_questions'] = Question.objects.filter(pk__in=checked_questions)
+        return context
+
+    def form_valid(self, form):
+        new_list = form.save(commit=False)
+        new_list.owner = self.request.user
+
+        if not 'checked_questions' in self.request.session or not self.request.session['checked_questions']:
+            checked_questions = []
+        else:
+            checked_questions = self.request.session['checked_questions']
+        new_list.save()
+
+        questions = Question.objects.filter(pk__in=checked_questions)
+        for question in questions:
+            print(question)
+            new_list.questions.add(question)
+        new_list.save()
+
+        self.request.session['checked_questions'] = []
+        return HttpResponseRedirect("/questions/question_lists/" + str(new_list.pk) + "/")
 
 def check_question(request):
     if (request.method == 'POST'):
@@ -51,22 +86,26 @@ def check_question(request):
     else:
         return HttpResponse(
             json.dumps({"nothing to see": "this isn't happening"}),
-            content_type="application/json"
+            content_type="application/json",
+            status = 400
         )
 
-class SelectedQuetionsView(LoginRequiredMixin, TemplateView):
-    template_name = "questions/question_selectedList.html"
+def clear_questions(request):
+    if (request.method == 'GET'):
 
-    def get_context_data(self, *args, **kwargs):
-        context = super(SelectedQuetionsView, self).get_context_data(**kwargs)
-        if not 'checked_questions' in self.request.session or not self.request.session['checked_questions']:
-            checked_questions = []
-        else:
-            checked_questions = self.request.session['checked_questions']
+        checked_questions = []
+        request.session['checked_questions'] = checked_questions
 
-        context['checked_questions'] = Question.objects.filter(pk__in=checked_questions)
-        return context
-
+        return HttpResponse(
+            json.dumps({"status" : "success"}),
+            content_type="application/json"
+        )
+    else:
+        return HttpResponse(
+            json.dumps({"nothing to see": "this isn't happening"}),
+            content_type="application/json",
+            status = 400
+        )
 
 def list_generator(request):
     if not 'checked_questions' in request.session or not request.session['checked_questions']:

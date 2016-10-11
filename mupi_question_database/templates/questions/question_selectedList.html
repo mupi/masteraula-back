@@ -5,23 +5,54 @@
 {% block content %}
 <div class="container">
     {% if checked_questions|length == 0 %}
-        <h2>Nenhuma questao selecionada</h2>
+        <h2 id="list-header">Nenhuma questao selecionada</h2>
     {% else %}
-        <h2>Questoes selecionadas</h2>
+        <h2 id="list-header">Questoes selecionadas</h2>
     {% endif %}
-    <div class="list-group">
-        {% for question in checked_questions %}
-            <div class="list-group-item">
-                <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
-                <font>{{ question.question_text }}</font>
-                <br>
-                {% for tag in question.tags.all %}
-                    <span class="tag tag-primary">{{ tag.name }}</span>
-                {% endfor %}
-            </div>
-        {% endfor %}
-    </div>
-    <a href="/questions/generate_list"><button class="btn btn-success">Gerar Lista</button></a>
+
+    <form method="POST" action="">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="list-group" id="list-questions">
+            {% for question in checked_questions %}
+                <div class="list-group-item">
+                    <a href="{% url 'questions:question_detail' question.pk %}">
+                        <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
+                    </a>
+                    <font>{{ question.question_text }}</font>
+                    <br>
+                    {% for tag in question.tags.all %}
+                        <span class="tag tag-primary">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+        <br>
+        <a href="/questions/" class="btn btn-primary">Selecionar Exercicios</a>
+
+        {% if checked_questions|length > 0 %}
+            <a href="/questions/generate_list" class="btn btn-primary button-clear-remove">Gerar Lista</a>
+            <input type="submit" class="btn btn-success button-clear-remove" value="Salva Lista" />
+            <a href="#" onClick="clearQuestions();" class="btn btn-danger button-clear-remove">Remover todas as questoes</a>
+        {% endif %}
+    </form>
+
+    <script>
+    function clearQuestions() {
+        if (confirm('Voce tem certeza que quer limpar a lista de questoes ?')) {
+            $(this).prev('span.text').remove();
+            $.ajax({
+                url : "/questions/clear_questions/",
+                type : "GET",
+                success:function(data) {
+                    $("#list-questions").html("");
+                    $("#list-header").text("Nenhuma questao selecionada");
+                    $(".button-clear-remove").remove();
+                }
+            });
+        }
+    };
+    </script>
 
 </div>
 {% endblock content %}

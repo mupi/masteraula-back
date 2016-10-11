@@ -6,11 +6,10 @@
 <div class="container">
     <h2>Questões</h2>
     <form method="POST">
-        <!-- {% csrf_token %} -->
         <div class="list-group">
             {% for question in question_list %}
                 <div class="list-group-item">
-                    <a href="{% url 'questions:detail' question.pk %}">
+                    <a href="{% url 'questions:question_detail' question.pk %}">
                         <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
                     </a>
                         {% if question.pk in request.session.checked_questions %}
@@ -20,6 +19,13 @@
                         {% endif %}
                     <font>{{ question.question_text }}</font>
                     <br>
+                    {% if question.level == 'E' %}
+                        <span class="tag tag-success">Facil</span>
+                    {% elif question.level == 'M' %}
+                        <span class="tag tag-warning">Medio</span>
+                    {% elif question.level == 'H' %}
+                        <span class="tag tag-danger">Dificil</span>
+                    {% endif %}
                     {% for tag in question.tags.all %}
                         <span class="tag tag-primary">{{ tag.name }}</span>
                     {% endfor %}
@@ -40,16 +46,14 @@
     };
 
     function clearQuestions() {
-        $(document).on("click", "a.deleteText", function() {
-            if (confirm('Voce tem certeza que quer limpar a lista de questoes ?')) {
-                $(this).prev('span.text').remove();
-                console.log("POST")
-                $.ajax({
-                    url : "check_question/",
-                    type : "POST",
-                });
-            }
-        });
+        if (confirm('Voce tem certeza que quer limpar a lista de questoes ?')) {
+            $(this).prev('span.text').remove();
+            console.log("POST")
+            $.ajax({
+                url : "clear_questions/",
+                type : "GET",
+            });
+        }
     };
     </script>
 
@@ -70,7 +74,8 @@
         </div>
     {% endif %}
     <!-- Fim da Paginacao -->
-    <a href="/questions/question_selectedList"><button class="btn btn-success">Terminar Lista</button></a>
+    <br>
+    <a href="/questions/create_question_list"><button class="btn btn-primary">Fazer Lista</button></a>
 
 </div>
 {% endblock content %}
