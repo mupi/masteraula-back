@@ -65,10 +65,10 @@
                     <a href="/questions?page={{ page_obj.previous_page_number }}">Anterior</a>
                 {% endif %}
                 <span class="page-current">
-                    Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}.
+                    | Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }} |
                 </span>
                 {% if page_obj.has_next %}
-
+                    <a href="/questions?page={{ page_obj.next_page_number }}">Seguinte</a>
                 {% endif %}
             </span>
         </div>
