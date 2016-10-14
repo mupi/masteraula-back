@@ -13,6 +13,13 @@ urlpatterns = [
     url(r'^create_question_list/$',views.CreateQuestionListView.as_view(), name='save_question_list'),
     url(r'^question_lists/(?P<pk>[\d]+)/$',views.QuestionListDetailDeleteView.as_view(), name='question_listdetail'),
 
+    # Rest Urls
+
     url(r'^rest/questions/$', rest_views.QuestionRestListView.as_view()),
     url(r'^rest/questions/(?P<pk>[0-9]+)/$', rest_views.QuestionRestDetailView.as_view()),
+
+    url(r'^rest/question_lists/$', rest_views.Question_ListRestListView.as_view()),
+    url(r'^rest/question_list/$', rest_views.Question_ListRestCreateView.as_view()),
+    url(r'^rest/question_lists/(?P<pk>[0-9]+)/$', rest_views.Question_ListRestDetailView.as_view()),
+
 ]
