@@ -22,13 +22,13 @@ class QuestionListView(LoginRequiredMixin, ListView):
     context_object_name = "question_list"
     paginate_by = 10
 
-class QuestionListDetailDeleteView(LoginRequiredMixin, DeleteView):
+class Question_ListDeleteView(LoginRequiredMixin, DeleteView):
     model = Question_List
     template_name = "questions/question_list_detail.html"
     context_object_name = "question_list"
-    success_url = "/questions"
+    success_url = "/questions/question_lists/"
 
-class CreateQuestionListView(LoginRequiredMixin, CreateView):
+class Question_ListCreateView(LoginRequiredMixin, CreateView):
     model = Question_List
     fields = ['question_list_header']
     template_name = "questions/question_selectedList.html"
@@ -93,8 +93,7 @@ def check_question(request):
 def clear_questions(request):
     if (request.method == 'GET'):
 
-        checked_questions = []
-        request.session['checked_questions'] = checked_questions
+        request.session['checked_questions'] = []
 
         return HttpResponse(
             json.dumps({"status" : "success"}),
@@ -146,3 +145,9 @@ def list_generator(request):
     )
     response['Content-Disposition'] = 'attachment; filename=' + docx_title
     return response
+
+class Question_ListListView(LoginRequiredMixin, ListView):
+    model = Question_List
+    template_name = "questions/question_list_list.html"
+    context_object_name = "question_list"
+    success_url = "/questions"

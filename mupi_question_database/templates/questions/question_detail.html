@@ -23,7 +23,7 @@
         </p>
 
         <ol type="a">
-        {% for answer in question.answer_set.all %}
+        {% for answer in question.answers.all %}
             {% if answer.is_correct %}
                 <b><li> {{answer.answer_text}} </li></b>
             {% else %}

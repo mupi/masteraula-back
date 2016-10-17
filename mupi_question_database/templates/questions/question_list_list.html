@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Question List: {{ question_list.question_list_header }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <h2>{{ question_list.question_list_header }}</h2>
+
+            <div class="list-group" id="list-questions">
+                {% for qlist in question_list %}
+                    <div class="list-group-item">
+                        <a href="{% url 'questions:question_listdetaildelete' qlist.pk %}">
+                            <h4 class="list-group-item-heading">{{ qlist.question_list_header }}</h4>
+                        </a>
+                        {% if qlist.questions.all|length <= 0 %}
+                            Nenhuma questão
+                        {% elif qlist.questions.all|length == 1 %}
+                            {{ qlist.questions.all|length }} questão.
+                        {% else %}
+                            {{ qlist.questions.all|length }} questões.
+                        {% endif %}
+                        <br>
+                        Criado por {{qlist.owner}} em {{qlist.create_date|date:"d/m/Y"}}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
