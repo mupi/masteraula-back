@@ -9,6 +9,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     create_date = indexes.DateTimeField(model_attr='create_date')
     level = indexes.CharField(model_attr='level')
     text_auto = indexes.EdgeNgramField(model_attr='question_text')
+    tags = indexes.MultiValueField()
 
     def get_model(self):
         return Question
