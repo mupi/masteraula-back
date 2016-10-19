@@ -13,6 +13,7 @@ urlpatterns = [
 
     url(r'^create_question_list/$',views.Question_ListCreateView.as_view(), name='save_question_list'),
     url(r'^question_lists/$',views.Question_ListListView.as_view(), name='question_listlist'),
+    url(r'^question_own_lists/$',views.Question_ListOwnListView.as_view(), name='question_list_ownlist'),
     url(r'^question_lists/(?P<pk>[\d]+)/$',views.Question_ListDeleteView.as_view(), name='question_listdetaildelete'),
 
     # Rest Urls

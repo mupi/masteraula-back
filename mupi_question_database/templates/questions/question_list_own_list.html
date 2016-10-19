@@ -5,6 +5,8 @@
 
 {% block content %}
 <div class="container">
+    <h2>Lista de questoes de: {{ request.user.username }}</h2>
+
     <div class="list-group" id="list-questions">
         {% for question_list in question_list_list %}
             <div class="list-group-item">
@@ -20,6 +22,12 @@
                 {% endif %}
                 <br>
                 Criado por {{question_list.owner}} em {{question_list.create_date|date:"d/m/Y"}}
+                <br>
+                {% if question_list.private %}
+                    Lista privada
+                {% else %}
+                    Lista publica
+                {% endif %}
             </div>
         {% endfor %}
     </div>

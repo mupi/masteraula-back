@@ -75,7 +75,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 class SimpleQuestion_ListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question_List
-        fields = ('question_list_header', 'owner', 'questions')
+        fields = ('question_list_header', 'owner', 'questions', 'private')
 
 
 class Question_ListSerializer(serializers.ModelSerializer):
@@ -83,7 +83,7 @@ class Question_ListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question_List
-        fields = ('id', 'question_list_header', 'owner', 'create_date', 'questions')
+        fields = ('id', 'question_list_header', 'owner', 'private', 'create_date', 'questions')
 
 
     def update(self, instance, validated_data):
