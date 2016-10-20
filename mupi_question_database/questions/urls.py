@@ -11,10 +11,11 @@ urlpatterns = [
     url(r'^check_question/$',views.check_question, name='check_question'),
     url(r'^clear_questions/$',views.clear_questions, name='clear_questions'),
 
-    url(r'^create_question_list/$',views.Question_ListCreateView.as_view(), name='save_question_list'),
-    url(r'^question_lists/$',views.Question_ListListView.as_view(), name='question_listlist'),
-    url(r'^question_own_lists/$',views.Question_ListOwnListView.as_view(), name='question_list_ownlist'),
-    url(r'^question_lists/(?P<pk>[\d]+)/$',views.Question_ListDeleteView.as_view(), name='question_listdetaildelete'),
+    url(r'^create_question_list/$',views.Question_ListCreateView.as_view(), name='question_list_save'),
+    url(r'^question_lists/$',views.Question_ListListView.as_view(), name='question_list_list'),
+    url(r'^question_own_lists/$',views.Question_ListOwnListView.as_view(), name='question_list_own_list'),
+    url(r'^question_lists/(?P<pk>[\d]+)/$',views.Question_ListDetailView.as_view(), name='question_list_detail'),
+    url(r'^question_lists/(?P<pk>[\d]+)/delete$',views.Question_ListDeleteView.as_view(), name='question_list_delete'),
 
     # Rest Urls
 

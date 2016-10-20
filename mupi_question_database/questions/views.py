@@ -23,11 +23,17 @@ class QuestionListView(LoginRequiredMixin, ListView):
     context_object_name = "question_list"
     paginate_by = 10
 
-class Question_ListDeleteView(LoginRequiredMixin, DeleteView):
+
+
+class Question_ListDetailView(LoginRequiredMixin, DetailView):
     model = Question_List
     template_name = "questions/question_list_detail.html"
     context_object_name = "question_list"
-    success_url = "/questions/question_lists/"
+
+class Question_ListDeleteView(LoginRequiredMixin, DeleteView):
+    model = Question_List
+    context_object_name = "question_list"
+    success_url = "/questions/question_lists"
 
 class Question_ListCreateView(LoginRequiredMixin, CreateView):
     model = Question_List
@@ -63,6 +69,32 @@ class Question_ListCreateView(LoginRequiredMixin, CreateView):
         self.request.session['checked_questions'] = []
         return HttpResponseRedirect("/questions/question_lists/" + str(new_list.pk) + "/")
 
+class Question_ListListView(LoginRequiredMixin, ListView):
+    model = Question_List
+    template_name = "questions/question_list_list.html"
+    context_object_name = "question_list_list"
+    success_url = "/questions"
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(Question_ListListView, self).get_context_data(**kwargs)
+
+        context['question_list_list'] = Question_List.objects.filter(Q(private=False) | Q(owner=self.request.user.id))
+        return context
+
+class Question_ListOwnListView(LoginRequiredMixin, ListView):
+    model = Question_List
+    template_name = "questions/question_list_own_list.html"
+    context_object_name = "question_list_list"
+    success_url = "/questions"
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(Question_ListOwnListView, self).get_context_data(**kwargs)
+
+        context['question_list_list'] = Question_List.objects.filter(owner=self.request.user.id)
+        return context
+
+
+
 def check_question(request):
     if (request.method == 'POST'):
         questionPk = request.POST.get('questionPK')
@@ -85,11 +117,7 @@ def check_question(request):
             content_type="application/json"
         )
     else:
-        return HttpResponse(
-            json.dumps({"nothing to see": "this isn't happening"}),
-            content_type="application/json",
-            status = 400
-        )
+        return HttpResponse(status = 404)
 
 def clear_questions(request):
     if (request.method == 'GET'):
@@ -101,11 +129,7 @@ def clear_questions(request):
             content_type="application/json"
         )
     else:
-        return HttpResponse(
-            json.dumps({"nothing to see": "this isn't happening"}),
-            content_type="application/json",
-            status = 400
-        )
+        return HttpResponse(status = 404)
 
 
 def list_generator(request):
@@ -167,29 +191,3 @@ def list_generator(request):
         json.dumps({'status' : 'ready'}),
         content_type="application/json"
     )
-
-
-
-class Question_ListListView(LoginRequiredMixin, ListView):
-    model = Question_List
-    template_name = "questions/question_list_list.html"
-    context_object_name = "question_list_list"
-    success_url = "/questions"
-
-    def get_context_data(self, *args, **kwargs):
-        context = super(Question_ListListView, self).get_context_data(**kwargs)
-
-        context['question_list_list'] = Question_List.objects.filter(Q(private=False) | Q(owner=self.request.user.id))
-        return context
-
-class Question_ListOwnListView(LoginRequiredMixin, ListView):
-    model = Question_List
-    template_name = "questions/question_list_own_list.html"
-    context_object_name = "question_list_list"
-    success_url = "/questions"
-
-    def get_context_data(self, *args, **kwargs):
-        context = super(Question_ListOwnListView, self).get_context_data(**kwargs)
-
-        context['question_list_list'] = Question_List.objects.filter(owner=self.request.user.id)
-        return context

@@ -8,7 +8,7 @@
     <div class="list-group" id="list-questions">
         {% for question_list in question_list_list %}
             <div class="list-group-item">
-                <a href="{% url 'questions:question_listdetaildelete' question_list.pk %}">
+                <a href="{% url 'questions:question_list_detail' question_list.pk %}">
                     <h4 class="list-group-item-heading">{{ question_list.question_list_header }}</h4>
                 </a>
                 {% if question_list.questions.all|length <= 0 %}

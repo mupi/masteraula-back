@@ -25,10 +25,10 @@
                 {% endfor %}
             </div>
             <br>
-            <form action="" method="post">{% csrf_token %}
                 <a href="#" class="btn btn-primary button-clear-remove" onclick="generateList()">Gerar Lista</a>
-                <input type="submit" class="btn btn-danger" value="Apagar Lista"/>
-            </form>
+                <form method="POST" action="{% url 'questions:question_list_delete' question_list.pk %}" >{% csrf_token %}
+                    <input type="submit" class="btn btn-danger" value="Apagar Lista" onclick="return confirm('Tem certeza disso?');"/>
+                </form>
         </div>
     </div>
 </div>
