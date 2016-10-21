@@ -40,11 +40,13 @@ class Answer(models.Model):
 
 
 class Question_List(models.Model):
-    question_list_header = models.CharField("Nome da Lista", max_length=200)
+    question_list_header = models.CharField('Nome da Lista', max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     questions = models.ManyToManyField(Question)
     create_date = models.DateTimeField(auto_now_add=True)
-    private = models.BooleanField()
+    private = models.BooleanField('Lista privada')
+    cloned_from = models.ForeignKey('self', null=True, blank=True, related_name='subarticles',
+                                    default=None, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ['pk']

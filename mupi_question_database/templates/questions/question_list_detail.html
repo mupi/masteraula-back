@@ -9,6 +9,9 @@
         <div class="col-sm-12">
             <h1>{{ question_list.question_list_header }}</h1>
             <h4> Criado por {{ question_list.owner.username }} em {{question_list.create_date|date:"d/m/Y"}}</h4>
+            {% if question_list.cloned_from %}
+                <h4> Clonado de <a href="{% url 'questions:question_list_detail' question_list.cloned_from.pk %}">Lista</a></h4>
+            {% endif %}
             <div class="list-group" id="list-questions">
                 {% for question in question_list.questions.all %}
                     <div class="list-group-item">
@@ -30,9 +33,8 @@
                 <form method="POST" action="{% url 'questions:question_list_delete' question_list.pk %}" >{% csrf_token %}
                     <input type="submit" class="btn btn-danger" value="Apagar Lista" onclick="return confirm('Tem certeza disso?');"/>
                 </form>
-            {% else %}
-                <a href="#" class="btn btn-primary" onclick="clonarLista()">Clonar Lista</a>
             {% endif %}
+            <a href="{% url 'questions:question_list_clone' question_list.pk %}" class="btn btn-primary">Clonar Lista</a>
         </div>
     </div>
 </div>

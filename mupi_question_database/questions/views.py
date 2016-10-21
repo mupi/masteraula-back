@@ -37,7 +37,7 @@ class Question_ListDeleteView(LoginRequiredMixin, DeleteView):
 
 class Question_ListCreateView(LoginRequiredMixin, CreateView):
     model = Question_List
-    fields = ['question_list_header']
+    fields = ['question_list_header', 'private']
     template_name = "questions/question_list_create.html"
 
     def get_context_data(self, *args, **kwargs):
@@ -59,7 +59,7 @@ class Question_ListCreateView(LoginRequiredMixin, CreateView):
         else:
             checked_questions = self.request.session['checked_questions']
         new_list.save()
-
+        
         questions = Question.objects.filter(pk__in=checked_questions)
         for question in questions:
             print(question)
@@ -87,12 +87,38 @@ class Question_ListOwnListView(LoginRequiredMixin, ListView):
     context_object_name = "question_list_list"
     success_url = "/questions"
 
-    def get_context_data(self, *args, **kwargs):
-        context = super(Question_ListOwnListView, self).get_context_data(**kwargs)
+class Question_ListCloneView(LoginRequiredMixin, CreateView):
+    model = Question_List
+    fields = ['question_list_header', 'private']
+    template_name = "questions/question_list_clone.html"
+    context_object_name = "question_list"
 
-        context['question_list_list'] = Question_List.objects.filter(owner=self.request.user.id)
+    def get_context_data(self, *args, **kwargs):
+        context = super(Question_ListCloneView, self).get_context_data(**kwargs)
+
+        context['cloned_from_list'] = Question_List.objects.get(id=self.kwargs['pk'])
         return context
 
+
+    def form_valid(self, form):
+        cloned_from_list = self.get_context_data()['cloned_from_list']
+        new_list = form.save(commit=False)
+        new_list.owner = self.request.user
+
+        if not cloned_from_list or not cloned_from_list.questions.all:
+            questions = []
+        else:
+            questions = cloned_from_list.questions.all()
+        new_list.cloned_from = cloned_from_list
+        new_list.save()
+
+        for question in questions:
+            print(question)
+            new_list.questions.add(question)
+        new_list.save()
+
+        self.request.session['cloned_from_list'] = None
+        return HttpResponseRedirect("/questions/question_lists/" + str(new_list.pk) + "/")
 
 
 def check_question(request):
