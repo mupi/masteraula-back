@@ -13,11 +13,11 @@
                         <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
                     </a>
                         {% if question.pk in request.session.checked_questions %}
-                            <input type="checkbox" checked id="chkquestion{{question.pk}}" onchange="checkQuestion({{question.pk}})"></input>
+                            <input type="checkbox" checked id="chkquestion{{question.pk}}" onchange="checkQuestion({{question.pk}})" />
                         {% else %}
-                            <input type="checkbox" id="chkquestion{{question.pk}}" onchange="checkQuestion({{question.pk}})"></input>
+                            <input type="checkbox" id="chkquestion{{question.pk}}" onchange="checkQuestion({{question.pk}})" />
                         {% endif %}
-                    <font>{{ question.question_text }}</font>
+                    <span>{{ question.question_text }}</span>
                     <br>
                     {% if question.level == 'E' %}
                         <span class="tag tag-success">Facil</span>
@@ -47,11 +47,15 @@
 
     function clearQuestions() {
         if (confirm('Voce tem certeza que quer limpar a lista de questoes ?')) {
-            $(this).prev('span.text').remove();
-            console.log("POST")
             $.ajax({
-                url : "clear_questions/",
-                type : "GET",
+                url : "/questions/clear_questions/",
+                type : "POST",
+                data : {csrfmiddlewaretoken: '{{csrf_token}}'},
+                success:function(data) {
+                    $('input[type=checkbox]').each(function() {
+                        $(this).prop('checked', false);
+                    });
+                }
             });
         }
     };
@@ -75,7 +79,8 @@
     {% endif %}
     <!-- Fim da Paginacao -->
     <br>
-    <a href="/questions/create_question_list"><button class="btn btn-primary">Fazer Lista</button></a>
+    <a href="/questions/create_question_list" class="btn btn-primary">Fazer Lista</a>
+    <a href="#" onclick="clearQuestions()" class="btn btn-danger">Limpar Lista</a>
 
 </div>
 {% endblock content %}

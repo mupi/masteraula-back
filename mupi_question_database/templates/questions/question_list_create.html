@@ -9,7 +9,7 @@
     {% else %}
         <h2 id="list-header">Questoes selecionadas</h2>
     {% endif %}
-
+    <br>
     <form method="POST" action="">
         {% csrf_token %}
         {{ form.as_p }}
@@ -40,10 +40,10 @@
     <script>
     function clearQuestions() {
         if (confirm('Voce tem certeza que quer limpar a lista de questoes ?')) {
-            $(this).prev('span.text').remove();
             $.ajax({
                 url : "/questions/clear_questions/",
-                type : "GET",
+                type : "POST",
+                data : {csrfmiddlewaretoken: '{{csrf_token}}'},
                 success:function(data) {
                     $("#list-questions").html("");
                     $("#list-header").text("Nenhuma questao selecionada");

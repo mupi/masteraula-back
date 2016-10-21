@@ -1,6 +1,6 @@
 from django.views.generic import DetailView, ListView, RedirectView, UpdateView, TemplateView, CreateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.db.models import Q
 
 from docx import *
@@ -38,7 +38,7 @@ class Question_ListDeleteView(LoginRequiredMixin, DeleteView):
 class Question_ListCreateView(LoginRequiredMixin, CreateView):
     model = Question_List
     fields = ['question_list_header']
-    template_name = "questions/question_selectedList.html"
+    template_name = "questions/question_list_create.html"
 
     def get_context_data(self, *args, **kwargs):
         context = super(Question_ListCreateView, self).get_context_data(**kwargs)
@@ -116,11 +116,10 @@ def check_question(request):
             json.dumps({"status" : "success"}),
             content_type="application/json"
         )
-    else:
-        return HttpResponse(status = 404)
+    raise Http404("Method GET not allowed in check_question!")
 
 def clear_questions(request):
-    if (request.method == 'GET'):
+    if (request.method == 'POST'):
 
         request.session['checked_questions'] = []
 
@@ -128,17 +127,16 @@ def clear_questions(request):
             json.dumps({"status" : "success"}),
             content_type="application/json"
         )
-    else:
-        return HttpResponse(status = 404)
+    raise Http404("Method GET not allowed in check_question!")
 
 
 def list_generator(request):
     if (request.method == 'GET'):
         if not 'generate_list_questions' in request.session or not request.session['generate_list_questions']:
-            return HttpResponse(status = 404)
+            raise Http404("Cant generate a null list.")
         list_questions = Question.objects.filter(pk__in=request.session['generate_list_questions'])
         if not list_questions:
-            return HttpResponse(status = 404)
+            raise Http404("Cant generate an empty list doccument.")
 
         document = Document()
         docx_title="Test_List.docx"
