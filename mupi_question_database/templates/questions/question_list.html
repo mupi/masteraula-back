@@ -39,7 +39,7 @@
         checked = $("#chkquestion"+questionPK).is(":checked");
         console.log(checked)
         $.ajax({
-            url : "check_question/",
+            url : "{% url 'questions:check_question'%}",
             type : "POST",
             data : { questionPK : questionPK, checked : checked, csrfmiddlewaretoken: '{{csrf_token}}'}, // data sent with the post request
         });
@@ -48,7 +48,7 @@
     function clearQuestions() {
         if (confirm('Voce tem certeza que quer limpar a lista de questoes ?')) {
             $.ajax({
-                url : "/questions/clear_questions/",
+                url : "{% url 'questions:clear_questions'%}",
                 type : "POST",
                 data : {csrfmiddlewaretoken: '{{csrf_token}}'},
                 success:function(data) {
@@ -79,7 +79,7 @@
     {% endif %}
     <!-- Fim da Paginacao -->
     <br>
-    <a href="/questions/question_list/create" class="btn btn-primary">Fazer Lista</a>
+    <a href="{% url 'questions:question_list_create' %}" class="btn btn-primary">Fazer Lista</a>
     <a href="#" onclick="clearQuestions()" class="btn btn-danger">Limpar Lista</a>
 
 </div>

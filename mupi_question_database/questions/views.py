@@ -2,6 +2,8 @@ from django.views.generic import DetailView, ListView, RedirectView, UpdateView,
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.db.models import Q
+from django.urls import reverse
+
 
 from docx import *
 from docx.shared import Inches
@@ -66,7 +68,7 @@ class Question_ListCreateView(LoginRequiredMixin, CreateView):
         new_list.save()
 
         self.request.session['checked_questions'] = []
-        return HttpResponseRedirect("/questions/question_lists/" + str(new_list.pk) + "/")
+        return HttpResponseRedirect(reverse('questions:question_list_detail', args=(str(new_list.pk),)))
 
 class Question_ListEditView(LoginRequiredMixin, UpdateView):
     model = Question_List
@@ -86,7 +88,7 @@ class Question_ListEditView(LoginRequiredMixin, UpdateView):
 
             self.request.session['checked_edit_questions'] = []
 
-        return HttpResponseRedirect("/questions/question_lists/" + str(new_list.pk) + "/")
+        return HttpResponseRedirect(reverse('questions:question_list_detail', args=(str(new_list.pk),)))
 
     def get_context_data(self, *args, **kwargs):
         context = super(Question_ListEditView, self).get_context_data(**kwargs)
@@ -182,7 +184,7 @@ class Question_ListCloneView(LoginRequiredMixin, CreateView):
         new_list.save()
 
         self.request.session['cloned_from_list'] = None
-        return HttpResponseRedirect("/questions/question_lists/" + str(new_list.pk) + "/")
+        return HttpResponseRedirect(reverse('questions:question_list_detail', args=(str(new_list.pk),)))
 
 
 def check_question(request):

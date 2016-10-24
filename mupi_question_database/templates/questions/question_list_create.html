@@ -28,10 +28,10 @@
             {% endfor %}
         </div>
         <br>
-        <a href="/questions/" class="btn btn-primary">Selecionar Exercicios</a>
+        <a href="{% url 'questions:list' %}" class="btn btn-primary">Selecionar Exercicios</a>
 
         {% if checked_questions|length > 0 %}
-            <a href="/questions/generate_list" class="btn btn-primary button-clear-remove">Gerar Lista</a>
+            <a href="{% url 'questions:list_generator' %}" class="btn btn-primary button-clear-remove">Gerar Lista</a>
             <input type="submit" class="btn btn-success button-clear-remove" value="Salva Lista" />
             <a href="#" onClick="clearQuestions();" class="btn btn-danger button-clear-remove">Remover todas as questoes</a>
         {% endif %}
@@ -41,7 +41,7 @@
     function clearQuestions() {
         if (confirm('Voce tem certeza que quer limpar a lista de questoes ?')) {
             $.ajax({
-                url : "/questions/clear_questions/",
+                url : "{% url 'questions:clear_questions'%}",
                 type : "POST",
                 data : {csrfmiddlewaretoken: '{{csrf_token}}'},
                 success:function(data) {
