@@ -33,6 +33,7 @@
                 <form method="POST" action="{% url 'questions:question_list_delete' question_list.pk %}" >{% csrf_token %}
                     <input type="submit" class="btn btn-danger" value="Apagar Lista" onclick="return confirm('Tem certeza disso?');"/>
                 </form>
+                <a href="{% url 'questions:question_list_edit' question_list.pk %}" class="btn btn-success">Editar Lista</a>
             {% endif %}
             <a href="{% url 'questions:question_list_clone' question_list.pk %}" class="btn btn-primary">Clonar Lista</a>
         </div>
