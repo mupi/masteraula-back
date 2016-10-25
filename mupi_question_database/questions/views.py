@@ -2,6 +2,7 @@ from django.views.generic import DetailView, ListView, RedirectView, UpdateView,
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Q
+from django.contrib import messages
 
 from docx import *
 from docx.shared import Inches
@@ -193,3 +194,8 @@ class Question_ListOwnListView(LoginRequiredMixin, ListView):
 
         context['question_list_list'] = Question_List.objects.filter(owner=self.request.user.id)
         return context
+
+class QuestionCreate(CreateView):
+    model = Question
+    fields = ['question_header','question_text','resolution','level','author','tags']
+    
