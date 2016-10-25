@@ -17,6 +17,11 @@
                             <a href="{% url 'questions:question_detail' question.pk %}">
                                 <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
                             </a>
+                            {% if question.pk in request.session.checked_edit_questions %}
+                                <input type="checkbox" checked id="chkquestion{{question.pk}}" onchange="checkEditQuestion({{question.pk}})" />
+                            {% else %}
+                                <input type="checkbox" id="chkquestion{{question.pk}}" onchange="checkEditQuestion({{question.pk}})" />
+                            {% endif %}
                             <span>{{ question.question_text }}</span>
                             <input type="hidden" name="questionId" value="{{question.id}}" />
                             <br>
@@ -27,10 +32,10 @@
                     {% endfor %}
                 </div>
                 <br>
-                {% if checked_edit_questions|length > 0%}
+                {% if checked_edit_add_questions|length > 0%}
                     <h2>Questões a serem adicionadas</h2>
                     <div class="list-group">
-                        {% for question in checked_edit_questions %}
+                        {% for question in checked_edit_add_questions %}
                         <div class="list-group-item">
                             <a href="{% url 'questions:question_detail' question.pk %}">
                                 <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
@@ -48,8 +53,31 @@
                 <br>
                 <a href="{% url 'questions:question_list_edit_list' question_list.pk %}" class="btn btn-primary">Adicionar mais exercícios</a>
                 <input type="submit" class="btn btn-success" value="Salvar Lista"/>
+                <a href="#" onclick="removeQuestions()" class="btn btn-danger">Remover questoes selecionadas</a>
             </form>
         </div>
     </div>
+    <script>
+    function checkEditQuestion(questionPK) {
+        checked = $("#chkquestion"+questionPK).is(":checked");
+        console.log(checked)
+        $.ajax({
+            url : "{% url 'questions:check_question_edit_list' %}",
+            type : "POST",
+            data : { questionPK : questionPK, checked : checked, csrfmiddlewaretoken: '{{csrf_token}}'}, // data sent with the post request
+        });
+    };
+
+    function removeQuestions() {
+        $.ajax({
+            url : "{% url 'questions:question_list_edit_remove_list' question_list.pk %}",
+            type : "POST",
+            data : { csrfmiddlewaretoken: '{{csrf_token}}'}, // data sent with the post request
+            success:function(data) {
+                location.reload();
+            }
+        });
+    };
+    </script>
 </div>
 {% endblock content %}

@@ -11,11 +11,11 @@
                 <a href="{% url 'questions:question_detail' question.pk %}">
                     <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
                 </a>
-                    {% if question.pk in request.session.checked_edit_questions %}
-                        <input type="checkbox" checked id="chkquestion{{question.pk}}" onchange="checkEditQuestion({{question.pk}})" />
-                    {% else %}
-                        <input type="checkbox" id="chkquestion{{question.pk}}" onchange="checkEditQuestion({{question.pk}})" />
-                    {% endif %}
+                {% if question.pk in request.session.checked_edit_add_questions %}
+                    <input type="checkbox" checked id="chkquestion{{question.pk}}" onchange="checkEditQuestion({{question.pk}})" />
+                {% else %}
+                    <input type="checkbox" id="chkquestion{{question.pk}}" onchange="checkEditQuestion({{question.pk}})" />
+                {% endif %}
                 <span>{{ question.question_text }}</span>
                 <br>
                 {% if question.level == 'E' %}
@@ -37,7 +37,7 @@
         checked = $("#chkquestion"+questionPK).is(":checked");
         console.log(checked)
         $.ajax({
-            url : "{% url 'questions:check_question_edit_list' %}",
+            url : "{% url 'questions:check_question_edit_add_list' %}",
             type : "POST",
             data : { questionPK : questionPK, checked : checked, csrfmiddlewaretoken: '{{csrf_token}}'}, // data sent with the post request
         });
@@ -46,7 +46,7 @@
     function clearEditQuestions() {
         if (confirm('Voce tem certeza que quer limpar a lista de questoes ?')) {
             $.ajax({
-                url : "{% url 'questions:clear_questions_edit_list' %}",
+                url : "{% url 'questions:clear_questions_edit_add_list' %}",
                 type : "POST",
                 data : {csrfmiddlewaretoken: '{{csrf_token}}'},
                 success:function(data) {

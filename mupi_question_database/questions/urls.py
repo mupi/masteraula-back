@@ -18,9 +18,11 @@ urlpatterns = [
     url(r'^question_lists/(?P<pk>[\d]+)/clone$',views.Question_ListCloneView.as_view(), name='question_list_clone'),
     url(r'^question_lists/(?P<pk>[\d]+)/edit$',views.Question_ListEditView.as_view(), name='question_list_edit'),
     url(r'^question_lists/(?P<pk>[\d]+)/edit/questions$',views.Question_ListEditListView.as_view(), name='question_list_edit_list'),
+    url(r'^question_lists/(?P<pk>[\d]+)/edit/questions/remove$',views.Question_ListRemoveQuestionsView.as_view(), name='question_list_edit_remove_list'),
 
+    url(r'^check_question_edit_add_list/$',views.check_question_edit_add_list, name='check_question_edit_add_list'),
+    url(r'^clear_questions_edit_add_list/$',views.clear_questions_edit_add_list, name='clear_questions_edit_add_list'),
     url(r'^check_question_edit_list/$',views.check_question_edit_list, name='check_question_edit_list'),
-    url(r'^clear_questions_edit_list/$',views.clear_questions_edit_list, name='clear_questions_edit_list'),
 
     # Rest Urls
 
