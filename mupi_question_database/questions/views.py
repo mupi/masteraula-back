@@ -2,6 +2,7 @@ from django.views.generic import DetailView, ListView, RedirectView, UpdateView,
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.db.models import Q
+from django.shortcuts import redirect
 from django.urls import reverse
 
 
@@ -36,6 +37,13 @@ class Question_ListDeleteView(LoginRequiredMixin, DeleteView):
     model = Question_List
     context_object_name = "question_list"
     success_url = "/questions/question_lists"
+
+    # Verifica se o request.user eh o dono da lista a ser deletada
+    def dispatch(self, request, *args, **kwargs):
+        question_list = self.get_object()
+        if question_list.owner != self.request.user:
+            return redirect(reverse('questions:question_list_detail', args=(self.kwargs['pk'],)))
+        return super(Question_ListDeleteView, self).dispatch(request, *args, **kwargs)
 
 class Question_ListCreateView(LoginRequiredMixin, CreateView):
     model = Question_List
@@ -75,6 +83,13 @@ class Question_ListEditView(LoginRequiredMixin, UpdateView):
     fields = ['question_list_header', 'private']
     template_name = "questions/question_list_edit.html"
 
+    # Verifica se o request.user eh o dono da lista a ser editada
+    def dispatch(self, request, *args, **kwargs):
+        question_list = self.get_object()
+        if question_list.owner != self.request.user:
+            return redirect(reverse('questions:question_list_detail', args=(self.kwargs['pk'],)))
+        return super(Question_ListEditView, self).dispatch(request, *args, **kwargs)
+
     def form_valid(self, form):
         new_list = form.save(commit=False)
 
@@ -110,6 +125,13 @@ class Question_ListRemoveQuestionsView(LoginRequiredMixin, UpdateView):
     model = Question_List
     fields = []
 
+    # Verifica se o request.user eh o dono da lista a ser editada
+    def dispatch(self, request, *args, **kwargs):
+        question_list = self.get_object()
+        if question_list.owner != self.request.user:
+            return redirect(reverse('questions:question_list_detail', args=(self.kwargs['pk'],)))
+        return super(Question_ListRemoveQuestionsView, self).dispatch(request, *args, **kwargs)
+
     def form_valid(self, form):
         new_list = form.save(commit=False)
 
@@ -130,6 +152,13 @@ class Question_ListEditListView(LoginRequiredMixin, ListView):
     template_name = "questions/question_list_edit_list.html"
     context_object_name = "question_list"
     paginate_by = 10
+
+    # Verifica se o request.user eh o dono da lista a ser editada
+    def dispatch(self, request, *args, **kwargs):
+        question_list = Question_List.objects.get(id=self.kwargs['pk'])
+        if question_list.owner != self.request.user:
+            return redirect(reverse('questions:question_list_detail', args=(self.kwargs['pk'],)))
+        return super(Question_ListEditListView, self).dispatch(request, *args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):
         context = super(Question_ListEditListView, self).get_context_data(**kwargs)
