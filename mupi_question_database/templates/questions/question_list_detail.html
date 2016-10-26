@@ -7,8 +7,11 @@
 <div class="container">
     <div class="row">
         <div class="col-sm-12">
-            <h2>{{ question_list.question_list_header }}</h2>
-
+            <h1>{{ question_list.question_list_header }}</h1>
+            <h4> Criado por {{ question_list.owner.username }} em {{question_list.create_date|date:"d/m/Y"}}</h4>
+            {% if question_list.cloned_from %}
+                <h4> Clonado de <a href="{% url 'questions:question_list_detail' question_list.cloned_from.pk %}">Lista</a></h4>
+            {% endif %}
             <div class="list-group" id="list-questions">
                 {% for question in question_list.questions.all %}
                     <div class="list-group-item">
@@ -25,10 +28,14 @@
                 {% endfor %}
             </div>
             <br>
-            <form action="" method="post">{% csrf_token %}
-                <a href="#" class="btn btn-primary button-clear-remove" onclick="generateList()">Gerar Lista</a>
-                <input type="submit" class="btn btn-danger" value="Apagar Lista"/>
-            </form>
+            <a href="#" class="btn btn-primary" onclick="generateList()">Gerar Lista</a>
+            {% if question_list.owner.id == request.user.id %}
+                <form method="POST" action="{% url 'questions:question_list_delete' question_list.pk %}" >{% csrf_token %}
+                    <input type="submit" class="btn btn-danger" value="Apagar Lista" onclick="return confirm('Tem certeza disso?');"/>
+                </form>
+                <a href="{% url 'questions:question_list_edit' question_list.pk %}" class="btn btn-success">Editar Lista</a>
+            {% endif %}
+            <a href="{% url 'questions:question_list_clone' question_list.pk %}" class="btn btn-primary">Clonar Lista</a>
         </div>
     </div>
 </div>
@@ -43,13 +50,13 @@ function generateList() {
     console.log(questionsId);
     console.log(questionsId.length);
     $.ajax({
-        url : "/questions/generate_list",
+        url : "{% url 'questions:list_generator' %}",
         type : "POST",
         data : { 'questionsId[]' : questionsId, csrfmiddlewaretoken: '{{csrf_token}}'},
         success:function(data) {
             if (data.status == "ready")
             {
-                window.location.href = "/questions/generate_list";
+                window.location.href = "{% url 'questions:list_generator' %}";
             }
         }
     });

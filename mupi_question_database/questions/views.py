@@ -1,8 +1,9 @@
 from django.views.generic import DetailView, ListView, RedirectView, UpdateView, TemplateView, CreateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.db.models import Q
-from django.contrib import messages
+from django.urls import reverse
+
 
 from docx import *
 from docx.shared import Inches
@@ -24,16 +25,22 @@ class QuestionListView(LoginRequiredMixin, ListView):
     context_object_name = "question_list"
     paginate_by = 10
 
-class Question_ListDeleteView(LoginRequiredMixin, DeleteView):
+
+
+class Question_ListDetailView(LoginRequiredMixin, DetailView):
     model = Question_List
     template_name = "questions/question_list_detail.html"
     context_object_name = "question_list"
-    success_url = "/questions/question_lists/"
+
+class Question_ListDeleteView(LoginRequiredMixin, DeleteView):
+    model = Question_List
+    context_object_name = "question_list"
+    success_url = "/questions/question_lists"
 
 class Question_ListCreateView(LoginRequiredMixin, CreateView):
     model = Question_List
-    fields = ['question_list_header']
-    template_name = "questions/question_selectedList.html"
+    fields = ['question_list_header', 'private']
+    template_name = "questions/question_list_create.html"
 
     def get_context_data(self, *args, **kwargs):
         context = super(Question_ListCreateView, self).get_context_data(**kwargs)
@@ -57,65 +64,154 @@ class Question_ListCreateView(LoginRequiredMixin, CreateView):
 
         questions = Question.objects.filter(pk__in=checked_questions)
         for question in questions:
-            print(question)
             new_list.questions.add(question)
         new_list.save()
 
         self.request.session['checked_questions'] = []
-        return HttpResponseRedirect("/questions/question_lists/" + str(new_list.pk) + "/")
+        return HttpResponseRedirect(reverse('questions:question_list_detail', args=(str(new_list.pk),)))
 
-def check_question(request):
-    if (request.method == 'POST'):
-        questionPk = request.POST.get('questionPK')
-        checked = request.POST.get('checked')
+class Question_ListEditView(LoginRequiredMixin, UpdateView):
+    model = Question_List
+    fields = ['question_list_header', 'private']
+    template_name = "questions/question_list_edit.html"
 
-        if not 'checked_questions' in request.session or not request.session['checked_questions']:
+    def form_valid(self, form):
+        new_list = form.save(commit=False)
+
+        if 'checked_edit_add_questions' in self.request.session and self.request.session['checked_edit_add_questions']:
+            checked_questions = self.request.session['checked_edit_add_questions']
+            questions = Question.objects.filter(pk__in=checked_questions)
+
+            for question in questions:
+                new_list.questions.add(question)
+            new_list.save()
+
+            self.request.session['checked_edit_add_questions'] = []
+
+        return HttpResponseRedirect(reverse('questions:question_list_detail', args=(str(new_list.pk),)))
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(Question_ListEditView, self).get_context_data(**kwargs)
+
+        # Faz tambem a verificacao para mostrar somente dados referentes a atualizacao
+        # da mesma lista e os dados que estao no request
+        if not 'checked_edit_add_questions' in self.request.session or not self.request.session['checked_edit_add_questions']:
             checked_questions = []
+            self.request.session['question_list_edit_id'] = None
+            self.request.session['checked_edit_add_questions'] = []
+            self.request.session['checked_edit_questions'] = []
+        elif self.request.session['question_list_edit_id'] == self.kwargs['pk']:
+            checked_questions = Question.objects.filter(pk__in=self.request.session['checked_edit_add_questions'])
+            context['checked_edit_add_questions'] = checked_questions
+
+        return context
+
+class Question_ListRemoveQuestionsView(LoginRequiredMixin, UpdateView):
+    model = Question_List
+    fields = []
+
+    def form_valid(self, form):
+        new_list = form.save(commit=False)
+
+        if 'checked_edit_questions' in self.request.session and self.request.session['checked_edit_questions']:
+            checked_questions = self.request.session['checked_edit_questions']
+            questions = new_list.questions.filter(pk__in=checked_questions)
+
+            for question in questions:
+                new_list.questions.remove(question)
+            new_list.save()
+
+            self.request.session['checked_edit_questions'] = []
+
+        return HttpResponseRedirect(reverse('questions:question_list_edit', args=(str(new_list.pk),)))
+
+class Question_ListEditListView(LoginRequiredMixin, ListView):
+    model = Question
+    template_name = "questions/question_list_edit_list.html"
+    context_object_name = "question_list"
+    paginate_by = 10
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(Question_ListEditListView, self).get_context_data(**kwargs)
+
+        # Verifica se a session esta armazenando dados de edicao da lista de
+        # questoes que esta sendo atualizada no momento, evitando dados mortos
+        # na session
+        if not self.request.session['question_list_edit_id'] or self.request.session['question_list_edit_id'] != self.kwargs['pk']:
+            self.request.session['checked_edit_add_questions'] = []
+        self.request.session['question_list_edit_id'] = self.kwargs['pk']
+
+        list_exclude_questions = Question_List.objects.get(id=self.kwargs['pk']).questions.all()
+
+        context['question_list'] = Question.objects.exclude(pk__in=list_exclude_questions)
+        # Armazena para fazer a verificaçao acima
+        context['pk_slug'] = self.kwargs['pk']
+
+        return context
+
+class Question_ListListView(LoginRequiredMixin, ListView):
+    model = Question_List
+    template_name = "questions/question_list_list.html"
+    context_object_name = "question_list_list"
+    success_url = "/questions"
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(Question_ListListView, self).get_context_data(**kwargs)
+
+        context['question_list_list'] = Question_List.objects.filter(Q(private=False) | Q(owner=self.request.user.id))
+        return context
+
+class Question_ListOwnListView(LoginRequiredMixin, ListView):
+    model = Question_List
+    template_name = "questions/question_list_own_list.html"
+    context_object_name = "question_list_list"
+    success_url = "/questions"
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(Question_ListOwnListView, self).get_context_data(**kwargs)
+
+        context['question_list_list'] = Question_List.objects.filter(owner=self.request.user.id)
+        return context
+
+class Question_ListCloneView(LoginRequiredMixin, CreateView):
+    model = Question_List
+    fields = ['question_list_header', 'private']
+    template_name = "questions/question_list_clone.html"
+    context_object_name = "question_list"
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(Question_ListCloneView, self).get_context_data(**kwargs)
+
+        context['cloned_from_list'] = Question_List.objects.get(id=self.kwargs['pk'])
+        return context
+
+
+    def form_valid(self, form):
+        cloned_from_list = self.get_context_data()['cloned_from_list']
+        new_list = form.save(commit=False)
+        new_list.owner = self.request.user
+
+        if not cloned_from_list or not cloned_from_list.questions.all:
+            questions = []
         else:
-            checked_questions = request.session['checked_questions']
+            questions = cloned_from_list.questions.all()
+        new_list.cloned_from = cloned_from_list
+        new_list.save()
 
-        if checked == 'true':
-            checked_questions.append(int(questionPk))
-        else:
-            checked_questions = [item for item in checked_questions if item != int(questionPk)]
+        for question in questions:
+            new_list.questions.add(question)
+        new_list.save()
 
-        request.session['checked_questions'] = checked_questions
-
-        return HttpResponse(
-            json.dumps({"status" : "success"}),
-            content_type="application/json"
-        )
-    else:
-        return HttpResponse(
-            json.dumps({"nothing to see": "this isn't happening"}),
-            content_type="application/json",
-            status = 400
-        )
-
-def clear_questions(request):
-    if (request.method == 'GET'):
-
-        request.session['checked_questions'] = []
-
-        return HttpResponse(
-            json.dumps({"status" : "success"}),
-            content_type="application/json"
-        )
-    else:
-        return HttpResponse(
-            json.dumps({"nothing to see": "this isn't happening"}),
-            content_type="application/json",
-            status = 400
-        )
-
+        self.request.session['cloned_from_list'] = None
+        return HttpResponseRedirect(reverse('questions:question_list_detail', args=(str(new_list.pk),)))
 
 def list_generator(request):
     if (request.method == 'GET'):
         if not 'generate_list_questions' in request.session or not request.session['generate_list_questions']:
-            return HttpResponse(status = 404)
+            raise Http404("Cant generate a null list.")
         list_questions = Question.objects.filter(pk__in=request.session['generate_list_questions'])
         if not list_questions:
-            return HttpResponse(status = 404)
+            raise Http404("Cant generate an empty list doccument.")
 
         document = Document()
         docx_title="Test_List.docx"
@@ -156,7 +252,6 @@ def list_generator(request):
             content_type="application/json"
         )
     questionsId = request.POST.getlist('questionsId[]')
-    print(questionsId)
 
     if questionsId == None or len(questionsId) == 0:
         return HttpResponse(
@@ -170,32 +265,100 @@ def list_generator(request):
     )
 
 
+def check_question(request):
+    if (request.method == 'POST'):
+        questionPk = request.POST.get('questionPK')
+        checked = request.POST.get('checked')
 
-class Question_ListListView(LoginRequiredMixin, ListView):
-    model = Question_List
-    template_name = "questions/question_list_list.html"
-    context_object_name = "question_list_list"
-    success_url = "/questions"
+        if not 'checked_questions' in request.session or not request.session['checked_questions']:
+            checked_questions = []
+        else:
+            checked_questions = request.session['checked_questions']
 
-    def get_context_data(self, *args, **kwargs):
-        context = super(Question_ListListView, self).get_context_data(**kwargs)
+        if checked == 'true':
+            checked_questions.append(int(questionPk))
+        else:
+            checked_questions = [item for item in checked_questions if item != int(questionPk)]
 
-        context['question_list_list'] = Question_List.objects.filter(Q(private=False) | Q(owner=self.request.user.id))
-        return context
+        request.session['checked_questions'] = checked_questions
 
-class Question_ListOwnListView(LoginRequiredMixin, ListView):
-    model = Question_List
-    template_name = "questions/question_list_own_list.html"
-    context_object_name = "question_list_list"
-    success_url = "/questions"
+        return HttpResponse(
+            json.dumps({"status" : "success"}),
+            content_type="application/json"
+        )
+    raise Http404("Method GET not allowed in check_question!")
 
-    def get_context_data(self, *args, **kwargs):
-        context = super(Question_ListOwnListView, self).get_context_data(**kwargs)
+def clear_questions(request):
+    if (request.method == 'POST'):
 
-        context['question_list_list'] = Question_List.objects.filter(owner=self.request.user.id)
-        return context
+        request.session['checked_questions'] = []
+
+        return HttpResponse(
+            json.dumps({"status" : "success"}),
+            content_type="application/json"
+        )
+    raise Http404("Method GET not allowed in check_question!")
+
+
+def check_question_edit_list(request):
+    if (request.method == 'POST'):
+        questionPk = request.POST.get('questionPK')
+        checked = request.POST.get('checked')
+
+        if not 'checked_edit_questions' in request.session or not request.session['checked_edit_questions']:
+            checked_questions = []
+        else:
+            checked_questions = request.session['checked_edit_questions']
+
+        if checked == 'true':
+            checked_questions.append(int(questionPk))
+        else:
+            checked_questions = [item for item in checked_questions if item != int(questionPk)]
+
+        request.session['checked_edit_questions'] = checked_questions
+
+        return HttpResponse(
+            json.dumps({"status" : "success"}),
+            content_type="application/json"
+        )
+    raise Http404("Method GET not allowed in check_question!")
+
+
+def check_question_edit_add_list(request):
+    if (request.method == 'POST'):
+        questionPk = request.POST.get('questionPK')
+        checked = request.POST.get('checked')
+
+        if not 'checked_edit_add_questions' in request.session or not request.session['checked_edit_add_questions']:
+            checked_questions = []
+        else:
+            checked_questions = request.session['checked_edit_add_questions']
+
+        if checked == 'true':
+            checked_questions.append(int(questionPk))
+        else:
+            checked_questions = [item for item in checked_questions if item != int(questionPk)]
+
+        request.session['checked_edit_add_questions'] = checked_questions
+
+        return HttpResponse(
+            json.dumps({"status" : "success"}),
+            content_type="application/json"
+        )
+    raise Http404("Method GET not allowed in check_question!")
+
+def clear_questions_edit_add_list(request):
+    if (request.method == 'POST'):
+
+        request.session['checked_edit_add_questions'] = []
+
+        return HttpResponse(
+            json.dumps({"status" : "success"}),
+            content_type="application/json"
+        )
+    raise Http404("Method GET not allowed in check_question!")
 
 class QuestionCreate(CreateView):
     model = Question
     fields = ['question_header','question_text','resolution','level','author','tags']
-    
+
