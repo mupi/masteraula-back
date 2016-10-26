@@ -19,7 +19,7 @@
 
             {% for result in page.object_list %}
                 <p>
-                    <a href="{{ result.object.get_absolute_url }}">{{ result.object.question_header }}</a>
+                    <a href="{% url 'questions:question_detail' result.object.id %}">{{ result.object.question_header }}</a>
                 </p>
             {% empty %}
                 <p>No results found.</p>
