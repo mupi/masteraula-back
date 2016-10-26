@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^generate_list$',views.list_generator, name='list_generator'),
     url(r'^check_question/$',views.check_question, name='check_question'),
     url(r'^clear_questions/$',views.clear_questions, name='clear_questions'),
+    url(r'^create_question/$',views.QuestionCreate.as_view(success_url='/questions/create_question'), name='question_form'),
 
     url(r'^question_list/create$',views.Question_ListCreateView.as_view(), name='question_list_create'),
     url(r'^question_lists/$',views.Question_ListListView.as_view(), name='question_list_list'),

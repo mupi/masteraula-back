@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.views.generic import DetailView, ListView, RedirectView, UpdateView, TemplateView, CreateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -386,3 +388,8 @@ def clear_questions_edit_add_list(request):
             content_type="application/json"
         )
     raise Http404("Method GET not allowed in check_question!")
+
+class QuestionCreate(CreateView):
+    model = Question
+    fields = ['question_header','question_text','resolution','level','author','tags']
+
