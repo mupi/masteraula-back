@@ -35,6 +35,13 @@ class Question_ListDetailView(LoginRequiredMixin, DetailView):
     template_name = "questions/question_list_detail.html"
     context_object_name = "question_list"
 
+    # Verifica se a lista eh privada e se for, somente mostrar para seu dono
+    def dispatch(self, request, *args, **kwargs):
+        question_list = self.get_object()
+        if question_list.private and question_list.owner != self.request.user:
+            return redirect(reverse('questions:question_list_list'))
+        return super(Question_ListDetailView, self).dispatch(request, *args, **kwargs)
+
 class Question_ListDeleteView(LoginRequiredMixin, DeleteView):
     model = Question_List
     context_object_name = "question_list"
