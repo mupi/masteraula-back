@@ -52,31 +52,39 @@ class Question_ListCreateView(LoginRequiredMixin, CreateView):
     fields = ['question_list_header', 'private']
     template_name = "questions/question_list_create.html"
 
+    # Necessario para passar informacoes para o front-end disponibilizar quais
+    # exercicios foram selecionados, mosrtando no check-box
     def get_context_data(self, *args, **kwargs):
         context = super(Question_ListCreateView, self).get_context_data(**kwargs)
+        # Atualiza com base no valor salvo na sessao (ou um novo, caso nao tenha)
         if not 'checked_questions' in self.request.session or not self.request.session['checked_questions']:
             checked_questions = []
         else:
             checked_questions = self.request.session['checked_questions']
 
+        # Torna-o acessivel diretamente no template
         context['checked_questions'] = Question.objects.filter(pk__in=checked_questions)
         return context
 
     def form_valid(self, form):
         new_list = form.save(commit=False)
         new_list.owner = self.request.user
+        # Salva a primeira vez para se ter um PK e assim poder fazer a relacao
+        # many-to-many das questoes da lista
+        new_list.save()
 
         if not 'checked_questions' in self.request.session or not self.request.session['checked_questions']:
             checked_questions = []
         else:
             checked_questions = self.request.session['checked_questions']
-        new_list.save()
 
+        # Faz as relacoes many-to-many
         questions = Question.objects.filter(pk__in=checked_questions)
         for question in questions:
             new_list.questions.add(question)
         new_list.save()
 
+        # Apaga o valor da session para evitar a dados na criacao de outra lista
         self.request.session['checked_questions'] = []
         return HttpResponseRedirect(reverse('questions:question_list_detail', args=(str(new_list.pk),)))
 
@@ -92,6 +100,7 @@ class Question_ListEditView(LoginRequiredMixin, UpdateView):
             return redirect(reverse('questions:question_list_detail', args=(self.kwargs['pk'],)))
         return super(Question_ListEditView, self).dispatch(request, *args, **kwargs)
 
+    # Somente adiciona as novas questoes, para remover eh o Question_ListRemoveQuestionsView
     def form_valid(self, form):
         new_list = form.save(commit=False)
 
@@ -99,10 +108,13 @@ class Question_ListEditView(LoginRequiredMixin, UpdateView):
             checked_questions = self.request.session['checked_edit_add_questions']
             questions = Question.objects.filter(pk__in=checked_questions)
 
+            # Relacoes many-to-many das novas questoes a serem adicionadas
             for question in questions:
                 new_list.questions.add(question)
             new_list.save()
 
+            # Apaga o valor para mostrar dados consistentes no front-end e evitar
+            # a propagacao dos dados dessa lista na edicao de outras
             self.request.session['checked_edit_add_questions'] = []
 
         return HttpResponseRedirect(reverse('questions:question_list_detail', args=(str(new_list.pk),)))
@@ -110,13 +122,13 @@ class Question_ListEditView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, *args, **kwargs):
         context = super(Question_ListEditView, self).get_context_data(**kwargs)
 
-        # Faz tambem a verificacao para mostrar somente dados referentes a atualizacao
+        # Verifica para mostrar somente dados referentes a atualizacao
         # da mesma lista e os dados que estao no request
         if not 'checked_edit_add_questions' in self.request.session or not self.request.session['checked_edit_add_questions']:
-            checked_questions = []
-            self.request.session['question_list_edit_id'] = None
-            self.request.session['checked_edit_add_questions'] = []
-            self.request.session['checked_edit_questions'] = []
+            # Zera todas as variaveis de controle para a insercao de novas questoes
+            self.request.session['question_list_edit_id'] = None        # ID da lista
+            self.request.session['checked_edit_add_questions'] = []     # Questoes a serem adicionadas
+            self.request.session['checked_edit_questions'] = []         # Questoes ja adicionadas selecionadas (para exclusao)
         elif self.request.session['question_list_edit_id'] == self.kwargs['pk']:
             checked_questions = Question.objects.filter(pk__in=self.request.session['checked_edit_add_questions'])
             context['checked_edit_add_questions'] = checked_questions
@@ -134,9 +146,11 @@ class Question_ListRemoveQuestionsView(LoginRequiredMixin, UpdateView):
             return redirect(reverse('questions:question_list_detail', args=(self.kwargs['pk'],)))
         return super(Question_ListRemoveQuestionsView, self).dispatch(request, *args, **kwargs)
 
+    # Somente remove as questoes, para adicionar eh o Question_ListEditView
     def form_valid(self, form):
         new_list = form.save(commit=False)
 
+        # Remove questao a questao das questoes ja adicionadas selecionadas
         if 'checked_edit_questions' in self.request.session and self.request.session['checked_edit_questions']:
             checked_questions = self.request.session['checked_edit_questions']
             questions = new_list.questions.filter(pk__in=checked_questions)
@@ -145,6 +159,8 @@ class Question_ListRemoveQuestionsView(LoginRequiredMixin, UpdateView):
                 new_list.questions.remove(question)
             new_list.save()
 
+            # Apaga o valor para mostrar dados consistentes no front-end e evitar
+            # a propagacao dos dados dessa lista na edicao de outras
             self.request.session['checked_edit_questions'] = []
 
         return HttpResponseRedirect(reverse('questions:question_list_edit', args=(str(new_list.pk),)))
@@ -216,18 +232,22 @@ class Question_ListCloneView(LoginRequiredMixin, CreateView):
         context['cloned_from_list'] = Question_List.objects.get(id=self.kwargs['pk'])
         return context
 
-
+    # Clona a lista, copiando as questoes mas alterando o dono e a origem da copia
     def form_valid(self, form):
+        # Dados da lista original
         cloned_from_list = self.get_context_data()['cloned_from_list']
+        # Dados da nova lista (nome e privado)
         new_list = form.save(commit=False)
         new_list.owner = self.request.user
+        new_list.cloned_from = cloned_from_list
+        # Faz o primeiro save para se poder fazer as relacoes many-to-many
+        new_list.save()
 
+        #Adiciona a relacao many-to-many uma a uma
         if not cloned_from_list or not cloned_from_list.questions.all:
             questions = []
         else:
             questions = cloned_from_list.questions.all()
-        new_list.cloned_from = cloned_from_list
-        new_list.save()
 
         for question in questions:
             new_list.questions.add(question)
@@ -236,6 +256,8 @@ class Question_ListCloneView(LoginRequiredMixin, CreateView):
         self.request.session['cloned_from_list'] = None
         return HttpResponseRedirect(reverse('questions:question_list_detail', args=(str(new_list.pk),)))
 
+
+# Gera um arquivo .docx contendo a lista de exercicios selecionadas
 def list_generator(request):
     if (request.method == 'GET'):
         if not 'generate_list_questions' in request.session or not request.session['generate_list_questions']:
@@ -296,16 +318,20 @@ def list_generator(request):
     )
 
 
+# Trata quando um usuario seleciona o checkbox para fazer uma nova lista nas
+# listas de questoes, armazenando tal informacao na sessao
 def check_question(request):
     if (request.method == 'POST'):
         questionPk = request.POST.get('questionPK')
         checked = request.POST.get('checked')
 
+        # Pega a lista ja salva na sessao ou cria uma caso nao tenha sido ainda
         if not 'checked_questions' in request.session or not request.session['checked_questions']:
             checked_questions = []
         else:
             checked_questions = request.session['checked_questions']
 
+        # Adiciona se foi selecionada o checkbox ou remove caso tenha sido deselecionado
         if checked == 'true':
             checked_questions.append(int(questionPk))
         else:
@@ -319,6 +345,7 @@ def check_question(request):
         )
     raise Http404("Method GET not allowed in check_question!")
 
+# Limpa todas as questoes que foram selecionadas usando o metodo acima
 def clear_questions(request):
     if (request.method == 'POST'):
 
@@ -330,17 +357,20 @@ def clear_questions(request):
         )
     raise Http404("Method GET not allowed in check_question!")
 
-
+# Trata quando um usuario seleciona o checkbox para editar questoes ja pertencentes as
+# listas de questoes, armazenando tal informacao na sessao
 def check_question_edit_list(request):
     if (request.method == 'POST'):
         questionPk = request.POST.get('questionPK')
         checked = request.POST.get('checked')
 
+        # Pega a lista ja salva na sessao ou cria uma caso nao tenha sido ainda
         if not 'checked_edit_questions' in request.session or not request.session['checked_edit_questions']:
             checked_questions = []
         else:
             checked_questions = request.session['checked_edit_questions']
 
+        # Adiciona se foi selecionada o checkbox ou remove caso tenha sido deselecionado
         if checked == 'true':
             checked_questions.append(int(questionPk))
         else:
@@ -354,17 +384,20 @@ def check_question_edit_list(request):
         )
     raise Http404("Method GET not allowed in check_question!")
 
-
+# Trata quando um usuario seleciona o checkbox para adicionar questoes as
+# listas de questoes, armazenando tal informacao na sessao
 def check_question_edit_add_list(request):
     if (request.method == 'POST'):
         questionPk = request.POST.get('questionPK')
         checked = request.POST.get('checked')
 
+        # Pega a lista ja salva na sessao ou cria uma caso nao tenha sido ainda
         if not 'checked_edit_add_questions' in request.session or not request.session['checked_edit_add_questions']:
             checked_questions = []
         else:
             checked_questions = request.session['checked_edit_add_questions']
 
+        # Adiciona se foi selecionada o checkbox ou remove caso tenha sido deselecionado
         if checked == 'true':
             checked_questions.append(int(questionPk))
         else:
@@ -378,6 +411,7 @@ def check_question_edit_add_list(request):
         )
     raise Http404("Method GET not allowed in check_question!")
 
+# Limpa todas as questoes que foram selecionadas usando o metodo acima
 def clear_questions_edit_add_list(request):
     if (request.method == 'POST'):
 
@@ -392,4 +426,3 @@ def clear_questions_edit_add_list(request):
 class QuestionCreate(CreateView):
     model = Question
     fields = ['question_header','question_text','resolution','level','author','tags']
-
