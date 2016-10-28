@@ -20,6 +20,7 @@
                         <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
                     </a>
                     <font>{{ question.question_text }}</font>
+                    <input type="hidden" name="questionId" value="{{question.id}}" />
                     <br>
                     {% for tag in question.tags.all %}
                         <span class="tag tag-primary">{{ tag.name }}</span>
@@ -31,7 +32,7 @@
         <a href="{% url 'questions:list' %}" class="btn btn-primary">Selecionar Exercicios</a>
 
         {% if checked_questions|length > 0 %}
-            <a href="{% url 'questions:list_generator' %}" class="btn btn-primary button-clear-remove">Gerar Lista</a>
+            <a href="#" class="btn btn-primary" onclick="generateList()">Gerar Lista</a>
             <input type="submit" class="btn btn-success button-clear-remove" value="Salva Lista" />
             <a href="#" onClick="clearQuestions();" class="btn btn-danger button-clear-remove">Remover todas as questoes</a>
         {% endif %}
@@ -51,6 +52,27 @@
                 }
             });
         }
+    };
+
+    function generateList() {
+        var questionsId = [];
+        $("input[name='questionId']").each(function() {
+            questionsId.push(parseInt($(this).val()));
+        });
+
+        console.log(questionsId);
+        console.log(questionsId.length);
+        $.ajax({
+            url : "{% url 'questions:list_generator' %}",
+            type : "POST",
+            data : { 'questionsId[]' : questionsId, csrfmiddlewaretoken: '{{csrf_token}}'},
+            success:function(data) {
+                if (data.status == "ready")
+                {
+                    window.location.href = "{% url 'questions:list_generator' %}";
+                }
+            }
+        });
     };
     </script>
 

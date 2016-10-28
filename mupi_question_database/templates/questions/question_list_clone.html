@@ -17,6 +17,7 @@
                         <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
                     </a>
                     <font>{{ question.question_text }}</font>
+                    <input type="hidden" name="questionId" value="{{question.id}}" />
                     <br>
                     {% for tag in question.tags.all %}
                         <span class="tag tag-primary">{{ tag.name }}</span>
@@ -26,7 +27,7 @@
         </div>
         <br>
         {% if cloned_from_list.questions.all|length > 0 %}
-            <a href=" {% url 'questions:list_generator'%}" class="btn btn-primary">Gerar Lista</a>
+            <a href="#" class="btn btn-primary" onclick="generateList()">Gerar Lista</a>
             <input type="submit" class="btn btn-success" value="Salva Lista" />
             <a href=" {% url 'questions:question_list_list'%}" class="btn btn-danger" onclick="return confirm('Deseja mesmo cancelar?')">Cancelar</a>
         {% endif %}
