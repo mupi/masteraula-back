@@ -4,7 +4,9 @@
 {% block title %}Create Question{{ object.question_header }}{% endblock %}
 
 {% block content %}
-<form action="" method="post">{% csrf_token %}
+<form action="" method="post">
+    {% csrf_token %}
+    {{ form.media }}
     {{ form.as_p }}
     <input type="submit" value="Save" />
 </form>

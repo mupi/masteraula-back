@@ -2,6 +2,7 @@ import datetime
 from django.db import models
 from mupi_question_database.users.models import User
 from taggit.managers import TaggableManager
+from ckeditor_uploader.fields import RichTextUploadingField
 
 class Question(models.Model):
     LEVEL_CHOICES = (
@@ -11,7 +12,7 @@ class Question(models.Model):
     )
 
     question_header = models.CharField(max_length=50)
-    question_text = models.CharField(max_length=1000)
+    question_text = RichTextUploadingField(config_name='awesome_ckeditor')
     resolution = models.CharField(max_length=500, null=True, blank=True)
     level = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)
     author = models.ForeignKey(User, on_delete=models.DO_NOTHING)

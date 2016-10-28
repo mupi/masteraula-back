@@ -19,15 +19,16 @@
             <span class="tag tag-primary">{{ tag.name }}</span>
         {% endfor %}
         <p>
-            <b>{{ question.question_header }}</b> {{ question.question_text }}
+            <b>{{ question.question_header }}</b>
+            {{ question.question_text|safe }}
         </p>
 
         <ol type="a">
         {% for answer in question.answers.all %}
             {% if answer.is_correct %}
-                <b><li> {{answer.answer_text}} </li></b>
+                <b><li> {{ answer.answer_text }} </li></b>
             {% else %}
-                <li> {{answer.answer_text}} </li>
+                <li> {{ answer.answer_text }} </li>
             {% endif %}
         {% endfor %}
         </ol>

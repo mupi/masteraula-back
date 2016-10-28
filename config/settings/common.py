@@ -43,6 +43,8 @@ THIRD_PARTY_APPS = (
     'taggit',
     'haystack',
     'rest_framework',
+    'ckeditor',
+    'ckeditor_uploader',
 )
 
 # Apps specific for this project go here.
@@ -265,4 +267,21 @@ HAYSTACK_CONNECTIONS = {
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10
+}
+
+CKEDITOR_UPLOAD_PATH = 'uploads/'
+CKEDITOR_JQUERY_URL = '//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js'
+CKEDITOR_ALLOW_NONIMAGE_FILES = False
+
+CKEDITOR_CONFIGS = {
+    'awesome_ckeditor': {
+        'language': 'pt-br',
+        'toolbar': 'Custom',
+        'toolbar_Custom': [
+            ['Bold', 'Italic', 'Underline'],
+            ['NumberedList', 'BulletedList'],
+            ['Image', 'Table'],
+            ['RemoveFormat', 'Source'],
+        ]
+    }
 }
