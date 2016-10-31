@@ -264,67 +264,6 @@ class Question_ListCloneView(LoginRequiredMixin, CreateView):
         return HttpResponseRedirect(reverse('questions:question_list_detail', args=(str(new_list.pk),)))
 
 
-# Gera um arquivo .docx contendo a lista de exercicios selecionadas
-def list_generator(request):
-    if (request.method == 'GET'):
-        if not 'generate_list_questions' in request.session or not request.session['generate_list_questions']:
-            raise Http404("Cant generate a null list.")
-        list_questions = Question.objects.filter(pk__in=request.session['generate_list_questions'])
-        if not list_questions:
-            raise Http404("Cant generate an empty list doccument.")
-
-        document = Document()
-        docx_title="Test_List.docx"
-        document.add_paragraph(
-            "Lista gerada em {:s} as {:s}.".format(
-                datetime.date.today().strftime('%d/%m/%Y'),
-                datetime.datetime.today().strftime('%X')
-            )
-        )
-
-        questionCounter = 1
-        for question in list_questions:
-            document.add_heading('Question ' + str(questionCounter), level=2)
-            p = document.add_paragraph('(')
-            p.add_run(question.question_header).bold = True
-            p.add_run(')'+question.question_text)
-            itemChar = 'a'
-            for answer in question.answers.all():
-                document.add_paragraph(itemChar + ') ' + answer.answer_text)
-                itemChar = chr(ord(itemChar) + 1)
-            questionCounter = questionCounter + 1
-            p = document.add_paragraph()
-
-        document.add_page_break()
-
-        document.save(docx_title)
-        data = open(docx_title, "rb").read()
-
-        response = HttpResponse(
-            data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        )
-        response['Content-Disposition'] = 'attachment; filename=' + docx_title
-        return response
-
-    if (request.method != 'POST'):
-        return HttpResponse(
-            json.dumps({"status" : "error"}),
-            content_type="application/json"
-        )
-    questionsId = request.POST.getlist('questionsId[]')
-
-    if questionsId == None or len(questionsId) == 0:
-        return HttpResponse(
-            json.dumps({"status" : "error"}),
-            content_type="application/json"
-        )
-    request.session['generate_list_questions'] = questionsId
-    return HttpResponse(
-        json.dumps({'status' : 'ready'}),
-        content_type="application/json"
-    )
-
-
 # Trata quando um usuario seleciona o checkbox para fazer uma nova lista nas
 # listas de questoes, armazenando tal informacao na sessao
 def check_question(request):
@@ -433,3 +372,152 @@ def clear_questions_edit_add_list(request):
 class QuestionCreate(CreateView):
     model = Question
     fields = ['question_header','question_text','resolution','level','author','tags']
+
+from html.parser import HTMLParser
+import re
+
+class MyHTMLParser(HTMLParser):
+
+    def __init__(self, document):
+        HTMLParser.__init__(self)
+
+        self.document = document
+        self.underline = False
+        self.bold = False
+        self.italic = False
+
+    def handle_starttag(self, tag, attrs):
+        # Adiciona imagem
+        if tag == 'img':
+            # Variaveis das imagens
+            height = None
+            width = None
+            src = None
+            # sai a procura das variaveis das imagens
+            for attr in attrs:
+                if attr[0] == 'src':
+                    src = 'mupi_question_database' + attr[1]
+                elif attr[0] == 'style':
+                    values = dict(item.split(":") for item in attr[1].split(";"))
+                    for value in values:
+                        if value.replace(' ', '') == 'width':
+                            width = re.sub('\D', '', values[value])
+                        elif value.replace(' ', '') == 'height':
+                            height = re.sub('\D', '', values[value])
+            # Coloca a imagem de acordo com sua respectiva dimensao definida
+            if width:
+                self.document.add_picture(src, width=Inches(int(width)/72))
+            else:
+                self.document.add_picture(src, width=Inches(0.5))
+
+        elif tag == 'p':
+            self.paragraph = self.document.add_paragraph()
+
+        # Habilita variaveis que alteram os estilo do texto (sublinhado, negrito e italico)
+        elif tag == 'u':
+            self.underline = True
+        elif tag == 'em':
+            self.italic = True
+        elif tag == 'strong':
+            self.bold = True
+
+    def handle_endtag(self, tag):
+        # Desabilita variaveis que alteram os estilo do texto (sublinhado, negrito e italico)
+        if tag == 'u':
+            self.underline = False
+        elif tag == 'em':
+            self.italic = False
+        elif tag == 'strong':
+            self.bold = False
+
+    def handle_data(self, data):
+        # Escreve no arqivo o dado lido do enunciado da pergunta
+        font = self.paragraph.add_run(data).font
+        font.italic     = self.italic
+        font.underline  = self.underline
+        font.bold       = self.bold
+
+    def init_parser(self, paragraph):
+        # Reseta todas as variaveis responsaveis pela escrita do enunciado
+        self.paragraph = paragraph
+        self.underline = False
+        self.bold = False
+        self.italic = False
+
+
+# Gera um arquivo .docx contendo a lista de exercicios selecionadas
+def list_generator(request):
+    # Metodo GET gera a lista preparada pelo POST e realiza seu download
+    if (request.method == 'GET'):
+        if not 'generate_list_questions' in request.session or not request.session['generate_list_questions']:
+            raise Http404("Cant generate a null list.")
+        list_questions = Question.objects.filter(pk__in=request.session['generate_list_questions'])
+        if not list_questions:
+            raise Http404("Cant generate an empty list doccument.")
+
+        questionCounter = 1
+
+        document = Document()
+        parser = MyHTMLParser(document)
+        docx_title="Test_List.docx"
+
+        document.add_paragraph(
+            "Lista gerada em {:s} as {:s}.".format(
+                datetime.date.today().strftime('%d/%m/%Y'),
+                datetime.datetime.today().strftime('%X')
+            )
+        )
+
+        for question in list_questions:
+            # Titulo de cada questao
+            document.add_heading('Questao ' + str(questionCounter), level=2)
+            p = document.add_paragraph('(')
+            p.add_run(question.question_header).bold = True
+            p.add_run(') ')
+            # Passa o paragrafo do titulo da questao para conter o enunciado do lado do Titulo
+            # Exemplo (Enem 2015) Enunciado:
+            parser.init_parser(p)
+
+            # o WysWyg adiciona varios \r, o parser nao trata esse caso especial entao remove-se todas suas ocorrencias
+            parser.feed(question.question_text.replace('\r\n', ''))
+
+            # Respotas enumeradas de a a quantidade de respostas
+            itemChar = 'a'
+            for answer in question.answers.all():
+                document.add_paragraph(itemChar + ') ' + answer.answer_text)
+                itemChar = chr(ord(itemChar) + 1)
+
+            questionCounter = questionCounter + 1
+
+        document.add_page_break()
+        document.save(docx_title)
+        data = open(docx_title, "rb").read()
+
+        # Zera variavel para evitar multiplos acessos a ele
+        request.session['generate_list_questions'] = None
+
+        response = HttpResponse(
+            data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+        return response
+
+    # Metodo so responde para GET e POST
+    if (request.method != 'POST'):
+        return HttpResponse(
+            json.dumps({"status" : "error"}),
+            content_type="application/json"
+        )
+
+    # Prepara a lista para o metodo GET
+    questionsId = request.POST.getlist('questionsId[]')
+
+    if questionsId == None or len(questionsId) == 0:
+        return HttpResponse(
+            json.dumps({"status" : "error"}),
+            content_type="application/json"
+        )
+    request.session['generate_list_questions'] = questionsId
+    return HttpResponse(
+        json.dumps({'status' : 'ready'}),
+        content_type="application/json"
+    )
