@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import reverse
 
+from html.parser import HTMLParser
 
 from docx import *
 from docx.shared import Inches
@@ -14,6 +15,7 @@ from docx.shared import Inches
 import json
 import datetime
 import io
+import re
 
 from .models import Question, Question_List
 
@@ -373,10 +375,7 @@ class QuestionCreate(CreateView):
     model = Question
     fields = ['question_header','question_text','resolution','level','author','tags']
 
-from html.parser import HTMLParser
-import re
-
-class MyHTMLParser(HTMLParser):
+class Question_HeaderParser(HTMLParser):
 
     def __init__(self, document):
         HTMLParser.__init__(self)
@@ -404,14 +403,14 @@ class MyHTMLParser(HTMLParser):
                             width = re.sub('\D', '', values[value])
                         elif value.replace(' ', '') == 'height':
                             height = re.sub('\D', '', values[value])
-            # Coloca a imagem de acordo com sua respectiva dimensao definida
+            # Coloca a imagem de acordo com sua respectiva dimensao definida (supondo DPI = 180)
             if width:
-                self.document.add_picture(src, width=Inches(int(width)/72))
+                self.document.add_picture(src, width=Inches(int(width)/180))
             else:
-                self.document.add_picture(src, width=Inches(0.5))
+                self.document.add_picture(src)
 
-        elif tag == 'p':
-            self.paragraph = self.document.add_paragraph()
+        # elif tag == 'p':
+        #     self.paragraph = self.document.add_paragraph()
 
         # Habilita variaveis que alteram os estilo do texto (sublinhado, negrito e italico)
         elif tag == 'u':
@@ -429,6 +428,8 @@ class MyHTMLParser(HTMLParser):
             self.italic = False
         elif tag == 'strong':
             self.bold = False
+        elif tag == 'p':
+            self.paragraph = self.document.add_paragraph()
 
     def handle_data(self, data):
         # Escreve no arqivo o dado lido do enunciado da pergunta
@@ -440,6 +441,13 @@ class MyHTMLParser(HTMLParser):
     def init_parser(self, paragraph):
         # Reseta todas as variaveis responsaveis pela escrita do enunciado
         self.paragraph = paragraph
+        self.underline = False
+        self.bold = False
+        self.italic = False
+
+    def init_parser_new(self):
+        # Reseta todas as variaveis responsaveis pela escrita do enunciado
+        self.paragraph = self.document.add_paragraph()
         self.underline = False
         self.bold = False
         self.italic = False
@@ -458,7 +466,7 @@ def list_generator(request):
         questionCounter = 1
 
         document = Document()
-        parser = MyHTMLParser(document)
+        parser = Question_HeaderParser(document)
         docx_title="Test_List.docx"
 
         document.add_paragraph(
@@ -484,7 +492,9 @@ def list_generator(request):
             # Respotas enumeradas de a a quantidade de respostas
             itemChar = 'a'
             for answer in question.answers.all():
-                document.add_paragraph(itemChar + ') ' + answer.answer_text)
+                parser.init_parser_new()
+                to_parse = itemChar + ') ' + answer.answer_text
+                parser.feed(to_parse.replace('\r\n', ''))
                 itemChar = chr(ord(itemChar) + 1)
 
             questionCounter = questionCounter + 1

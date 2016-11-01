@@ -13,7 +13,7 @@ class Question(models.Model):
 
     question_header = models.CharField(max_length=50)
     question_text = RichTextUploadingField(config_name='awesome_ckeditor')
-    resolution = models.CharField(max_length=500, null=True, blank=True)
+    resolution = RichTextUploadingField(config_name='awesome_ckeditor', null=True, blank=True)
     level = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)
     author = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     create_date = models.DateTimeField(auto_now_add=True)
@@ -29,7 +29,7 @@ class Question(models.Model):
 
 class Answer(models.Model):
     question = models.ForeignKey('Question', related_name='answers', on_delete=models.CASCADE)
-    answer_text = models.CharField(max_length=100)
+    answer_text = RichTextUploadingField(config_name='awesome_ckeditor')
     is_correct = models.BooleanField()
 
     class Meta:
