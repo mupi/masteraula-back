@@ -23,7 +23,6 @@
                                 <input type="checkbox" id="chkquestion{{question.pk}}" onchange="checkEditQuestion({{question.pk}})" />
                             {% endif %}
                             <span>{{ question.question_text }}</span>
-                            <input type="hidden" name="questionId" value="{{question.id}}" />
                             <br>
                             {% for tag in question.tags.all %}
                                 <span class="tag tag-primary">{{ tag.name }}</span>

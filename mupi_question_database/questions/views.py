@@ -465,9 +465,13 @@ def list_generator(request):
 
         questionCounter = 1
 
+        # Faz o novo documento
         document = Document()
         parser = Question_HeaderParser(document)
         docx_title="Test_List.docx"
+
+        # Cabecalho da lista gerada
+        document.add_heading(request.session['generate_list_header'])
 
         document.add_paragraph(
             "Lista gerada em {:s} as {:s}.".format(
@@ -505,6 +509,7 @@ def list_generator(request):
 
         # Zera variavel para evitar multiplos acessos a ele
         request.session['generate_list_questions'] = None
+        request.session['generate_list_header'] = None
 
         response = HttpResponse(
             data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -519,6 +524,7 @@ def list_generator(request):
         )
 
     # Prepara a lista para o metodo GET
+    list_header = request.POST.getlist('listHeader')
     questionsId = request.POST.getlist('questionsId[]')
 
     if questionsId == None or len(questionsId) == 0:
@@ -527,6 +533,8 @@ def list_generator(request):
             content_type="application/json"
         )
     request.session['generate_list_questions'] = questionsId
+    request.session['generate_list_header'] = list_header
+
     return HttpResponse(
         json.dumps({'status' : 'ready'}),
         content_type="application/json"

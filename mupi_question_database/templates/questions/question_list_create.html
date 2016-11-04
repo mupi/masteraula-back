@@ -13,6 +13,7 @@
     <form method="POST" action="">
         {% csrf_token %}
         {{ form.as_p }}
+        <input type="hidden" name="listHeader" value="Sem nome" />
         <div class="list-group" id="list-questions">
             {% for question in checked_questions %}
                 <div class="list-group-item">
@@ -65,7 +66,7 @@
         $.ajax({
             url : "{% url 'questions:list_generator' %}",
             type : "POST",
-            data : { 'questionsId[]' : questionsId, csrfmiddlewaretoken: '{{csrf_token}}'},
+            data : { 'questionsId[]' : questionsId, 'listHeader' : 'List sem nome',  csrfmiddlewaretoken: '{{csrf_token}}'},
             success:function(data) {
                 if (data.status == "ready")
                 {

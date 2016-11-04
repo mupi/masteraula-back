@@ -8,6 +8,7 @@
     <div class="row">
         <div class="col-sm-12">
             <h1>{{ question_list.question_list_header }}</h1>
+            <input type="hidden" name="listHeader" id="listHeader" value="{{ question_list.question_list_header }}" />
             <h4> Criado por {{ question_list.owner.username }} em {{question_list.create_date|date:"d/m/Y"}}</h4>
             {% if question_list.cloned_from %}
                 <h4> Clonado de <a href="{% url 'questions:question_list_detail' question_list.cloned_from.pk %}">Lista</a></h4>
@@ -47,12 +48,14 @@ function generateList() {
         questionsId.push(parseInt($(this).val()));
     });
 
+    var listHeader = $('#listHeader').val();
+
     console.log(questionsId);
     console.log(questionsId.length);
     $.ajax({
         url : "{% url 'questions:list_generator' %}",
         type : "POST",
-        data : { 'questionsId[]' : questionsId, csrfmiddlewaretoken: '{{csrf_token}}'},
+        data : { 'questionsId[]' : questionsId, 'listHeader' : listHeader, csrfmiddlewaretoken: '{{csrf_token}}'},
         success:function(data) {
             if (data.status == "ready")
             {
