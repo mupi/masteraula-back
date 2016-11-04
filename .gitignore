@@ -61,5 +61,11 @@ node_modules/
 # User-uploaded media
 mupi_question_database/media/
 
+# migrations of database
 migrations
+
+# generated list
 *.docx
+
+# index of Haystack
+whoosh_index

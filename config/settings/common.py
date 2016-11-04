@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 from __future__ import absolute_import, unicode_literals
 
 import environ
-
+import os
 
 ROOT_DIR = environ.Path(__file__) - 3  # (mupi_question_database/config/settings/common.py - 3 = mupi_question_database/)
 APPS_DIR = ROOT_DIR.path('mupi_question_database')
@@ -260,7 +260,8 @@ ADMIN_URL = r'^admin/'
 # ------------------------------------------------------------------------------
 HAYSTACK_CONNECTIONS = {
     'default': {
-        'ENGINE': 'haystack.backends.simple_backend.SimpleEngine',
+        'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+        'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
     },
 }
 
