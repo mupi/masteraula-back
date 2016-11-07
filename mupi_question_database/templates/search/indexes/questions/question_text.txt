@@ -1,5 +1,9 @@
 {{ object.question_header }}
-{{ object.question_text }}
-{{ object.user.get_full_name }}
+{{ object.author }}
+{{ object.question_text|striptags }}
+
+{% if object.level == 'E' %} Facil
+{% elif object.level == 'M' %} Medio
+{% elif object.level == 'H' %} Dificil{% endif %}
+
 {% for tag in object.tags.all %} {{ tag.name }} {% endfor %}
-{{ object.resolution}}
