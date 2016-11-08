@@ -19,9 +19,9 @@ class Question(models.Model):
     create_date = models.DateTimeField(auto_now_add=True)
 
     tags = TaggableManager()
-
-    class Meta:
-        ordering = ['pk']
+    # 
+    # class Meta:
+    #     ordering = ['pk']
 
     def __str__(self):
         return u'QuestionId%d (%s) %s' % (self.pk, self.question_header ,self.question_text)
@@ -43,7 +43,7 @@ class Answer(models.Model):
 class Question_List(models.Model):
     question_list_header = models.CharField('Nome da Lista', max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    questions = models.ManyToManyField(Question)
+    questions = models.ManyToManyField(Question, through='QuestionQuestion_List')
     create_date = models.DateTimeField(auto_now_add=True)
     private = models.BooleanField('Lista privada')
     cloned_from = models.ForeignKey('self', null=True, blank=True, related_name='subarticles',
@@ -54,3 +54,12 @@ class Question_List(models.Model):
 
     def __str__(self):
         return u'ListId: %d Header: %s' % (self.pk, self.question_list_header)
+
+
+class QuestionQuestion_List(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    question_list = models.ForeignKey(Question_List, on_delete=models.CASCADE)
+    order = models.PositiveIntegerField(null=False, blank=True)
+
+    class Meta:
+        ordering = ['order']

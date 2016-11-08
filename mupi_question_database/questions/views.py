@@ -17,7 +17,7 @@ import datetime
 import io
 import re
 
-from .models import Question, Question_List
+from .models import Question, Question_List, QuestionQuestion_List
 
 class QuestionDetailView(LoginRequiredMixin, DetailView):
     model = Question
@@ -26,6 +26,7 @@ class QuestionDetailView(LoginRequiredMixin, DetailView):
 
 class QuestionListView(LoginRequiredMixin, ListView):
     model = Question
+    queryset = Question.objects.order_by('pk')
     template_name = "questions/question_list.html"
     context_object_name = "question_list"
     paginate_by = 10
@@ -71,8 +72,11 @@ class Question_ListCreateView(LoginRequiredMixin, CreateView):
         else:
             checked_questions = self.request.session['checked_questions']
 
-        # Torna-o acessivel diretamente no template
-        context['checked_questions'] = Question.objects.filter(pk__in=checked_questions)
+        # Torna-o acessivel diretamente no template e feito dessa forma para
+        # garantir a ordem de selecao
+        context['checked_questions'] = [Question.objects.get(pk=question_id)
+                                        for question_id in checked_questions ]
+
         return context
 
     def form_valid(self, form):
@@ -87,11 +91,16 @@ class Question_ListCreateView(LoginRequiredMixin, CreateView):
         else:
             checked_questions = self.request.session['checked_questions']
 
-        # Faz as relacoes many-to-many
-        questions = Question.objects.filter(pk__in=checked_questions)
+        # Faz as relacoes many-to-many respeitando a ordem
+        questions = [Question.objects.get(pk=question_id)
+                    for question_id in checked_questions ]
+        order = 1
+
         for question in questions:
-            new_list.questions.add(question)
-        new_list.save()
+            relation = QuestionQuestion_List(question=question,
+                                            question_list=new_list, order=order)
+            order = order + 1
+            relation.save()
 
         # Apaga o valor da session para evitar a dados na criacao de outra lista
         self.request.session['checked_questions'] = []
@@ -115,11 +124,16 @@ class Question_ListEditView(LoginRequiredMixin, UpdateView):
 
         if 'checked_edit_add_questions' in self.request.session and self.request.session['checked_edit_add_questions']:
             checked_questions = self.request.session['checked_edit_add_questions']
-            questions = Question.objects.filter(pk__in=checked_questions)
+            questions = [Question.objects.get(pk=question_id)
+                            for question_id in checked_questions ]
 
             # Relacoes many-to-many das novas questoes a serem adicionadas
+            order = len(new_list.questions.all()) + 1
             for question in questions:
-                new_list.questions.add(question)
+                relation = QuestionQuestion_List(question=question,
+                                                question_list=new_list, order=order)
+                order = order + 1
+                relation.save()
             new_list.save()
 
             # Apaga o valor para mostrar dados consistentes no front-end e evitar
@@ -139,7 +153,7 @@ class Question_ListEditView(LoginRequiredMixin, UpdateView):
             self.request.session['checked_edit_add_questions'] = []     # Questoes a serem adicionadas
             self.request.session['checked_edit_questions'] = []         # Questoes ja adicionadas selecionadas (para exclusao)
         elif self.request.session['question_list_edit_id'] == self.kwargs['pk']:
-            checked_questions = Question.objects.filter(pk__in=self.request.session['checked_edit_add_questions'])
+            checked_questions = [Question.objects.get(pk=question_id) for question_id in self.request.session['checked_edit_add_questions']]
             context['checked_edit_add_questions'] = checked_questions
 
         return context
@@ -157,22 +171,22 @@ class Question_ListRemoveQuestionsView(LoginRequiredMixin, UpdateView):
 
     # Somente remove as questoes, para adicionar eh o Question_ListEditView
     def form_valid(self, form):
-        new_list = form.save(commit=False)
+        edited_list = form.save(commit=False)
 
         # Remove questao a questao das questoes ja adicionadas selecionadas
         if 'checked_edit_questions' in self.request.session and self.request.session['checked_edit_questions']:
             checked_questions = self.request.session['checked_edit_questions']
-            questions = new_list.questions.filter(pk__in=checked_questions)
+            questions = edited_list.questions.filter(pk__in=checked_questions)
 
             for question in questions:
-                new_list.questions.remove(question)
-            new_list.save()
+                QuestionQuestion_List.objects.get(question=question, question_list = edited_list).delete()
+            edited_list.save()
 
             # Apaga o valor para mostrar dados consistentes no front-end e evitar
             # a propagacao dos dados dessa lista na edicao de outras
             self.request.session['checked_edit_questions'] = []
 
-        return HttpResponseRedirect(reverse('questions:question_list_edit', args=(str(new_list.pk),)))
+        return HttpResponseRedirect(reverse('questions:question_list_edit', args=(str(edited_list.pk),)))
 
 class Question_ListEditListView(LoginRequiredMixin, ListView):
     model = Question
@@ -459,7 +473,8 @@ def list_generator(request):
     if (request.method == 'GET'):
         if not 'generate_list_questions' in request.session or not request.session['generate_list_questions']:
             raise Http404("Cant generate a null list.")
-        list_questions = Question.objects.filter(pk__in=request.session['generate_list_questions'])
+        list_questions = [Question.objects.get(pk=question_id)
+                            for question_id in request.session['generate_list_questions'] ]
         if not list_questions:
             raise Http404("Cant generate an empty list doccument.")
 

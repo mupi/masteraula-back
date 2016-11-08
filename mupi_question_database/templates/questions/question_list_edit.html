@@ -40,7 +40,6 @@
                                 <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
                             </a>
                             <span>{{ question.question_text }}</span>
-                            <input type="hidden" name="questionId" value="{{question.id}}" />
                             <br>
                             {% for tag in question.tags.all %}
                                 <span class="tag tag-primary">{{ tag.name }}</span>
@@ -73,6 +72,10 @@
             type : "POST",
             data : { csrfmiddlewaretoken: '{{csrf_token}}'}, // data sent with the post request
             success:function(data) {
+                $('input:checkbox').each(function() {
+                    if ($(this).attr('id').startsWith("chkquestion"))
+                        $(this).prop("checked", false);
+                });
                 location.reload();
             }
         });
