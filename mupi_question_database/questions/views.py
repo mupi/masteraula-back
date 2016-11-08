@@ -11,6 +11,7 @@ from html.parser import HTMLParser
 
 from docx import *
 from docx.shared import Inches
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 import json
 import datetime
@@ -398,6 +399,9 @@ class Question_HeaderParser(HTMLParser):
         self.underline = False
         self.bold = False
         self.italic = False
+        self.paragraph = None
+        self.run = None
+        self.respostas = False
 
     def handle_starttag(self, tag, attrs):
         # Adiciona imagem
@@ -419,9 +423,9 @@ class Question_HeaderParser(HTMLParser):
                             height = re.sub('\D', '', values[value])
             # Coloca a imagem de acordo com sua respectiva dimensao definida (supondo DPI = 180)
             if width:
-                self.document.add_picture(src, width=Inches(int(width)/180))
+                self.run.add_picture(src, width=Inches(int(width)/180))
             else:
-                self.document.add_picture(src)
+                self.run.add_run().add_picture(src)
 
         # elif tag == 'p':
         #     self.paragraph = self.document.add_paragraph()
@@ -442,12 +446,15 @@ class Question_HeaderParser(HTMLParser):
             self.italic = False
         elif tag == 'strong':
             self.bold = False
-        elif tag == 'p':
+        elif tag == 'p' and not self.respostas:
             self.paragraph = self.document.add_paragraph()
+            self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            self.run = self.paragraph.add_run()
 
     def handle_data(self, data):
         # Escreve no arqivo o dado lido do enunciado da pergunta
-        font = self.paragraph.add_run(data).font
+        self.run.add_text(data)
+        font = self.run.font
         font.italic     = self.italic
         font.underline  = self.underline
         font.bold       = self.bold
@@ -455,6 +462,8 @@ class Question_HeaderParser(HTMLParser):
     def init_parser(self, paragraph):
         # Reseta todas as variaveis responsaveis pela escrita do enunciado
         self.paragraph = paragraph
+        self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        self.run = self.paragraph.add_run()
         self.underline = False
         self.bold = False
         self.italic = False
@@ -462,9 +471,14 @@ class Question_HeaderParser(HTMLParser):
     def init_parser_new(self):
         # Reseta todas as variaveis responsaveis pela escrita do enunciado
         self.paragraph = self.document.add_paragraph()
+        self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        self.run = self.paragraph.add_run()
         self.underline = False
         self.bold = False
         self.italic = False
+
+    def set_respostas(self):
+        self.respostas = True
 
 
 # Gera um arquivo .docx contendo a lista de exercicios selecionadas
@@ -510,6 +524,7 @@ def list_generator(request):
 
             # Respotas enumeradas de a a quantidade de respostas
             itemChar = 'a'
+            parser.set_respostas()
             for answer in question.answers.all():
                 parser.init_parser_new()
                 to_parse = itemChar + ') ' + answer.answer_text
