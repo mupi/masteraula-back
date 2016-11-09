@@ -388,20 +388,42 @@ def clear_questions_edit_add_list(request):
 
 class QuestionCreate(CreateView):
     model = Question
-    fields = ['question_header','question_text','resolution','level','author','tags']
+    fields = [
+        'question_header',
+        'question_text',
+        'resolution',
+        'level',
+        'author',
+        'tags',
+    ]
 
 class Question_HeaderParser(HTMLParser):
+    ''' Classe responsavel por realizer o parser para geracao de listas de
+    questoes  '''
+    # Estilo do texto (sublinhado, negrito e italico)
+    underline = False
+    bold = False
+    italic = False
+
+    # Controle do paragrafo
+    paragraph = None
+    run = None
+
+    # Flags
+    respostas = False   # resposta em uma unica linha
+    is_table   = False     # texto dentro da tabela
+    line_columns = True
+
+    # Variaveis de controle de tabelas
+    table = None
+    cell_paragraph = None
+    cell_run = None
+    row_index = -1
+    column_index = -1
 
     def __init__(self, document):
         HTMLParser.__init__(self)
-
         self.document = document
-        self.underline = False
-        self.bold = False
-        self.italic = False
-        self.paragraph = None
-        self.run = None
-        self.respostas = False
 
     def handle_starttag(self, tag, attrs):
         # Adiciona imagem
@@ -427,9 +449,6 @@ class Question_HeaderParser(HTMLParser):
             else:
                 self.run.add_run().add_picture(src)
 
-        # elif tag == 'p':
-        #     self.paragraph = self.document.add_paragraph()
-
         # Habilita variaveis que alteram os estilo do texto (sublinhado, negrito e italico)
         elif tag == 'u':
             self.underline = True
@@ -437,6 +456,34 @@ class Question_HeaderParser(HTMLParser):
             self.italic = True
         elif tag == 'strong':
             self.bold = True
+
+        # Textos de tabelas
+        elif tag == 'p' and self.is_table:
+            self.cell_paragraph = self.table.cell(
+                        self.row_index, self.column_index).add_paragraph()
+            self.cell_run = self.cell_paragraph.add_run()
+
+        # Textos normais, nota que textos de respostas ocupam somente uma linha,
+        # mesmo que contenham varias tags <p>
+        elif tag == 'p' and not self.respostas:
+            self.paragraph = self.document.add_paragraph()
+            self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            self.run = self.paragraph.add_run()
+
+        # Controle de tabelas
+        elif tag == 'table':
+            self.is_table = True
+            self.table = self.document.add_table(rows=0, cols=0)
+            self.table.style = 'TableGrid'
+        elif tag == 'tr':
+            self.table.add_row()
+            self.row_index = self.row_index + 1
+            self.column_index = -1
+        elif tag == 'td':
+            # Controle de adicao de tabelas, atualmente nao possui table merge
+            if self.line_columns:
+                self.table.add_column(1000)     # possivel bug do python-docx
+            self.column_index = self.column_index + 1
 
     def handle_endtag(self, tag):
         # Desabilita variaveis que alteram os estilo do texto (sublinhado, negrito e italico)
@@ -446,18 +493,53 @@ class Question_HeaderParser(HTMLParser):
             self.italic = False
         elif tag == 'strong':
             self.bold = False
-        elif tag == 'p' and not self.respostas:
-            self.paragraph = self.document.add_paragraph()
-            self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-            self.run = self.paragraph.add_run()
+
+        # Desabilita os textos
+        elif tag == 'p' and self.is_table:
+            self.cell_run = None
+
+        elif tag == 'p':
+            self.run = None
+
+        # Desabilita as tabelas
+        elif tag == 'table':
+            self.is_table = False
+        elif tag == 'tr':
+            self.line_columns = False
+        # Desabilita as tabelas
+        elif tag == 'td':
+            self.cell_run = None
+            # Exclui paragrafos vazios na celula atual, workaround encontrado
+            # para melhorar o visual da lista gerada
+            cell = self.table.cell(self.row_index, self.column_index)
+            for para in cell.paragraphs:
+                if para.text == "":
+                    self.delete_paragraph(para)
 
     def handle_data(self, data):
-        # Escreve no arqivo o dado lido do enunciado da pergunta
-        self.run.add_text(data)
-        font = self.run.font
-        font.italic     = self.italic
-        font.underline  = self.underline
-        font.bold       = self.bold
+        # Escreve o texto na tabela, verifica se o dado contem alguma coisa
+        # importante, (existem linhas com tabulacoes que nao devem ser postas)
+        if self.is_table and re.sub(r"\W", "", data) != "":
+            # Texto normal sem tag
+            if self.cell_run is None:
+                self.cell_paragraph = self.table.cell(self.row_index,
+                                self.column_index).add_paragraph()
+                self.cell_paragraph.add_run(data)
+            # Texto com tags
+            else:
+                self.cell_run.add_text(data)
+                font = self.cell_run.font
+                font.italic     = self.italic
+                font.underline  = self.underline
+                font.bold       = self.bold
+
+        # Escreve o texto normalmente
+        elif self.run is not None:
+            self.run.add_text(data)
+            font = self.run.font
+            font.italic     = self.italic
+            font.underline  = self.underline
+            font.bold       = self.bold
 
     def init_parser(self, paragraph):
         # Reseta todas as variaveis responsaveis pela escrita do enunciado
@@ -477,8 +559,24 @@ class Question_HeaderParser(HTMLParser):
         self.bold = False
         self.italic = False
 
+    def end_parser(self):
+        '''Finaliza o parser excluindo todos os paragrafos que eventualmente
+        ficaram em branco'''
+        for para in self.document.paragraphs:
+            if para.text == "":
+                self.delete_paragraph(para)
+
     def set_respostas(self):
+        '''Seta a flag para tratamento de respostas, que devem contem uma linha
+        apenas '''
         self.respostas = True
+
+    def delete_paragraph(self, paragraph):
+        '''Funcao auxiliar que deleta determinado paragrafo passado como
+        parametro a funcao'''
+        p = paragraph._element
+        p.getparent().remove(p)
+        p._p = p._element = None
 
 
 # Gera um arquivo .docx contendo a lista de exercicios selecionadas
@@ -520,7 +618,7 @@ def list_generator(request):
             parser.init_parser(p)
 
             # o WysWyg adiciona varios \r, o parser nao trata esse caso especial entao remove-se todas suas ocorrencias
-            parser.feed(question.question_text.replace('\r\n', ''))
+            parser.feed(question.question_text.replace('\r\n\t', ''))
 
             # Respotas enumeradas de a a quantidade de respostas
             itemChar = 'a'
@@ -528,12 +626,14 @@ def list_generator(request):
             for answer in question.answers.all():
                 parser.init_parser_new()
                 to_parse = itemChar + ') ' + answer.answer_text
-                parser.feed(to_parse.replace('\r\n', ''))
+                parser.feed(to_parse.replace('\r\n\t', ''))
                 itemChar = chr(ord(itemChar) + 1)
 
             questionCounter = questionCounter + 1
 
         document.add_page_break()
+        parser.end_parser()
+
         document.save(docx_title)
         data = open(docx_title, "rb").read()
 
