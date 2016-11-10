@@ -1,0 +1,54 @@
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+<h1>{% trans "Sign Up" %}</h1>
+
+<p>Already have an account? Then please <a href="{% url 'account_login' %}">sign in</a>.</p>
+
+<form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
+  {% csrf_token %}
+
+  <div class="form-group">
+      <label class="col-sm-5 col-xs-12 control-label">{% trans "Username" %}</label>
+      <div class="col-sm-7 col-xs-12">
+          <input name="username" type="text" class="form-control" placeholder="{% trans 'Choose an username' %}">
+      </div>
+  </div>
+
+  <div class="form-group">
+      <label class="col-sm-5 col-xs-12 control-label">{% trans 'E-mail' %}</label>
+      <div class="col-sm-7 col-xs-12">
+          <input name="email" type="email" class="form-control" placeholder="{% trans 'Insert your e-mail' %}">
+      </div>
+  </div>
+
+  <div class="form-group">
+      <label class="col-sm-5 col-xs-12 control-label">{% trans 'Password' %}</label>
+      <div class="col-sm-7 col-xs-12">
+          <p><input name="password1" type="password" class="form-control" placeholder="{% trans 'A really strong password' %}"></p>
+          <input name="password2" type="password" class="form-control" placeholder="{% trans 'Confirm your password' %}">
+      </div>
+  </div>
+
+  {% if terms_required %}
+  <div class="form-group">
+      <label class="col-sm-offset-5 col-sm-7 col-xs-12">
+          <span class="checkbox-wrapper"><input name="accept_terms" id="accept_terms" type="checkbox"></span>
+          {% url 'flatpage' url='/terms' as terms_url %}
+          <label for="accept_terms" class="terms">{% blocktrans %}I agree to the <a href="{{ terms_url }}" target="_blank">Terms of Use</a>{% endblocktrans %}</label>
+      </label>
+  </div>
+  {% endif %}
+
+  <div class="submit textright clearfix">
+      <div class="col-xs-12">
+          <button class="btn btn-success">{% trans 'Sign Up' %}</button>
+      </div>
+  </div>
+  <div class="divider"></div>
+
+  {% if redirect_field_value %}
+  <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+  {% endif %}
+
+</form>

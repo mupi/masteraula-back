@@ -1,0 +1,43 @@
+.tagline {
+  background: url("../images/banner.jpg") top left / auto 100% no-repeat fixed;
+  background-size: 100%;
+  color: #fff;
+  padding: 6% 0;
+}
+.question_counter{
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 1.5em;
+  .total_questions{
+    font-size: 2em;
+  }
+}
+.benefits{
+  .thumb{
+    width: 150px;
+    height: 150px;
+    overflow: hidden;
+    text-align: center;
+    margin: 30px auto;
+    img{
+      max-width: 100%;
+    }
+  }
+}
+footer{
+  font-size: 0.8em;
+  padding-top: 1em;
+  background-color: $orange;
+  color: #fff;
+}
+footer p{
+  margin-top: 5px;
+  margin-bottom: 1rem;
+}
+.pwdby{
+  text-align: right;
+  a{
+    color: #fff;
+    font-weight: bold;
+  }
+}

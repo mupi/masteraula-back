@@ -1,1 +1,76 @@
 {% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+<header class="tagline">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <h1>Encontre, compre e venda planos de aula.</h1>
+          <p>
+            LessonHub é uma rede de educadores para educadores onde você pode encontrar materiais
+            gratuitos ou a um preço acessível para utilizar em suas aulas.
+          </p>
+          <div class="question_counter">
+            <span class="total_questions">
+              {{ question_list|length }}
+            </span>
+            <p>
+              Questões cadastradas
+            </p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          {% if user.is_authenticated %}
+            {% include "search/_search_form.html" %}
+          {% else %}
+            {% include "account/_signup_form.html" %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+</header>
+<section class="container benefits">
+    <div class="row">
+        <div class="col-sm-4" id="sobre">
+            <div class="thumb">
+              <img class="img-circle img-responsive" src="{% static 'images/money.png'%}" class="img-responsive">
+            </div>
+            <h3 class="text-center">
+              Venda suas questões
+            </h3>
+            <p>
+              Ganhe uma renda extra vendendo os materiais que você já criou para
+              outros educadores da comunidade.
+            </p>
+        </div>
+        <div class="col-sm-4">
+            <div class="thumb">
+              <img class="img-circle img-responsive" src="{% static 'images/clock.png'%}" class="img-responsive">
+            </div>
+            <h3 class="text-center">Ganhe tempo ao preparar avaliações</h3>
+            <p>
+              Otimize seu tempo de preparar aulas encontrando materiais curados
+              por educadores de todo o Brasil.
+            </p>
+        </div>
+        <div class="col-sm-4">
+            <div class="thumb">
+              <img class="img-circle img-responsive" src="{% static 'images/search.png'%}" class="img-responsive">
+            </div>
+            <h3 class="text-center">Encontre materiais online</h3>
+            <p>
+                Busque por disciplina, assunto ou tipo de material para você adaptar e utilizar com seus alunos.
+            </p>
+        </div>
+    </div>
+</section>
+<footer class="section contato-section">
+  <div class="container">
+      <div class="row">
+          <p class="pwdby">Feito com ♥ pela <a href="http://escolamupi.com.br" target="_blank" class="mupi-link">Mupi</a></p>
+      </div>
+  </div>
+</footer>
+{% endblock content %}

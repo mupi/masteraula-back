@@ -25,14 +25,12 @@ class QuestionDetailView(LoginRequiredMixin, DetailView):
     template_name = "questions/question_detail.html"
     context_object_name = "question"
 
-class QuestionListView(LoginRequiredMixin, ListView):
+class QuestionListView(ListView):
     model = Question
     queryset = Question.objects.order_by('pk')
     template_name = "questions/question_list.html"
     context_object_name = "question_list"
     paginate_by = 10
-
-
 
 class Question_ListDetailView(LoginRequiredMixin, DetailView):
     model = Question_List
