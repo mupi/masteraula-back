@@ -6,7 +6,7 @@
 <div class="container">
     <h1>
         <span>Questões</span>
-        <a href="{% url 'questions:question_form'%}" class="float-xs-right btn btn-success">Nova Questao</a>
+        <a href="{% url 'questions:question_form'%}" class="float-xs-right btn btn-success">Nova Questão</a>
     </h1>
     <form method="POST">
         <div class="list-group">
@@ -20,7 +20,7 @@
                     {% else %}
                         <input type="checkbox" id="chkquestion{{question.pk}}" onchange="checkQuestion({{question.pk}})" />
                     {% endif %}
-                    <span>{{ question.question_text }}</span>
+                    <span>{{ question.question_text|safe }}</span>
                     <br>
                     {% if question.level == 'E' %}
                         <span class="tag tag-success">Facil</span>

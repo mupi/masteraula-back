@@ -34,7 +34,7 @@
         </ol>
         {% if question.resolution is not None and question.resolution != ""%}
             <p>
-                <b>Resposta esperada do autor</b>: {{ question.resolution }}
+                <b>Resposta esperada do autor</b>: {{ question.resolution|safe }}
             </p>
         {% endif %}
         </div>
