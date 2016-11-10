@@ -7,6 +7,7 @@ urlpatterns = [
     url(r'^$', views.QuestionListView.as_view(), name='list'),
     url(r'^(?P<pk>[\d]+)/$',views.QuestionDetailView.as_view(), name='question_detail'),
     url(r'^generate_list$',views.list_generator, name='list_generator'),
+    url(r'^generate_answer_list$',views.answer_list_generator, name='answer_list_generator'),
     url(r'^check_question/$',views.check_question, name='check_question'),
     url(r'^clear_questions/$',views.clear_questions, name='clear_questions'),
     url(r'^create_question/$',views.QuestionCreate.as_view(success_url='/questions/create_question'), name='question_form'),

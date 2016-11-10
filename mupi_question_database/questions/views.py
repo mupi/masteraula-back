@@ -7,18 +7,12 @@ from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import reverse
 
-from html.parser import HTMLParser
-
-from docx import *
-from docx.shared import Inches
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-
 import json
-import datetime
 import io
 import re
 
 from .models import Question, Question_List, QuestionQuestion_List
+from .docx_parsers import Question_Parser, Answer_Parser
 
 class QuestionDetailView(LoginRequiredMixin, DetailView):
     model = Question
@@ -395,188 +389,6 @@ class QuestionCreate(CreateView):
         'tags',
     ]
 
-class Question_HeaderParser(HTMLParser):
-    ''' Classe responsavel por realizer o parser para geracao de listas de
-    questoes  '''
-    # Estilo do texto (sublinhado, negrito e italico)
-    underline = False
-    bold = False
-    italic = False
-
-    # Controle do paragrafo
-    paragraph = None
-    run = None
-
-    # Flags
-    respostas = False   # resposta em uma unica linha
-    is_table   = False     # texto dentro da tabela
-    line_columns = True
-
-    # Variaveis de controle de tabelas
-    table = None
-    cell_paragraph = None
-    cell_run = None
-    row_index = -1
-    column_index = -1
-
-    def __init__(self, document):
-        HTMLParser.__init__(self)
-        self.document = document
-
-    def handle_starttag(self, tag, attrs):
-        # Adiciona imagem
-        if tag == 'img':
-            # Variaveis das imagens
-            height = None
-            width = None
-            src = None
-            # sai a procura das variaveis das imagens
-            for attr in attrs:
-                if attr[0] == 'src':
-                    src = 'mupi_question_database' + attr[1]
-                elif attr[0] == 'style':
-                    values = dict(item.split(":") for item in attr[1].split(";"))
-                    for value in values:
-                        if value.replace(' ', '') == 'width':
-                            width = re.sub('\D', '', values[value])
-                        elif value.replace(' ', '') == 'height':
-                            height = re.sub('\D', '', values[value])
-            # Coloca a imagem de acordo com sua respectiva dimensao definida (supondo DPI = 180)
-            if width:
-                self.run.add_picture(src, width=Inches(int(width)/180))
-            else:
-                self.run.add_run().add_picture(src)
-
-        # Habilita variaveis que alteram os estilo do texto (sublinhado, negrito e italico)
-        elif tag == 'u':
-            self.underline = True
-        elif tag == 'em':
-            self.italic = True
-        elif tag == 'strong':
-            self.bold = True
-
-        # Textos de tabelas
-        elif tag == 'p' and self.is_table:
-            self.cell_paragraph = self.table.cell(
-                        self.row_index, self.column_index).add_paragraph()
-            self.cell_run = self.cell_paragraph.add_run()
-
-        # Textos normais, nota que textos de respostas ocupam somente uma linha,
-        # mesmo que contenham varias tags <p>
-        elif tag == 'p' and not self.respostas:
-            self.paragraph = self.document.add_paragraph()
-            self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-            self.run = self.paragraph.add_run()
-
-        # Controle de tabelas
-        elif tag == 'table':
-            self.is_table = True
-            self.table = self.document.add_table(rows=0, cols=0)
-            self.table.style = 'TableGrid'
-        elif tag == 'tr':
-            self.table.add_row()
-            self.row_index = self.row_index + 1
-            self.column_index = -1
-        elif tag == 'td':
-            # Controle de adicao de tabelas, atualmente nao possui table merge
-            if self.line_columns:
-                self.table.add_column(1000)     # possivel bug do python-docx
-            self.column_index = self.column_index + 1
-
-    def handle_endtag(self, tag):
-        # Desabilita variaveis que alteram os estilo do texto (sublinhado, negrito e italico)
-        if tag == 'u':
-            self.underline = False
-        elif tag == 'em':
-            self.italic = False
-        elif tag == 'strong':
-            self.bold = False
-
-        # Desabilita os textos
-        elif tag == 'p' and self.is_table:
-            self.cell_run = None
-
-        elif tag == 'p':
-            self.run = None
-
-        # Desabilita as tabelas
-        elif tag == 'table':
-            self.is_table = False
-        elif tag == 'tr':
-            self.line_columns = False
-        # Desabilita as tabelas
-        elif tag == 'td':
-            self.cell_run = None
-            # Exclui paragrafos vazios na celula atual, workaround encontrado
-            # para melhorar o visual da lista gerada
-            cell = self.table.cell(self.row_index, self.column_index)
-            for para in cell.paragraphs:
-                if para.text == "":
-                    self.delete_paragraph(para)
-
-    def handle_data(self, data):
-        # Escreve o texto na tabela, verifica se o dado contem alguma coisa
-        # importante, (existem linhas com tabulacoes que nao devem ser postas)
-        if self.is_table and re.sub(r"\W", "", data) != "":
-            # Texto normal sem tag
-            if self.cell_run is None:
-                self.cell_paragraph = self.table.cell(self.row_index,
-                                self.column_index).add_paragraph()
-                self.cell_paragraph.add_run(data)
-            # Texto com tags
-            else:
-                self.cell_run.add_text(data)
-                font = self.cell_run.font
-                font.italic     = self.italic
-                font.underline  = self.underline
-                font.bold       = self.bold
-
-        # Escreve o texto normalmente
-        elif self.run is not None:
-            self.run.add_text(data)
-            font = self.run.font
-            font.italic     = self.italic
-            font.underline  = self.underline
-            font.bold       = self.bold
-
-    def init_parser(self, paragraph):
-        # Reseta todas as variaveis responsaveis pela escrita do enunciado
-        self.paragraph = paragraph
-        self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-        self.run = self.paragraph.add_run()
-        self.underline = False
-        self.bold = False
-        self.italic = False
-
-    def init_parser_new(self):
-        # Reseta todas as variaveis responsaveis pela escrita do enunciado
-        self.paragraph = self.document.add_paragraph()
-        self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-        self.run = self.paragraph.add_run()
-        self.underline = False
-        self.bold = False
-        self.italic = False
-
-    def end_parser(self):
-        '''Finaliza o parser excluindo todos os paragrafos que eventualmente
-        ficaram em branco'''
-        for para in self.document.paragraphs:
-            if para.text == "":
-                self.delete_paragraph(para)
-
-    def set_respostas(self):
-        '''Seta a flag para tratamento de respostas, que devem contem uma linha
-        apenas '''
-        self.respostas = True
-
-    def delete_paragraph(self, paragraph):
-        '''Funcao auxiliar que deleta determinado paragrafo passado como
-        parametro a funcao'''
-        p = paragraph._element
-        p.getparent().remove(p)
-        p._p = p._element = None
-
-
 # Gera um arquivo .docx contendo a lista de exercicios selecionadas
 def list_generator(request):
     # Metodo GET gera a lista preparada pelo POST e realiza seu download
@@ -588,51 +400,69 @@ def list_generator(request):
         if not list_questions:
             raise Http404("Cant generate an empty list doccument.")
 
-        questionCounter = 1
+        list_header = request.session['generate_list_header'][0]
+        docx_title = re.sub(r"\W", "_", list_header) + '.docx'
+        parser = Question_Parser(docx_title)
 
-        # Faz o novo documento
-        document = Document()
-        parser = Question_HeaderParser(document)
-        docx_title="Test_List.docx"
+        parser.parse_heading(list_header)
+        parser.parse_list_questions(list_questions)
 
-        # Cabecalho da lista gerada
-        document.add_heading(request.session['generate_list_header'])
+        parser.end_parser()
+        data = open(docx_title, "rb").read()
 
-        document.add_paragraph(
-            "Lista gerada em {:s} as {:s}.".format(
-                datetime.date.today().strftime('%d/%m/%Y'),
-                datetime.datetime.today().strftime('%X')
-            )
+        # Zera variavel para evitar multiplos acessos a ele
+        request.session['generate_list_questions'] = None
+        request.session['generate_list_header'] = None
+
+        response = HttpResponse(
+            data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+        return response
+
+    # Metodo so responde para GET e POST
+    if (request.method != 'POST'):
+        return HttpResponse(
+            json.dumps({"status" : "error"}),
+            content_type="application/json"
         )
 
-        for question in list_questions:
-            # Titulo de cada questao
-            document.add_heading('Questao ' + str(questionCounter), level=2)
-            p = document.add_paragraph('(')
-            p.add_run(question.question_header).bold = True
-            p.add_run(') ')
-            # Passa o paragrafo do titulo da questao para conter o enunciado do lado do Titulo
-            # Exemplo (Enem 2015) Enunciado:
-            parser.init_parser(p)
+    # Prepara a lista para o metodo GET
+    list_header = request.POST.getlist('listHeader')
+    questionsId = request.POST.getlist('questionsId[]')
 
-            # o WysWyg adiciona varios \r, o parser nao trata esse caso especial entao remove-se todas suas ocorrencias
-            parser.feed(question.question_text.replace('\r\n\t', ''))
+    if questionsId == None or len(questionsId) == 0:
+        return HttpResponse(
+            json.dumps({"status" : "error"}),
+            content_type="application/json"
+        )
+    request.session['generate_list_questions'] = questionsId
+    request.session['generate_list_header'] = list_header
 
-            # Respotas enumeradas de a a quantidade de respostas
-            itemChar = 'a'
-            parser.set_respostas()
-            for answer in question.answers.all():
-                parser.init_parser_new()
-                to_parse = itemChar + ') ' + answer.answer_text
-                parser.feed(to_parse.replace('\r\n\t', ''))
-                itemChar = chr(ord(itemChar) + 1)
+    return HttpResponse(
+        json.dumps({'status' : 'ready'}),
+        content_type="application/json"
+    )
 
-            questionCounter = questionCounter + 1
 
-        document.add_page_break()
+# Gera um arquivo .docx contendo a lista de exercicios selecionadas
+def answer_list_generator(request):
+    # Metodo GET gera a lista preparada pelo POST e realiza seu download
+    if (request.method == 'GET'):
+        if not 'generate_list_questions' in request.session or not request.session['generate_list_questions']:
+            raise Http404("Cant generate a null list.")
+        list_questions = [Question.objects.get(pk=question_id)
+                            for question_id in request.session['generate_list_questions'] ]
+        if not list_questions:
+            raise Http404("Cant generate an empty list doccument.")
+
+        list_header = request.session['generate_list_header'][0]
+        docx_title = re.sub(r"\W", "_", list_header) + '_answers.docx'
+        parser = Answer_Parser(docx_title)
+
+        parser.parse_heading(list_header)
+        parser.parse_answers_list_questions(list_questions)
+
         parser.end_parser()
-
-        document.save(docx_title)
         data = open(docx_title, "rb").read()
 
         # Zera variavel para evitar multiplos acessos a ele

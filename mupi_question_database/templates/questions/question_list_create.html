@@ -34,6 +34,7 @@
 
         {% if checked_questions|length > 0 %}
             <a href="#" class="btn btn-primary" onclick="generateList()">Gerar Lista</a>
+            <a href="#" class="btn btn-primary" onclick="generateAnswerList()">Gerar Gabarito</a>
             <input type="submit" class="btn btn-success button-clear-remove" value="Salva Lista" />
             <a href="#" onClick="clearQuestions();" class="btn btn-danger button-clear-remove">Remover todas as questoes</a>
         {% endif %}
@@ -71,6 +72,27 @@
                 if (data.status == "ready")
                 {
                     window.location.href = "{% url 'questions:list_generator' %}";
+                }
+            }
+        });
+    };
+
+    function generateAnswerList() {
+        var questionsId = [];
+        $("input[name='questionId']").each(function() {
+            questionsId.push(parseInt($(this).val()));
+        });
+
+        console.log(questionsId);
+        console.log(questionsId.length);
+        $.ajax({
+            url : "{% url 'questions:answer_list_generator' %}",
+            type : "POST",
+            data : { 'questionsId[]' : questionsId, 'listHeader' : 'List sem nome',  csrfmiddlewaretoken: '{{csrf_token}}'},
+            success:function(data) {
+                if (data.status == "ready")
+                {
+                    window.location.href = "{% url 'questions:answer_list_generator' %}";
                 }
             }
         });

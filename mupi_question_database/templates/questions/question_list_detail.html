@@ -30,6 +30,7 @@
             </div>
             <br>
             <a href="#" class="btn btn-primary" onclick="generateList()">Gerar Lista</a>
+            <a href="#" class="btn btn-primary" onclick="generateAnswerList()">Gerar Gabarito</a>
             {% if question_list.owner.id == request.user.id %}
                 <form method="POST" action="{% url 'questions:question_list_delete' question_list.pk %}" >{% csrf_token %}
                     <input type="submit" class="btn btn-danger" value="Apagar Lista" onclick="return confirm('Tem certeza disso?');"/>
@@ -60,6 +61,29 @@ function generateList() {
             if (data.status == "ready")
             {
                 window.location.href = "{% url 'questions:list_generator' %}";
+            }
+        }
+    });
+};
+
+function generateAnswerList() {
+    var questionsId = [];
+    $("input[name='questionId']").each(function() {
+        questionsId.push(parseInt($(this).val()));
+    });
+
+    var listHeader = $('#listHeader').val();
+
+    console.log(questionsId);
+    console.log(questionsId.length);
+    $.ajax({
+        url : "{% url 'questions:answer_list_generator' %}",
+        type : "POST",
+        data : { 'questionsId[]' : questionsId, 'listHeader' : listHeader, csrfmiddlewaretoken: '{{csrf_token}}'},
+        success:function(data) {
+            if (data.status == "ready")
+            {
+                window.location.href = "{% url 'questions:answer_list_generator' %}";
             }
         }
     });
