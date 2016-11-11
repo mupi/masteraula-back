@@ -61,9 +61,6 @@ node_modules/
 # User-uploaded media
 mupi_question_database/media/
 
-# migrations of database
-migrations
-
 # generated list
 *.docx
 
