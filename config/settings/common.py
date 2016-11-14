@@ -275,7 +275,7 @@ CKEDITOR_JQUERY_URL = '//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.j
 CKEDITOR_ALLOW_NONIMAGE_FILES = False
 
 CKEDITOR_CONFIGS = {
-    'awesome_ckeditor': {
+    'default': {
         'language': 'pt-br',
         'toolbar': 'Custom',
         'toolbar_Custom': [

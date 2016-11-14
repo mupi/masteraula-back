@@ -11,8 +11,9 @@ import json
 import io
 import re
 
-from .models import Question, Question_List, QuestionQuestion_List
+from .models import Question, Question_List, QuestionQuestion_List, Answer
 from .docx_parsers import Question_Parser, Answer_Parser
+from .forms import QuestionForm
 
 class QuestionDetailView(LoginRequiredMixin, DetailView):
     model = Question
@@ -380,14 +381,32 @@ def clear_questions_edit_add_list(request):
 
 class QuestionCreate(CreateView):
     model = Question
-    fields = [
-        'question_header',
-        'question_text',
-        'resolution',
-        'level',
-        'author',
-        'tags',
-    ]
+    form_class = QuestionForm
+
+    def form_valid(self, form):
+        new_question = form.save(commit=False)
+
+        answers = self.request.POST.getlist('answer_text')
+        correct_answer = self.request.POST.get('correct_answer')
+
+        new_question.author = self.request.user
+        new_question.save()
+
+        qty = 1
+        for answer_text in answers:
+            # Cria uma nova resposta
+            new_answer = Answer()
+            # Coloca o seu texto e tambem verifica se esta eh a correta
+            new_answer.answer_text = answer_text
+            new_answer.is_correct = (qty == correct_answer)
+            # Adiciona a questao para entao salva-la
+            new_answer.question = new_question
+            new_answer.save()
+            qty = qty + 1
+        new_question.save()
+
+        return HttpResponseRedirect(reverse('questions:question_detail', args=(str(new_question.pk),)))
+
 
 # Gera um arquivo .docx contendo a lista de exercicios selecionadas
 def list_generator(request):

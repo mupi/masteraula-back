@@ -6,20 +6,21 @@ from ckeditor_uploader.fields import RichTextUploadingField
 
 class Question(models.Model):
     LEVEL_CHOICES = (
-        ("E", "EASY"),
-        ("M", "MEDIUM"),
-        ("H", "HARD")
+        ('', 'Nenhuma opção'),
+        ('E', 'Fácil'),
+        ('M', 'Médio'),
+        ('H', 'Difícil')
     )
 
     question_header = models.CharField(max_length=50)
-    question_text = RichTextUploadingField(config_name='awesome_ckeditor')
-    resolution = RichTextUploadingField(config_name='awesome_ckeditor', null=True, blank=True)
+    question_text = RichTextUploadingField()
+    resolution = RichTextUploadingField(null=True, blank=True)
     level = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)
     author = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     create_date = models.DateTimeField(auto_now_add=True)
 
     tags = TaggableManager()
-    # 
+    #
     # class Meta:
     #     ordering = ['pk']
 
@@ -29,7 +30,7 @@ class Question(models.Model):
 
 class Answer(models.Model):
     question = models.ForeignKey('Question', related_name='answers', on_delete=models.CASCADE)
-    answer_text = RichTextUploadingField(config_name='awesome_ckeditor')
+    answer_text = RichTextUploadingField()
     is_correct = models.BooleanField()
 
     class Meta:
@@ -37,7 +38,7 @@ class Answer(models.Model):
 
     def __str__(self):
         return u'QuestionId: %d AnswerId: %d Correct: %s' % (
-        self.question.pk, self.pk, ("Yes" if self.is_correct else "No"))
+        self.question.pk, self.pk, ('Yes' if self.is_correct else 'No'))
 
 
 class Question_List(models.Model):
