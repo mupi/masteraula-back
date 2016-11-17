@@ -7,13 +7,16 @@ from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import reverse
 
+from haystack.generic_views import SearchView
+from haystack.query import SearchQuerySet
+
 import json
 import io
 import re
 
 from .models import Question, Question_List, QuestionQuestion_List, Answer
 from .docx_parsers import Question_Parser, Answer_Parser
-from .forms import QuestionForm
+from .forms import QuestionForm, QuestionSearchForm
 
 class QuestionDetailView(LoginRequiredMixin, DetailView):
     model = Question
@@ -516,3 +519,9 @@ def answer_list_generator(request):
         json.dumps({'status' : 'ready'}),
         content_type="application/json"
     )
+
+
+class QuestionSearchView(SearchView):
+    template_name = 'questions/question_list.html'
+    queryset = SearchQuerySet().models(Question).order_by('create_date')
+    form_class = QuestionSearchForm

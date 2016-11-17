@@ -40,7 +40,7 @@
           <ul class="nav navbar-nav">
             {% if request.user.is_authenticated %}
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'questions:list' %}">Questões</a>
+              <a class="nav-link" href="{% url 'questions:question_search' %}">Questões</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{% url 'questions:question_list_list' %}">Listas</a>

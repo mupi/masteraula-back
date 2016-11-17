@@ -30,7 +30,7 @@
             {% endfor %}
         </div>
         <br>
-        <a href="{% url 'questions:list' %}" class="btn btn-primary">Selecionar Exercicios</a>
+        <a href="{% url 'questions:question_search' %}" class="btn btn-primary">Selecionar Exercicios</a>
 
         {% if checked_questions|length > 0 %}
             <a href="#" class="btn btn-primary" onclick="generateList()">Gerar Lista</a>

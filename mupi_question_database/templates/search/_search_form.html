@@ -2,33 +2,11 @@
 
 <h2>Search</h2>
 
-<form method="get" action=".">
+<form method="get" action="{% url 'questions:question_search'%}">
     <div class="input-group">
       <input type="text" id="id_q" name="q" class="form-control" placeholder="Search for...">
       <span class="input-group-btn">
         <button class="btn btn-secondary" type="submit">Go!</button>
       </span>
     </div>
-
-    {% if query %}
-        <h3>Results</h3>
-
-        {% for result in page.object_list %}
-            <p>
-                <a href="{% url 'questions:question_detail' result.object.id %}">{{ result.object.question_header }}</a>
-            </p>
-        {% empty %}
-            <p>No results found.</p>
-        {% endfor %}
-
-        {% if page.has_previous or page.has_next %}
-            <div>
-                {% if page.has_previous %}<a href="?q={{ query }}&amp;page={{ page.previous_page_number }}">{% endif %}&laquo; Previous{% if page.has_previous %}</a>{% endif %}
-                |
-                {% if page.has_next %}<a href="?q={{ query }}&amp;page={{ page.next_page_number }}">{% endif %}Next &raquo;{% if page.has_next %}</a>{% endif %}
-            </div>
-        {% endif %}
-    {% else %}
-      Sua pesquisa não retornou resultados
-    {% endif %}
 </form>

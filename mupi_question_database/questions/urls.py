@@ -4,7 +4,7 @@ from . import views
 from . import rest_views
 
 urlpatterns = [
-    url(r'^$', views.QuestionListView.as_view(), name='list'),
+    # url(r'^$', views.QuestionListView.as_view(), name='list'),
     url(r'^(?P<pk>[\d]+)/$',views.QuestionDetailView.as_view(), name='question_detail'),
     url(r'^generate_list$',views.list_generator, name='list_generator'),
     url(r'^generate_answer_list$',views.answer_list_generator, name='answer_list_generator'),
@@ -35,4 +35,6 @@ urlpatterns = [
     url(r'^rest/question_list/$', rest_views.Question_ListRestCreateView.as_view()),
     url(r'^rest/question_lists/(?P<pk>[0-9]+)/$', rest_views.Question_ListRestDetailView.as_view()),
 
+
+    url(r'^search/$', views.QuestionSearchView.as_view() ,name='question_search'),
 ]
