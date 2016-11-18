@@ -19,7 +19,7 @@
                         <a href="{% url 'questions:question_detail' question.pk %}">
                             <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
                         </a>
-                        <font>{{ question.question_text }}</font>
+                        <font>{{ question.question_text|safe }}</font>
                         <input type="hidden" name="questionId" value="{{question.id}}" />
                         <br>
                         {% for tag in question.tags.all %}

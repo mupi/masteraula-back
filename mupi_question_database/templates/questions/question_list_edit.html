@@ -22,7 +22,7 @@
                             {% else %}
                                 <input type="checkbox" id="chkquestion{{question.pk}}" onchange="checkEditQuestion({{question.pk}})" />
                             {% endif %}
-                            <span>{{ question.question_text }}</span>
+                            <span>{{ question.question_text|safe }}</span>
                             <br>
                             {% for tag in question.tags.all %}
                                 <span class="tag tag-primary">{{ tag.name }}</span>
@@ -39,7 +39,7 @@
                             <a href="{% url 'questions:question_detail' question.pk %}">
                                 <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
                             </a>
-                            <span>{{ question.question_text }}</span>
+                            <span>{{ question.question_text|safe }}</span>
                             <br>
                             {% for tag in question.tags.all %}
                                 <span class="tag tag-primary">{{ tag.name }}</span>
