@@ -529,11 +529,13 @@ class QuestionSearchView(SearchView):
     template_name = 'questions/question_list.html'
     queryset = SearchQuerySet().models(Question).order_by('create_date')
     form_class = QuestionSearchForm
+    paginate_by = 10
 
 class QuestionEditSearchView(SearchView):
     template_name = 'questions/question_list_edit_list.html'
     # queryset = SearchQuerySet().models(Question).order_by('create_date')
     form_class = QuestionSearchForm
+    paginate_by = 10
 
     # Verifica se o request.user eh o dono da lista a ser editada
     def dispatch(self, request, *args, **kwargs):
