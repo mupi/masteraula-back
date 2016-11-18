@@ -269,8 +269,12 @@ class Question_ListCloneView(LoginRequiredMixin, CreateView):
         else:
             questions = cloned_from_list.questions.all()
 
+        order = 1
         for question in questions:
-            new_list.questions.add(question)
+            relation = QuestionQuestion_List(question=question,
+                                            question_list=new_list, order=order)
+            order = order + 1
+            relation.save()
         new_list.save()
 
         self.request.session['cloned_from_list'] = None
