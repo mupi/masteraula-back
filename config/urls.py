@@ -32,7 +32,7 @@ urlpatterns = [
 
     url(
         r'^ckeditor/upload/',
-        login_required(ckeditor_uploader_views.upload),
+        csrf_exempt(login_required(ckeditor_uploader_views.upload)),
          name='ckeditor_upload'
     ),
     url(

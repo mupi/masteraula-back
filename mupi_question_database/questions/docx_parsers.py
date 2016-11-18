@@ -65,9 +65,6 @@ class Question_Parser(HTMLParser):
             # o WysWyg adiciona varios \r, o parser nao trata esse caso especial entao remove-se todas suas ocorrencias
             self.feed(question.question_text.replace('\r\n\t', ''))
 
-            # Altera a flag avisando que sera parseado respostas
-            self.respostas = True
-
             # Respotas enumeradas de a a quantidade de respostas
             self.parse_list_answers(question.answers.all())
 
@@ -85,6 +82,8 @@ class Question_Parser(HTMLParser):
 
     def parse_list_answers(self, list_answer):
         '''Faz o parser das respostas de cada questao'''
+        # Seta a flag para escrever as resposas
+        self.respostas = True
         for answer in list_answer:
             self.init_parser_new()
             to_parse = self.question_item + ') ' + answer.answer_text
@@ -127,6 +126,8 @@ class Question_Parser(HTMLParser):
         p.add_run(question_header).bold = True
         p.add_run(') ')
         self.paragraph = p
+        # Flag de respostas False pois comecara com o enunciado
+        self.respostas = False
 
 # Parser Methods
 

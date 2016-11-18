@@ -8,7 +8,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     qustion_id = indexes.IntegerField(model_attr='pk')
     author = indexes.CharField(model_attr='author')
     create_date = indexes.DateTimeField(model_attr='create_date')
-    level = indexes.CharField(model_attr='level')
+    level = indexes.CharField(model_attr='level', null=True)
     question_text = indexes.CharField(model_attr='question_text')
     text_auto = indexes.EdgeNgramField(model_attr='question_text')
     tags = indexes.MultiValueField()
