@@ -394,7 +394,7 @@ class QuestionCreate(CreateView):
         new_question = form.save(commit=False)
 
         answers = self.request.POST.getlist('answer_text')
-        correct_answer = self.request.POST.get('correct_answer')
+        correct_answer = int(self.request.POST.get('correct_answer'))
 
         new_question.author = self.request.user
         new_question.save()
@@ -405,7 +405,7 @@ class QuestionCreate(CreateView):
             new_answer = Answer()
             # Coloca o seu texto e tambem verifica se esta eh a correta
             new_answer.answer_text = answer_text
-            new_answer.is_correct = (qty == correct_answer)
+            new_answer.is_correct = True if qty == correct_answer else False
             # Adiciona a questao para entao salva-la
             new_answer.question = new_question
             new_answer.save()
