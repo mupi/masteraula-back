@@ -8,6 +8,7 @@ from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from django.views import defaults as default_views
 from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 
 from mupi_question_database.questions.views import QuestionListView
@@ -36,7 +37,7 @@ urlpatterns = [
     ),
     url(
         r'^ckeditor/browse/',
-        never_cache(login_required(ckeditor_uploader_views.browse)),
+        csrf_exempt(never_cache(login_required(ckeditor_uploader_views.browse))),
         name='ckeditor_browse'
     ),
 
