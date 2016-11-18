@@ -5,10 +5,14 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.views.generic import TemplateView
+from django.contrib.auth.decorators import login_required
 from django.views import defaults as default_views
+from django.views.decorators.cache import never_cache
+from django.views.generic import TemplateView
 
 from mupi_question_database.questions.views import QuestionListView
+
+from ckeditor_uploader import views as ckeditor_uploader_views
 
 urlpatterns = [
     url(r'^$', QuestionListView.as_view(template_name='pages/home.html'), name='home'),
@@ -24,7 +28,17 @@ urlpatterns = [
     # Your stuff: custom urls includes go here
     url(r'^questions/', include('mupi_question_database.questions.urls', namespace='questions')),
     url(r'^search/', include('haystack.urls')),
-    url(r'^ckeditor/', include('ckeditor_uploader.urls')),
+
+    url(
+        r'^ckeditor/upload/',
+        login_required(ckeditor_uploader_views.upload),
+         name='ckeditor_upload'
+    ),
+    url(
+        r'^ckeditor/browse/',
+        never_cache(login_required(ckeditor_uploader_views.browse)),
+        name='ckeditor_browse'
+    ),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
