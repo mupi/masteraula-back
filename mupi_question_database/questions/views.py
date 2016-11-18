@@ -525,3 +525,33 @@ class QuestionSearchView(SearchView):
     template_name = 'questions/question_list.html'
     queryset = SearchQuerySet().models(Question).order_by('create_date')
     form_class = QuestionSearchForm
+
+class QuestionEditSearchView(SearchView):
+    template_name = 'questions/question_list_edit_list.html'
+    # queryset = SearchQuerySet().models(Question).order_by('create_date')
+    form_class = QuestionSearchForm
+
+    # Verifica se o request.user eh o dono da lista a ser editada
+    def dispatch(self, request, *args, **kwargs):
+        question_list = Question_List.objects.get(id=self.kwargs['pk'])
+        if question_list.owner != self.request.user:
+            return redirect(reverse('questions:question_list_detail', args=(self.kwargs['pk'],)))
+        return super(QuestionEditSearchView, self).dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        queryset = super(QuestionEditSearchView, self).get_queryset()
+        # further filter queryset based on some set of criteria
+
+        if not self.request.session['question_list_edit_id'] or self.request.session['question_list_edit_id'] != self.kwargs['pk']:
+            self.request.session['checked_edit_add_questions'] = []
+        self.request.session['question_list_edit_id'] = self.kwargs['pk']
+
+        list_exclude_questions = list(Question_List.objects.get(id=self.kwargs['pk']).questions.all())
+        list_exclude_questions = [question.pk for question in list_exclude_questions]
+        return queryset.exclude(qustion_id__in=list_exclude_questions).models(Question).order_by('create_date')
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(QuestionEditSearchView, self).get_context_data(**kwargs)
+        context['pk_slug'] = self.kwargs['pk']
+
+        return context

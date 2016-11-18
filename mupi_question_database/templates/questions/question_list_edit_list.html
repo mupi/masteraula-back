@@ -4,9 +4,21 @@
 
 {% block content %}
 <div class="container">
-    <h2>Questões</h2>
+    <h1>
+        Questões
+    </h1>
+    <form method="get" action="{% url 'questions:question_search_edit_list' pk_slug %}">
+        <div class="input-group">
+          <input type="text" id="id_q" name="q" class="form-control" placeholder="Search for...">
+          <span class="input-group-btn">
+            <button class="btn btn-secondary" type="submit">Go!</button>
+          </span>
+        </div>
+    </form>
+    <br>
     <div class="list-group">
-        {% for question in question_list %}
+        {% for result in page_obj.object_list %}
+            {% with result.object as question %}
             <div class="list-group-item">
                 <a href="{% url 'questions:question_detail' question.pk %}">
                     <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
@@ -16,7 +28,7 @@
                 {% else %}
                     <input type="checkbox" id="chkquestion{{question.pk}}" onchange="checkEditQuestion({{question.pk}})" />
                 {% endif %}
-                <span>{{ question.question_text }}</span>
+                <span>{{ question.question_text|safe }}</span>
                 <br>
                 {% if question.level == 'E' %}
                     <span class="tag tag-success">Facil</span>
@@ -29,7 +41,10 @@
                     <span class="tag tag-primary">{{ tag.name }}</span>
                 {% endfor %}
             </div>
-        {% endfor %}
+            {% endwith %}
+            {% empty %}
+                <p>No results found.</p>
+            {% endfor %}
     </div>
 
     <script>
@@ -53,6 +68,7 @@
                     $('input[type=checkbox]').each(function() {
                         $(this).prop('checked', false);
                     });
+                    window.location.href = "{% url 'questions:question_list_edit' pk_slug %}";
                 }
             });
         }
@@ -64,13 +80,13 @@
         <div class="pagination">
             <span class="page-links">
                 {% if page_obj.has_previous %}
-                    <a href="/questions?page={{ page_obj.previous_page_number }}">Anterior</a>
+                    <a href="?q={{ query }}&amp;page={{ page_obj.previous_page_number }}">&laquo; Anterior</a>
                 {% endif %}
                 <span class="page-current">
                     | Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }} |
                 </span>
                 {% if page_obj.has_next %}
-                    <a href="/questions?page={{ page_obj.next_page_number }}">Seguinte</a>
+                    <a href="?q={{ query }}&amp;page={{ page_obj.next_page_number }}">Seguinte &raquo;</a>
                 {% endif %}
             </span>
         </div>

@@ -5,6 +5,7 @@ import re
 
 class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True,use_template=True)
+    qustion_id = indexes.IntegerField(model_attr='pk')
     author = indexes.CharField(model_attr='author')
     create_date = indexes.DateTimeField(model_attr='create_date')
     level = indexes.CharField(model_attr='level')
