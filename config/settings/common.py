@@ -45,6 +45,7 @@ THIRD_PARTY_APPS = (
     'rest_framework',
     'ckeditor',
     'ckeditor_uploader',
+    'rolepermissions',
 )
 
 # Apps specific for this project go here.
@@ -288,3 +289,5 @@ CKEDITOR_CONFIGS = {
 }
 
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
+
+ROLEPERMISSIONS_MODULE = 'mupi_question_database.users.roles'

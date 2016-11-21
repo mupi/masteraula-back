@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load permission_tags %}
 
 {% block title %}Question List: {{ question_list.question_list_header }}{% endblock %}
 
@@ -29,15 +30,17 @@
                 {% endfor %}
             </div>
             <br>
-            <a href="#" class="btn btn-primary" onclick="generateList()">Gerar Lista</a>
-            <a href="#" class="btn btn-primary" onclick="generateAnswerList()">Gerar Gabarito</a>
-            {% if question_list.owner.id == request.user.id %}
-                <form method="POST" action="{% url 'questions:question_list_delete' question_list.pk %}" >{% csrf_token %}
-                    <input type="submit" class="btn btn-danger" value="Apagar Lista" onclick="return confirm('Tem certeza disso?');"/>
-                </form>
-                <a href="{% url 'questions:question_list_edit' question_list.pk %}" class="btn btn-success">Editar Lista</a>
+            {% if user|has_role:'teacher' %}
+                <a href="#" class="btn btn-primary" onclick="generateList()">Gerar Lista</a>
+                <a href="#" class="btn btn-primary" onclick="generateAnswerList()">Gerar Gabarito</a>
+                {% if question_list.owner.id == request.user.id %}
+                    <form method="POST" action="{% url 'questions:question_list_delete' question_list.pk %}" >{% csrf_token %}
+                        <input type="submit" class="btn btn-danger" value="Apagar Lista" onclick="return confirm('Tem certeza disso?');"/>
+                    </form>
+                    <a href="{% url 'questions:question_list_edit' question_list.pk %}" class="btn btn-success">Editar Lista</a>
+                {% endif %}
+                <a href="{% url 'questions:question_list_clone' question_list.pk %}" class="btn btn-primary">Clonar Lista</a>
             {% endif %}
-            <a href="{% url 'questions:question_list_clone' question_list.pk %}" class="btn btn-primary">Clonar Lista</a>
         </div>
     </div>
 </div>

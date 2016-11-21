@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% load static i18n %}
+{% load permission_tags %}
+
 {% block title %}Questões{% endblock %}
 
 {% block content %}
@@ -25,10 +27,12 @@
                     <a href="{% url 'questions:question_detail' question.pk %}">
                         <h4 class="list-group-item-heading">{{ question.question_header }}</h4>
                     </a>
-                    {% if question.pk in request.session.checked_questions %}
-                        <input type="checkbox" checked id="chkquestion{{question.pk}}" onchange="checkQuestion({{question.pk}})" />
-                    {% else %}
-                        <input type="checkbox" id="chkquestion{{question.pk}}" onchange="checkQuestion({{question.pk}})" />
+                    {% if user|has_role:'teacher' %}
+                        {% if question.pk in request.session.checked_questions %}
+                            <input type="checkbox" checked id="chkquestion{{question.pk}}" onchange="checkQuestion({{question.pk}})" />
+                        {% else %}
+                            <input type="checkbox" id="chkquestion{{question.pk}}" onchange="checkQuestion({{question.pk}})" />
+                        {% endif %}
                     {% endif %}
                     <span>{{ question.question_text|safe }}</span>
                     <br>
@@ -94,7 +98,9 @@
     {% endif %}
     <!-- Fim da Paginacao -->
     <br>
-    <a href="{% url 'questions:question_list_create' %}" class="btn btn-primary">Fazer Lista</a>
-    <a href="#" onclick="clearQuestions()" class="btn btn-danger">Limpar Lista</a>
+    {% if user|has_role:'teacher' %}
+        <a href="{% url 'questions:question_list_create' %}" class="btn btn-primary">Fazer Lista</a>
+        <a href="#" onclick="clearQuestions()" class="btn btn-danger">Limpar Lista</a>
+    {% endif %}
 </div>
 {% endblock content %}

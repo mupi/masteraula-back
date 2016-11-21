@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load permission_tags %}
 
 {% block title %}Question: {{ object.question_header }}{% endblock %}
 
@@ -25,14 +26,14 @@
 
         <ol type="a">
         {% for answer in question.answers.all %}
-            {% if answer.is_correct %}
+            {% if answer.is_correct and user|has_role:'teacher' %}
                 <b><li> {{ answer.answer_text|safe }} </li></b>
             {% else %}
                 <li> {{ answer.answer_text|safe }} </li>
             {% endif %}
         {% endfor %}
         </ol>
-        {% if question.resolution is not None and question.resolution != ""%}
+        {% if question.resolution is not None and question.resolution != "" and user|has_role:'teacher' %}
             <p>
                 <b>Resposta esperada do autor</b>: {{ question.resolution|safe }}
             </p>
