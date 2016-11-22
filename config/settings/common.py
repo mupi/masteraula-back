@@ -291,3 +291,5 @@ CKEDITOR_CONFIGS = {
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
 
 ROLEPERMISSIONS_MODULE = 'mupi_question_database.users.roles'
+
+ACCOUNT_SIGNUP_FORM_CLASS = 'mupi_question_database.users.forms.SignupForm'
