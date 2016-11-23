@@ -1,6 +1,11 @@
-from haystack import indexes
-from .models import Question
 from django.utils import timezone
+
+from taggit.models import Tag
+
+from haystack import indexes
+
+from .models import Question
+
 import re
 
 class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
@@ -10,7 +15,6 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     create_date = indexes.DateTimeField(model_attr='create_date')
     level = indexes.CharField(model_attr='level', null=True)
     question_text = indexes.CharField(model_attr='question_text')
-    text_auto = indexes.EdgeNgramField(model_attr='question_text')
     tags = indexes.MultiValueField()
 
     def get_model(self):
@@ -36,3 +40,10 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_tags(self, obj):
         return [tag.name for tag in obj.tags.all()]
+
+class TagIndex(indexes.SearchIndex, indexes.Indexable):
+    text = indexes.CharField(document=True,use_template=True)
+    tags_auto = indexes.EdgeNgramField(model_attr='name')
+
+    def get_model(self):
+        return Tag

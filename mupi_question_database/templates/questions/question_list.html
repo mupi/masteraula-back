@@ -18,6 +18,9 @@
           </span>
         </div>
     </form>
+
+    <ul id="searchTags"></ul>
+
     <br>
     <form method="POST">
         <div class="list-group">
@@ -54,6 +57,26 @@
         </div>
     </form>
     <script>
+    $("#searchTags").tagit({
+        allowSpaces: true,
+    });
+
+    $(".ui-widget-content .ui-autocomplete-input").on('input', function() {
+        text = $(".ui-widget-content .ui-autocomplete-input").val();
+        $.ajax({
+            url : "{% url 'questions:get_tags'%}",
+            type : "POST",
+            data : {q : text ,csrfmiddlewaretoken: '{{csrf_token}}'},
+            success:function(data) {
+                $("#searchTags").tagit({
+                    allowSpaces: true,
+                    autocomplete: {delay: 0, minLength: 2},
+                    availableTags: data['results'],
+                });
+            }
+        });
+    });
+    
     function checkQuestion(questionPK) {
         checked = $("#chkquestion"+questionPK).is(":checked");
         console.log(checked)

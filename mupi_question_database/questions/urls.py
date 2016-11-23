@@ -29,6 +29,8 @@ urlpatterns = [
     url(r'^clear_questions_edit_add_list/$',views.clear_questions_edit_add_list, name='clear_questions_edit_add_list'),
     url(r'^check_question_edit_list/$',views.check_question_edit_list, name='check_question_edit_list'),
 
+    url(r'^get_tags/$', views.autocomplete, name='get_tags'),
+
     # Rest Urls
 
     url(r'^rest/questions/$', rest_views.QuestionRestListView.as_view()),

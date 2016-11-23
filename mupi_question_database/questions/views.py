@@ -2,6 +2,7 @@
 
 from django.views.generic import DetailView, ListView, RedirectView, UpdateView, TemplateView, CreateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.db.models import Q
 from django.shortcuts import redirect
@@ -13,13 +14,15 @@ from haystack.query import SearchQuerySet
 from rolepermissions.mixins import HasRoleMixin
 from rolepermissions.decorators import has_role_decorator
 
+from taggit.models import Tag
+
 import json
 import io
 import re
 
 from .models import Question, Question_List, QuestionQuestion_List, Answer
 from .docx_parsers import Question_Parser, Answer_Parser
-from .forms import QuestionForm, QuestionSearchForm
+from .forms import QuestionForm, QuestionSearchForm, QuestionTagSearchForm
 
 class QuestionDetailView(LoginRequiredMixin, DetailView):
     model = Question
@@ -570,3 +573,17 @@ class QuestionEditSearchView(LoginRequiredMixin, SearchView):
         context['pk_slug'] = self.kwargs['pk']
 
         return context
+
+class QuestionTagSearchView(SearchView):
+    template_name = 'questions/question_list.html'
+    form_class = QuestionTagSearchForm
+    paginate_by = 10
+
+@login_required
+def autocomplete(request):
+    sqs = SearchQuerySet().models(Tag).autocomplete(tags_auto=request.POST.get('q'))
+    suggestions = [result.object.name for result in sqs]
+    the_data = json.dumps({
+        'results': suggestions
+    })
+    return HttpResponse(the_data, content_type='application/json')

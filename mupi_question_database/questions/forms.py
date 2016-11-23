@@ -1,6 +1,8 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
+from haystack.query import SearchQuerySet
+
 from ckeditor.widgets import CKEditorWidget
 
 from haystack.forms import SearchForm
@@ -77,3 +79,17 @@ class QuestionSearchForm(SearchForm):
     def no_query_found(self):
         self.query = True
         return self.searchqueryset.all()
+
+class QuestionTagSearchForm(SearchForm):
+    tags = forms.CharField(required=False)
+
+    def search(self):
+        sqs = SearchQuerySet().models(Question).order_by('create_date')
+
+        if not self.is_valid():
+            return self.no_query_found()
+
+        if self.cleaned_data['tags']:
+            sqs = sqs.filter(tags__in=self.cleaned_data['tags'].split(' '))
+
+        return sqs
