@@ -77,6 +77,7 @@ class AnswerSerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.ModelSerializer):
     answers = AnswerSerializer(many=True, read_only=False)
     tags = TagListSerializer(read_only=False)
+    author = UserSerializer(read_only=True)
 
     class Meta:
         model = Question
@@ -97,14 +98,21 @@ class QuestionSerializer(serializers.ModelSerializer):
         '''
         Override para tratar jsutamente o taggit
         '''
+        tags = validated_data.pop('tags')
+        answers = validated_data.pop('answers')
+
         question = Question.objects.create(question_header=validated_data['question_header'],
                                             question_text=validated_data['question_text'],
                                             resolution=validated_data['resolution'],
                                             level=validated_data['level'],
                                             author=validated_data['author'])
 
-        for tag in validated_data['tags']:
+        for tag in tags:
             question.tags.add(tag)
+
+        for answer in answers:
+            new_answer = Answer.objects.create(question=question, **answer)
+            question.answers.add(new_answer)
 
         return question
 
