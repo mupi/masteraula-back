@@ -3,7 +3,7 @@ from rest_framework.exceptions import ParseError
 
 import ast
 
-from .models import Question, Answer, Question_List
+from .models import Question, Answer, Question_List, Profile
 
 class TagListSerializer(serializers.Field):
     '''
@@ -26,10 +26,22 @@ class TagListSerializer(serializers.Field):
         return obj
 
 
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = (
+            'user',
+            'credit_balance'
+        )
+
 class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
-        fields = ('id', 'answer_text', 'is_correct')
+        fields = (
+            'id',
+            'answer_text',
+            'is_correct'
+        )
 
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -39,7 +51,18 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ('id', 'question_header', 'question_text', 'resolution', 'level', 'author', 'create_date', 'tags', 'answers')
+        fields = (
+            'id',
+            'question_header',
+            'question_text',
+            'resolution',
+            'level',
+            'author',
+            'create_date',
+            'credit_cost',
+            'tags',
+            'answers'
+        )
 
     def create(self, validated_data):
         '''
@@ -75,7 +98,12 @@ class QuestionSerializer(serializers.ModelSerializer):
 class SimpleQuestion_ListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question_List
-        fields = ('question_list_header', 'owner', 'questions', 'private')
+        fields = (
+            'question_list_header',
+            'owner',
+            'questions',
+            'private'
+        )
 
 
 class Question_ListSerializer(serializers.ModelSerializer):
@@ -83,7 +111,14 @@ class Question_ListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question_List
-        fields = ('id', 'question_list_header', 'owner', 'private', 'create_date', 'questions')
+        fields = (
+            'id',
+            'question_list_header',
+            'owner',
+            'private',
+            'create_date',
+            'questions'
+        )
 
 
     def update(self, instance, validated_data):

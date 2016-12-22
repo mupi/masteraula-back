@@ -4,6 +4,10 @@ from mupi_question_database.users.models import User
 from taggit.managers import TaggableManager
 from ckeditor_uploader.fields import RichTextUploadingField
 
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    credit_balance = models.PositiveIntegerField(null=False, blank=True, default=0)
+
 class Question(models.Model):
     LEVEL_CHOICES = (
         ('', 'Nenhuma opção'),
@@ -18,6 +22,7 @@ class Question(models.Model):
     level = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)
     author = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     create_date = models.DateTimeField(auto_now_add=True)
+    credit_cost = models.PositiveIntegerField(null=False, blank=False, default=0)
 
     tags = TaggableManager()
     #

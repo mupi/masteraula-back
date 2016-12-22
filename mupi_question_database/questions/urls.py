@@ -7,6 +7,8 @@ urlpatterns = [
     url(r'^$', views.QuestionSearchView.as_view(), name='list'),
     url(r'^search/$', views.QuestionSearchView.as_view() ,name='question_search'),
 
+    url(r'^search_tag_ajax/$', views.QuestionTagSearchView.as_view()  ,name='question_search_tag_ajax'),
+
     url(r'^(?P<pk>[\d]+)/$',views.QuestionDetailView.as_view(), name='question_detail'),
     url(r'^generate_list$',views.list_generator, name='list_generator'),
     url(r'^generate_answer_list$',views.answer_list_generator, name='answer_list_generator'),
@@ -32,6 +34,8 @@ urlpatterns = [
     url(r'^get_tags/$', views.autocomplete, name='get_tags'),
 
     # Rest Urls
+
+    url(r'^rest/users/$', rest_views.ProfileRestListView.as_view()),
 
     url(r'^rest/questions/$', rest_views.QuestionRestListView.as_view()),
     url(r'^rest/questions/(?P<pk>[0-9]+)/$', rest_views.QuestionRestDetailView.as_view()),

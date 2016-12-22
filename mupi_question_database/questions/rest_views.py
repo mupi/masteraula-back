@@ -1,9 +1,14 @@
 from rest_framework import generics, response
 
-from .serializers import QuestionSerializer, Question_ListSerializer, SimpleQuestion_ListSerializer
-from .models import Question, Question_List
+from .serializers import QuestionSerializer, Question_ListSerializer, SimpleQuestion_ListSerializer, ProfileSerializer
+from .models import Question, Question_List, Profile
 
 from .permissions import IsOwnerOrReadOnlyQuestion_List
+
+class ProfileRestListView(generics.ListAPIView):
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
+
 
 class QuestionRestListView(generics.ListAPIView):
     queryset = Question.objects.all()
