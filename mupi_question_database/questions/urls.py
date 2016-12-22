@@ -1,7 +1,43 @@
 from django.conf.urls import url
+from rest_framework import renderers
 
 from . import views
 from . import rest_views
+
+# #View Sets
+user_list = rest_views.UserViewSet.as_view({
+    'get'   : 'list',
+    'post'  : 'create'
+})
+
+user_detail = rest_views.UserViewSet.as_view({
+    'get'   : 'retrieve',
+    'put'   : 'update',
+    'delete': 'destroy'
+})
+
+question_list = rest_views.QuestionViewSet.as_view({
+    'get'   : 'list',
+    'post'  : 'create'
+})
+
+question_detail = rest_views.QuestionViewSet.as_view({
+    'get'   : 'retrieve',
+    'put'   : 'update',
+    'delete': 'destroy'
+})
+
+questionlist_list = rest_views.Question_ListViewSet.as_view({
+    'get'   : 'list',
+    'post'  : 'create'
+})
+
+questionlist_detail = rest_views.Question_ListViewSet.as_view({
+    'get'   : 'retrieve',
+    'put'   : 'update',
+    'delete': 'destroy'
+})
+
 
 urlpatterns = [
     url(r'^$', views.QuestionSearchView.as_view(), name='list'),
@@ -35,14 +71,13 @@ urlpatterns = [
 
     # Rest Urls
 
-    url(r'^rest/users/$', rest_views.ProfileRestListView.as_view()),
+    url(r'^rest/users/$', user_list),
 
-    url(r'^rest/questions/$', rest_views.QuestionRestListView.as_view()),
-    url(r'^rest/questions/(?P<pk>[0-9]+)/$', rest_views.QuestionRestDetailView.as_view()),
+    url(r'^rest/questions/$', question_list),
+    url(r'^rest/questions/(?P<pk>[0-9]+)/$', question_detail),
 
-    url(r'^rest/question_lists/$', rest_views.Question_ListRestListView.as_view()),
-    url(r'^rest/question_list/$', rest_views.Question_ListRestCreateView.as_view()),
-    url(r'^rest/question_lists/(?P<pk>[0-9]+)/$', rest_views.Question_ListRestDetailView.as_view()),
+    url(r'^rest/question_lists/$', questionlist_list),
+    url(r'^rest/question_lists/(?P<pk>[0-9]+)/$', questionlist_detail),
 
 
 ]

@@ -1,35 +1,28 @@
-from rest_framework import generics, response
+from rest_framework import generics, response, viewsets
 
-from .serializers import QuestionSerializer, Question_ListSerializer, SimpleQuestion_ListSerializer, ProfileSerializer
+from mupi_question_database.users.models import User
+
+from .serializers import QuestionSerializer, Question_ListSerializer, SimpleQuestion_ListSerializer, ProfileSerializer, UserSerializer
 from .models import Question, Question_List, Profile
 
 from .permissions import IsOwnerOrReadOnlyQuestion_List
 
-class ProfileRestListView(generics.ListAPIView):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 
-class QuestionRestListView(generics.ListAPIView):
+class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
 
-class QuestionRestDetailView(generics.RetrieveAPIView):
-    queryset = Question.objects.all()
-    serializer_class = QuestionSerializer
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
 
-
-class Question_ListRestListView(generics.ListAPIView):
+class Question_ListViewSet(viewsets.ModelViewSet):
+    queryset = Question_List.objects.all()
     serializer_class = Question_ListSerializer
-    queryset = Question_List.objects.all()
-    queryset = Question_List.objects.filter(private=False)
 
-class Question_ListRestCreateView(generics.CreateAPIView):
-    serializer_class = SimpleQuestion_ListSerializer
-    queryset = Question_List.objects.all()
-
-class Question_ListRestDetailView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = Question_ListSerializer
-    permission_classes = [IsOwnerOrReadOnlyQuestion_List,]
-    queryset = Question_List.objects.all()
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
