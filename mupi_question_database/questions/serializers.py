@@ -1,9 +1,11 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError
 
-import ast
+from mupi_question_database.users.models import User
 
 from .models import Question, Answer, Question_List, Profile
+
+import ast
 
 class TagListSerializer(serializers.Field):
     '''
@@ -25,14 +27,42 @@ class TagListSerializer(serializers.Field):
             return [tag.name for tag in obj.all()]
         return obj
 
-
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = (
-            'user',
-            'credit_balance'
+            'credit_balance',
         )
+
+class UserSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer(read_only=False)
+
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'password',
+            'profile'
+        )
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        profile_data = validated_data.pop('profile')
+
+        user = User(username=validated_data['username'],
+                    first_name=validated_data['first_name'],
+                    last_name=validated_data['last_name'],
+                    email=validated_data['email'])
+        user.set_password(validated_data['password'])
+        user.save()
+
+        Profile.objects.create(user=user, **profile_data)
+
+        return user
+
 
 class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -45,9 +75,8 @@ class AnswerSerializer(serializers.ModelSerializer):
 
 
 class QuestionSerializer(serializers.ModelSerializer):
-    answers = AnswerSerializer(many=True, read_only=True)
-    tags = TagListSerializer(read_only=True)
-    id = serializers.IntegerField()
+    answers = AnswerSerializer(many=True, read_only=False)
+    tags = TagListSerializer(read_only=False)
 
     class Meta:
         model = Question
