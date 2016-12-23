@@ -27,7 +27,7 @@ urlpatterns = [
     url(r'^accounts/', include('allauth.urls')),
 
     # Your stuff: custom urls includes go here
-    url(r'^questions/', include('mupi_question_database.questions.urls', namespace='questions')),
+    url(r'^rest/', include('mupi_question_database.questions.urls', namespace='questions')),
     url(r'^search/', include('haystack.urls')),
 
     url(
@@ -40,6 +40,8 @@ urlpatterns = [
         csrf_exempt(never_cache(login_required(ckeditor_uploader_views.browse))),
         name='ckeditor_browse'
     ),
+
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
