@@ -52,8 +52,7 @@ class Question_List(models.Model):
     questions = models.ManyToManyField(Question, through='QuestionQuestion_List')
     create_date = models.DateTimeField(auto_now_add=True)
     private = models.BooleanField('Lista privada')
-    cloned_from = models.ForeignKey('self', null=True, blank=True, related_name='subarticles',
-                                    default=None, on_delete=models.CASCADE)
+    cloned_from = models.ForeignKey('self', null=True, blank=True, default=None, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ['pk']

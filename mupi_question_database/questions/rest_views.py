@@ -2,7 +2,7 @@ from rest_framework import generics, response, viewsets
 
 from mupi_question_database.users.models import User
 
-from .serializers import QuestionSerializer, Question_ListSerializer, SimpleQuestion_ListSerializer, ProfileSerializer, UserSerializer
+from .serializers import QuestionSerializer, Question_ListSerializer, UserSerializer
 from .models import Question, Question_List, Profile
 
 from .permissions import IsOwnerOrReadOnlyQuestion_List

@@ -3,7 +3,7 @@ from rest_framework.exceptions import ParseError
 
 from mupi_question_database.users.models import User
 
-from .models import Question, Answer, Question_List, Profile
+from .models import Question, Answer, Question_List, QuestionQuestion_List, Profile
 
 import ast
 
@@ -132,19 +132,18 @@ class QuestionSerializer(serializers.ModelSerializer):
 
         return super().update(instance, validated_data)
 
-class SimpleQuestion_ListSerializer(serializers.ModelSerializer):
+class QuestionOrderSerializer(serializers.ModelSerializer):
+    question = QuestionSerializer(read_only=False)
+
     class Meta:
-        model = Question_List
+        model = QuestionQuestion_List
         fields = (
-            'question_list_header',
-            'owner',
-            'questions',
-            'private'
+            'question',
+            'order',
         )
 
-
 class Question_ListSerializer(serializers.ModelSerializer):
-    questions = QuestionSerializer(many=True, read_only=False)
+    questions = QuestionOrderSerializer(many=True, source='questionquestion_list_set', read_only=False)
 
     class Meta:
         model = Question_List
