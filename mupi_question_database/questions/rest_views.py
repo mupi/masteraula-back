@@ -9,8 +9,7 @@ from .permissions import IsOwnerOrReadOnlyQuestion_List
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
-
+    serializer_class = UserDetailSerializer
 
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()

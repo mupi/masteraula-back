@@ -27,7 +27,7 @@ urlpatterns = [
     url(r'^accounts/', include('allauth.urls')),
 
     # Your stuff: custom urls includes go here
-    url(r'^rest/', include('mupi_question_database.questions.urls', namespace='questions')),
+    url(r'^rest/', include('mupi_question_database.questions.urls', namespace='mupi_question_database')),
     url(r'^search/', include('haystack.urls')),
 
     url(

@@ -7,9 +7,9 @@ from . import rest_views
 
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
-router.register(r'questions', rest_views.QuestionViewSet)
-router.register(r'users', rest_views.UserViewSet)
-router.register(r'question_lists', rest_views.Question_ListViewSet)
+router.register(r'questions', rest_views.QuestionViewSet, base_name='questions')
+router.register(r'users', rest_views.UserViewSet, base_name='users')
+router.register(r'question_lists', rest_views.Question_ListViewSet, base_name='question_lists')
 
 
 urlpatterns = [
@@ -44,6 +44,5 @@ urlpatterns = [
 
     # Rest Urls
 
-    url(r'^rest/', include(router.urls)),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+    url(r'^', include(router.urls)),
 ]

@@ -32,12 +32,14 @@ class ProfileSerializer(serializers.ModelSerializer):
             'credit_balance',
         )
 
-class UserDetailSerializer(serializers.ModelSerializer):
+class UserDetailSerializer(serializers.HyperlinkedModelSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:users-detail')
     profile = ProfileSerializer(read_only=True)
 
     class Meta:
         model = User
         fields = (
+            'url',
             'id',
             'username',
             'name',
@@ -59,11 +61,13 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
         return user
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:users-detail')
 
     class Meta:
         model = User
         fields = (
+            'url',
             'id',
             'username',
             'name',
@@ -82,14 +86,16 @@ class AnswerSerializer(serializers.ModelSerializer):
         )
 
 
-class QuestionSerializer(serializers.ModelSerializer):
+class QuestionSerializer(serializers.HyperlinkedModelSerializer):
     answers = AnswerSerializer(many=True, read_only=False)
     tags = TagListSerializer(read_only=False)
-    author = UserSerializer(read_only=True)
+    author = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:users-detail', read_only=True)
+    url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:questions-detail')
 
     class Meta:
         model = Question
         fields = (
+            'url',
             'id',
             'question_header',
             'question_text',
@@ -141,7 +147,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 class QuestionOrderSerializer(serializers.ModelSerializer):
-    question = QuestionSerializer(read_only=False)
+    question = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:questions-detail', read_only=True)
 
     class Meta:
         model = QuestionQuestion_List
@@ -150,15 +156,18 @@ class QuestionOrderSerializer(serializers.ModelSerializer):
             'order',
         )
 
-class Question_ListSerializer(serializers.ModelSerializer):
+class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
     questions = QuestionOrderSerializer(many=True, source='questionquestion_list_set', read_only=False)
+    owner = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:users-detail', read_only=True)
+    url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:question_lists-detail')
 
     class Meta:
         model = Question_List
         fields = (
+            'url',
             'id',
-            'question_list_header',
             'owner',
+            'question_list_header',
             'private',
             'create_date',
             'questions'
