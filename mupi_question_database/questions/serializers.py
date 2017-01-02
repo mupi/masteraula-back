@@ -5,8 +5,6 @@ from mupi_question_database.users.models import User
 
 from .models import Question, Answer, Question_List, QuestionQuestion_List, Profile
 
-import ast
-
 class TagListSerializer(serializers.Field):
     '''
     TagListSerializer para tratar o App taggit, ja que nao possui suporte para
@@ -34,15 +32,15 @@ class ProfileSerializer(serializers.ModelSerializer):
             'credit_balance',
         )
 
-class UserSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer(read_only=False)
+class UserDetailSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer(read_only=True)
 
     class Meta:
         model = User
         fields = (
+            'id',
             'username',
-            'first_name',
-            'last_name',
+            'name',
             'email',
             'password',
             'profile'
@@ -50,8 +48,6 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        profile_data = validated_data.pop('profile')
-
         user = User(username=validated_data['username'],
                     first_name=validated_data['first_name'],
                     last_name=validated_data['last_name'],
@@ -59,10 +55,22 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
 
-        Profile.objects.create(user=user, **profile_data)
+        Profile.objects.create(user=user)
 
         return user
 
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'username',
+            'name',
+            'email',
+            'password'
+        )
+        extra_kwargs = {'password': {'write_only': True}}
 
 class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
