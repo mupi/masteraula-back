@@ -222,7 +222,7 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
         return super().update(instance, validated_data)
 
 class QuestionOrderSerializer(serializers.ModelSerializer):
-    question = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:questions-detail', read_only=True)
+    question = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:questions-detail', read_only=False, queryset=Question.objects.all())
 
     class Meta:
         model = QuestionQuestion_List
@@ -231,8 +231,12 @@ class QuestionOrderSerializer(serializers.ModelSerializer):
             'order',
         )
 
+    def create(self, validated_data):
+        question = validated_data.pop('question')
+        print(question)
+
 class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
-    questions = QuestionOrderSerializer(many=True, source='questionquestion_list_set', read_only=False)
+    questions = QuestionOrderSerializer(many=True, source='questionquestion_list_set', read_only=False, label='questions')
     owner = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:users-detail', read_only=True)
     cloned_from = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:question_lists-detail', read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:question_lists-detail')
@@ -250,19 +254,46 @@ class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
             'questions'
         )
 
+    def create(self, validated_data):
+        questions_order = validated_data.pop('questionquestion_list_set')
+        questions_order = sorted(questions_order, key=lambda k: k['order'])
+
+        # Verifica a ordem da lista de ordens
+        expected = 1
+        for question_order in questions_order:
+            if question_order['order'] != expected:
+                raise ParseError("Invalid questions order")
+            expected = expected + 1
+
+
+        new_list = Question_List.objects.create(**validated_data)
+        for question_order in questions_order:
+            QuestionQuestion_List.objects.create(question_list=new_list, **question_order)
+        return new_list
 
     def update(self, instance, validated_data):
+        if 'questionquestion_list_set' in validated_data:
+            questions_order = validated_data.pop('questionquestion_list_set')
+            questions_order = sorted(questions_order, key=lambda k: k['order'])
 
-        question_ids = [item['id'] for item in validated_data['questions']]
-        dbquestions = [question.id for question in list(instance.questions.all())]
-        to_add = list(set(question_ids) - set(dbquestions))
+            # Verifica a ordem da lista de ordens
+            expected = 1
+            for question_order in questions_order:
+                if question_order['order'] != expected:
+                    raise ParseError("Invalid questions order")
+                expected = expected + 1
 
-        for question in instance.questions.all():
-            if question.id not in question_ids:
-                instance.questions.remove(question)
+            questions_ids = [item['question'].id for item in questions_order]
 
-        for question_id in to_add:
-            question = Question.objects.filter(id=question_id)
-            instance.questions.add(question)
+            for question in instance.questions.all():
+                if question.id not in questions_ids:
+                    QuestionQuestion_List.objects.get(question=question.id,question_list=instance).delete()
 
-        return instance
+            for question_order in questions_order:
+                try:
+                    question = QuestionQuestion_List.objects.get(question=question_order['question'],question_list=instance)
+                    question.order = question_order['order']
+                except:
+                    QuestionQuestion_List.objects.create(question_list=instance, **question_order)
+
+        return super().update(instance, validated_data)
