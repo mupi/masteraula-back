@@ -88,11 +88,9 @@ class Question_ListViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    def list(self, request):
-        if request.user.is_superuser:
-            queryset = Question_List.objects.all()
-            serializer = zQuestion_ListSerializer(queryset, many=True)
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            queryset = serializers.Question_List.objects.all()
         else:
-            queryset = Question_List.objects.filter(private=False)
-            serializer = Question_ListSerializer(queryset, many=True)
-        return Response(serializer.data)
+            queryset = serializers.Question_List.objects.filter(private=False)
+        return queryset

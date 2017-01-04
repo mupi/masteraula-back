@@ -80,6 +80,7 @@ class PasswordSerializer(serializers.Serializer):
     password = serializers.CharField(max_length=200)
     previous_password = serializers.CharField(max_length=200)
 
+
 class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
@@ -233,6 +234,7 @@ class QuestionOrderSerializer(serializers.ModelSerializer):
 class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
     questions = QuestionOrderSerializer(many=True, source='questionquestion_list_set', read_only=False)
     owner = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:users-detail', read_only=True)
+    cloned_from = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:question_lists-detail', read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:question_lists-detail')
 
     class Meta:
@@ -244,6 +246,7 @@ class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
             'question_list_header',
             'private',
             'create_date',
+            'cloned_from',
             'questions'
         )
 
