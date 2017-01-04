@@ -1,4 +1,5 @@
 from rest_framework import generics, response, viewsets, status
+from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response
 
 from mupi_question_database.users.models import User
@@ -49,6 +50,22 @@ class UserViewSet(viewsets.ModelViewSet):
                 return Response({'status': 'update set'})
             else:
                 return Response({'password': 'invalid password'},
+                                status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    @detail_route(methods=['post'])
+    def set_password(self, request, pk=None):
+        user = self.get_object()
+        serializer = serializers.PasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            if user.check_password(serializer.validated_data['previous_password']):
+                user.set_password(serializer.data['password'])
+                user.save()
+                return Response({'status': 'password set'})
+            else:
+                return Response({'previous_password': 'invalid password'},
                                 status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(serializer.errors,

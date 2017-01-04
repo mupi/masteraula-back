@@ -76,19 +76,9 @@ class UserProfileSerializer(serializers.HyperlinkedModelSerializer):
         extra_kwargs = {'profile' : {'read_only' : True},
                         'username': {'read_only' : True}}
 
-# class UserUpdateSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = (
-#             'id',
-#             'name',
-#             'email',
-#             'password'
-#         )
-#         extra_kwargs = {'password': {'write_only': True},
-#                         'name' : {'write_only' : True},
-#                         'email' : {'write_only' : True}
-#                         }
+class PasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(max_length=200)
+    previous_password = serializers.CharField(max_length=200)
 
 class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
