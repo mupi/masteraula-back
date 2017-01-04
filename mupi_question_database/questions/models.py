@@ -64,7 +64,7 @@ class Question_List(models.Model):
 class QuestionQuestion_List(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     question_list = models.ForeignKey(Question_List, on_delete=models.CASCADE)
-    order = models.PositiveIntegerField(null=False, blank=True)
+    order = models.PositiveIntegerField(null=False, blank=False)
 
     class Meta:
         ordering = ['order']
