@@ -4,10 +4,6 @@ from mupi_question_database.users.models import User
 from taggit.managers import TaggableManager
 from ckeditor_uploader.fields import RichTextUploadingField
 
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    credit_balance = models.PositiveIntegerField(null=False, blank=True, default=0)
-
 class Question(models.Model):
     LEVEL_CHOICES = (
         ('', 'Nenhuma opção'),
@@ -49,7 +45,7 @@ class Answer(models.Model):
 class Question_List(models.Model):
     question_list_header = models.CharField('Nome da Lista', max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    questions = models.ManyToManyField(Question, through='QuestionQuestion_List')
+    questions = models.ManyToManyField(Question, through='QuestionQuestion_List', related_name='questions')
     create_date = models.DateTimeField(auto_now_add=True)
     private = models.BooleanField('Lista privada')
     cloned_from = models.ForeignKey('self', null=True, blank=True, default=None, on_delete=models.CASCADE)
@@ -68,3 +64,11 @@ class QuestionQuestion_List(models.Model):
 
     class Meta:
         ordering = ['order']
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    credit_balance = models.PositiveIntegerField(null=False, blank=True, default=0)
+    avaiable_questions = models.ManyToManyField(Question, null=False, blank=True)
+
+    def __str__(self):
+        return u'Profile de %s' % (self.user.username)
