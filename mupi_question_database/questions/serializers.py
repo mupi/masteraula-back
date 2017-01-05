@@ -236,7 +236,7 @@ class QuestionOrderSerializer(serializers.ModelSerializer):
         print(question)
 
 class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
-    questions = QuestionOrderSerializer(many=True, source='questionquestion_list_set', read_only=False, label='questions')
+    questions = QuestionOrderSerializer(many=True, source='questionquestion_list_set', read_only=False)
     owner = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:users-detail', read_only=True)
     cloned_from = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:question_lists-detail', read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:question_lists-detail')
@@ -253,18 +253,19 @@ class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
             'cloned_from',
             'questions'
         )
+        extra_kwargs = {'cloned_from': {'required' : False}}
 
     def create(self, validated_data):
-        questions_order = validated_data.pop('questionquestion_list_set')
-        questions_order = sorted(questions_order, key=lambda k: k['order'])
+        if 'questionquestion_list_set' in validated_data:
+            questions_order = validated_data.pop('questionquestion_list_set')
+            questions_order = sorted(questions_order, key=lambda k: k['order'])
 
-        # Verifica a ordem da lista de ordens
-        expected = 1
-        for question_order in questions_order:
-            if question_order['order'] != expected:
-                raise ParseError("Invalid questions order")
-            expected = expected + 1
-
+            # Verifica a ordem da lista de ordens
+            expected = 1
+            for question_order in questions_order:
+                if question_order['order'] != expected:
+                    raise ParseError("Invalid questions order")
+                expected = expected + 1
 
         new_list = Question_List.objects.create(**validated_data)
         for question_order in questions_order:
@@ -275,6 +276,7 @@ class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
         if 'questionquestion_list_set' in validated_data:
             questions_order = validated_data.pop('questionquestion_list_set')
             questions_order = sorted(questions_order, key=lambda k: k['order'])
+            print(questions_order)
 
             # Verifica a ordem da lista de ordens
             expected = 1
@@ -293,6 +295,7 @@ class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
                 try:
                     question = QuestionQuestion_List.objects.get(question=question_order['question'],question_list=instance)
                     question.order = question_order['order']
+                    question.save()
                 except:
                     QuestionQuestion_List.objects.create(question_list=instance, **question_order)
 

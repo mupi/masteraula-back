@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 from mupi_question_database.users.models import User
 
-from .models import Question, Question_List, Profile
+from .models import Question, Question_List, Profile, QuestionQuestion_List
 from . import permissions as permissions
 from . import serializers as serializers
 
@@ -94,3 +94,19 @@ class Question_ListViewSet(viewsets.ModelViewSet):
         else:
             queryset = serializers.Question_List.objects.filter(private=False)
         return queryset
+
+    @detail_route(methods=['post'])
+    def clone_list(self, request, pk=None):
+        original_list = self.get_object()
+
+        serializer = serializers.Question_ListSerializer(data=request.data)
+
+        serializer.initial_data['questions'] = serializers.QuestionOrderSerializer(
+                QuestionQuestion_List.objects.filter(question_list=original_list), many=True, context={'request': request}).data
+
+        if serializer.is_valid():
+            print(serializer.validated_data)
+            cloned_list = serializer.save(owner=self.request.user, cloned_from=original_list)
+            return Response({"status" : "success"})
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
