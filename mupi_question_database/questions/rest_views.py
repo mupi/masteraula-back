@@ -1,5 +1,6 @@
 from rest_framework import generics, response, viewsets, status
 from rest_framework.decorators import detail_route, list_route
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from mupi_question_database.users.models import User
@@ -79,6 +80,43 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    @list_route(permission_classes=[IsAuthenticated])
+    def user_avaiable_questions(self, request):
+        profile = self.request.user.profile
+        avaiable_questions = profile.avaiable_questions.all()
+
+        page = self.paginate_queryset(avaiable_questions)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(recent_users, many=True)
+        return Response(serializer.data)
+
+    @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
+    def trade_question(self, request, pk=None):
+        bought_question = self.get_object()
+        buyer_profile = self.request.user.profile
+        seller_profile = bought_question.author.profile
+
+        print("asdfdasf")
+
+        avaiable_questions = buyer_profile.avaiable_questions.all()
+        if bought_question in avaiable_questions:
+            return Response({"error" : "already bought this question"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if buyer_profile.credit_balance < bought_question.credit_cost:
+            return Response({"error" : "insuficient founds"}, status=status.HTTP_400_BAD_REQUEST)
+
+        buyer_profile.credit_balance = buyer_profile.credit_balance - bought_question.credit_cost
+        buyer_profile.avaiable_questions.add(bought_question)
+
+        seller_profile.credit_balance = seller_profile.credit_balance + bought_question.credit_cost
+
+        buyer_profile.save()
+        seller_profile.save()
+        return Response({"status" : "success"})
 
 class Question_ListViewSet(viewsets.ModelViewSet):
     queryset = Question_List.objects.all()
