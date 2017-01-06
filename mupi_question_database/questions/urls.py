@@ -2,6 +2,8 @@ from django.conf.urls import url, include
 from rest_framework import renderers
 from rest_framework.routers import DefaultRouter
 
+from rest_framework_jwt.views import obtain_jwt_token, verify_jwt_token
+
 from . import views
 from . import rest_views
 
@@ -10,7 +12,6 @@ router = DefaultRouter()
 router.register(r'questions', rest_views.QuestionViewSet, base_name='questions')
 router.register(r'users', rest_views.UserViewSet, base_name='users')
 router.register(r'question_lists', rest_views.Question_ListViewSet, base_name='question_lists')
-
 
 urlpatterns = [
     # url(r'^$', views.QuestionSearchView.as_view(), name='list'),
@@ -45,4 +46,6 @@ urlpatterns = [
     # Rest Urls
 
     url(r'^', include(router.urls)),
+    url(r'^api-token-auth/', obtain_jwt_token),
+    url(r'^api-token-verify/', verify_jwt_token),
 ]

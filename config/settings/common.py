@@ -13,6 +13,8 @@ from __future__ import absolute_import, unicode_literals
 import environ
 import os
 
+import datetime
+
 ROOT_DIR = environ.Path(__file__) - 3  # (mupi_question_database/config/settings/common.py - 3 = mupi_question_database/)
 APPS_DIR = ROOT_DIR.path('mupi_question_database')
 
@@ -46,6 +48,7 @@ THIRD_PARTY_APPS = (
     'ckeditor',
     'ckeditor_uploader',
     'rolepermissions',
+    'rest_framework.authtoken',
 )
 
 # Apps specific for this project go here.
@@ -232,7 +235,6 @@ AUTH_PASSWORD_VALIDATORS = [
 # ------------------------------------------------------------------------------
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
 )
 
 # Some really nice defaults
@@ -268,7 +270,10 @@ HAYSTACK_CONNECTIONS = {
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+    )
 }
 
 CKEDITOR_UPLOAD_PATH = 'uploads/'
@@ -293,3 +298,7 @@ HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
 ROLEPERMISSIONS_MODULE = 'mupi_question_database.users.roles'
 
 ACCOUNT_SIGNUP_FORM_CLASS = 'mupi_question_database.users.forms.SignupForm'
+
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=86400),
+}
