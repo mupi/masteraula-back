@@ -12,12 +12,13 @@ from . import serializers as serializers
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
-    permission_classes = (permissions.IsOwnerOrReadOnlyUser,)
+    permission_classes = (permissions.UserPermission,)
 
     def get_serializer_class(self):
-        if self.action == 'list' or self.action == 'create':
-            return serializers.UserSerializer
-        return serializers.UserProfileSerializer
+        user = self.request.user
+        if (self.action == 'retrieve' and user == self.get_object()) or user.is_superuser:
+            return serializers.UserProfileSerializer
+        return serializers.UserSerializer
 
 
     def update(self, request, pk=None):
@@ -56,7 +57,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
-    @detail_route(methods=['post'])
+    @detail_route(methods=['post'], permission_classes=[permissions.UserPermission])
     def set_password(self, request, pk=None):
         user = self.get_object()
         serializer = serializers.PasswordSerializer(data=request.data)
@@ -76,7 +77,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
-    permission_classes = (permissions.IsOwnerOrReadOnlyQuestion,)
+    permission_classes = (permissions.QuestionPermission,)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -100,8 +101,6 @@ class QuestionViewSet(viewsets.ModelViewSet):
         buyer_profile = self.request.user.profile
         seller_profile = bought_question.author.profile
 
-        print("asdfdasf")
-
         avaiable_questions = buyer_profile.avaiable_questions.all()
         if bought_question in avaiable_questions:
             return Response({"error" : "already bought this question"}, status=status.HTTP_400_BAD_REQUEST)
@@ -119,9 +118,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
         return Response({"status" : "success"})
 
 class Question_ListViewSet(viewsets.ModelViewSet):
-    queryset = Question_List.objects.all()
     serializer_class = serializers.Question_ListSerializer
-    permission_classes = (permissions.IsOwnerOrReadOnlyQuestion_List,)
+    permission_classes = (permissions.Question_ListPermission,)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
