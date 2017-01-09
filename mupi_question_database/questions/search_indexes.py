@@ -10,7 +10,6 @@ import re
 
 class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True,use_template=True)
-    qustion_id = indexes.IntegerField(model_attr='pk')
     author = indexes.CharField(model_attr='author')
     create_date = indexes.DateTimeField(model_attr='create_date')
     level = indexes.CharField(model_attr='level', null=True)
@@ -39,7 +38,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         return ''
 
     def prepare_tags(self, obj):
-        return [tag.name for tag in obj.tags.all()]
+        return [tag.name.replace(' ','_') for tag in obj.tags.all()]
 
 class TagIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True,use_template=True)

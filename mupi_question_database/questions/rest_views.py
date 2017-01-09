@@ -1,3 +1,5 @@
+from drf_haystack.viewsets import HaystackViewSet
+
 from rest_framework import generics, response, viewsets, status
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.permissions import IsAuthenticated
@@ -146,3 +148,8 @@ class Question_ListViewSet(viewsets.ModelViewSet):
             return Response({"status" : "success"})
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class QuestionSearchView(HaystackViewSet):
+    index_models = [Question]
+
+    serializer_class = serializers.QuestionSearchSerializer

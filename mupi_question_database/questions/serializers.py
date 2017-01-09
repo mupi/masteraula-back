@@ -1,9 +1,12 @@
+from drf_haystack.serializers import HaystackSerializer
+
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError
 
 from mupi_question_database.users.models import User
 
 from .models import Question, Answer, Question_List, QuestionQuestion_List, Profile
+from .search_indexes import QuestionIndex
 
 class TagListSerializer(serializers.Field):
     '''
@@ -152,6 +155,8 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
             new_answer = Answer.objects.create(question=question, **answer)
             question.answers.add(new_answer)
 
+        # Atualiza o indice haystack
+        QuestionIndex().update_object(question)
         return question
 
     def update(self, instance, validated_data):
@@ -300,3 +305,13 @@ class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
                     QuestionQuestion_List.objects.create(question_list=instance, **question_order)
 
         return super().update(instance, validated_data)
+
+class QuestionSearchSerializer(HaystackSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:questions-detail')
+
+    class Meta:
+        index_classes = [QuestionIndex]
+
+        fields = [
+            "url", "question_id",  "text", "author", "create_date", "level", "question_text", "tags",
+        ]
