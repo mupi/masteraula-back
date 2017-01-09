@@ -6,7 +6,7 @@ from rest_framework.exceptions import ParseError
 from mupi_question_database.users.models import User
 
 from .models import Question, Answer, Question_List, QuestionQuestion_List, Profile
-from .search_indexes import QuestionIndex
+from .search_indexes import QuestionIndex, TagIndex
 
 class TagListSerializer(serializers.Field):
     '''
@@ -224,6 +224,9 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
             for tag in to_delete:
                 instance.tags.remove(tag)
 
+        # Atualiza o indice haystack
+        QuestionIndex().update_object(instance)
+
         return super().update(instance, validated_data)
 
 class QuestionOrderSerializer(serializers.ModelSerializer):
@@ -313,5 +316,15 @@ class QuestionSearchSerializer(HaystackSerializer):
         index_classes = [QuestionIndex]
 
         fields = [
-            "url", "question_id",  "text", "author", "create_date", "level", "question_text", "tags",
+            "url", "question_id", "author", "create_date", "level", "question_text", "tags",
         ]
+        ignore_fields = ["text"]
+
+class TagSearchSerializer(HaystackSerializer):
+    class Meta:
+        index_classes = [TagIndex]
+        fields = ["name", "tags_auto"]
+        ignore_fields = ["tags_auto"]
+        field_aliases = {
+            "q": "tags_auto"
+        }

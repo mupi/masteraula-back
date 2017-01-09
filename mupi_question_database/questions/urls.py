@@ -10,9 +10,12 @@ from . import rest_views
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
 router.register(r'questions', rest_views.QuestionViewSet, base_name='questions')
-router.register(r'question/search', rest_views.QuestionSearchView, base_name='questions-search')
+
 router.register(r'users', rest_views.UserViewSet, base_name='users')
 router.register(r'question_lists', rest_views.Question_ListViewSet, base_name='question_lists')
+
+router.register(r'question/search', rest_views.QuestionSearchView, base_name='questions-search')
+router.register(r'tag/search', rest_views.TagSearchView, base_name='tags-search')
 
 urlpatterns = [
     # url(r'^$', views.QuestionSearchView.as_view(), name='list'),

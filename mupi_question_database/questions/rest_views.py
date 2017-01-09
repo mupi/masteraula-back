@@ -1,9 +1,12 @@
+from drf_haystack.filters import HaystackAutocompleteFilter
 from drf_haystack.viewsets import HaystackViewSet
 
 from rest_framework import generics, response, viewsets, status
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from taggit.models import Tag
 
 from mupi_question_database.users.models import User
 
@@ -153,3 +156,9 @@ class QuestionSearchView(HaystackViewSet):
     index_models = [Question]
 
     serializer_class = serializers.QuestionSearchSerializer
+
+class TagSearchView(HaystackViewSet):
+    index_models = [Tag]
+
+    serializer_class = serializers.TagSearchSerializer
+    filter_backends = [HaystackAutocompleteFilter]
