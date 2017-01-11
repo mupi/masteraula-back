@@ -48,6 +48,20 @@ class QuestionPermission(permissions.BasePermission):
 
 class UserPermission(permissions.BasePermission):
 
+    def has_permission(self, request, view):
+        # Qualquer usuario pode fazer a listagem dos dados
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # super-usuarios podem criar novos usuarios
+        if request.user.is_superuser:
+            return True
+        # Somente pode criar novos usuarios, pessoas nao logadas
+        if view.action == 'create':
+            return True
+        # garante acesso aos demais metodos nao SAFE
+        return request.user.is_authenticated()
+
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
