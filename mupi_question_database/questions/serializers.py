@@ -37,6 +37,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:users-detail')
+    password = serializers.CharField(max_length=200)
 
     class Meta:
         model = User
@@ -316,7 +317,7 @@ class QuestionSearchSerializer(HaystackSerializer):
         index_classes = [QuestionIndex]
 
         fields = [
-            "url", "question_id", "author", "create_date", "level", "question_text", "tags",
+            "url", "text", "question_id", "author", "create_date", "level", "question_text", "tags",
         ]
         ignore_fields = ["text"]
 

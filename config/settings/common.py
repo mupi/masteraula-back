@@ -49,6 +49,7 @@ THIRD_PARTY_APPS = (
     'ckeditor_uploader',
     'rolepermissions',
     'rest_framework.authtoken',
+    'rest_framework_swagger'
 )
 
 # Apps specific for this project go here.
@@ -301,4 +302,14 @@ ACCOUNT_SIGNUP_FORM_CLASS = 'mupi_question_database.users.forms.SignupForm'
 
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=86400),
+}
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        },
+    },
 }

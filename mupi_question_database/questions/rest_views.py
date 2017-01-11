@@ -1,10 +1,12 @@
 from drf_haystack.filters import HaystackAutocompleteFilter
-from drf_haystack.viewsets import HaystackViewSet
+from drf_haystack.generics import HaystackGenericAPIView
 
 from rest_framework import generics, response, viewsets, status
 from rest_framework.decorators import detail_route, list_route
+from rest_framework.mixins import ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.viewsets import ViewSetMixin
 
 from taggit.models import Tag
 
@@ -14,19 +16,56 @@ from .models import Question, Question_List, Profile, QuestionQuestion_List
 from . import permissions as permissions
 from . import serializers as serializers
 
+
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = serializers.UserSerializer
     permission_classes = (permissions.UserPermission,)
 
     def get_serializer_class(self):
         user = self.request.user
+        if (self.action == 'set_password'):
+            return serializers.PasswordSerializer
         if (self.action == 'retrieve' and user == self.get_object()) or user.is_superuser:
             return serializers.UserProfileSerializer
         return serializers.UserSerializer
 
+    def list(self, request):
+        """
+        List all the users with basic information (without profile info)
+        """
+        return super().list(request)
+
+    def create(self, request):
+        """
+        Create a new User with some required fields
+
+        Only the name is not required.\n
+        Email has to be a valid email.\n
+        Username has to be a new one (can't repeat)
+        """
+        return super().create(request)
+
+    def retrieve(self, request, pk=None):
+        """
+        Get the id's related user. If the user is authenticated, more info will be displayed.
+        """
+        return super().retrieve(request)
+
+    def destroy(self, request, pk=None):
+        """
+        Delete the id's related user.
+
+        The user will only be deleted if the current authenticated user is the deleted one.
+        """
+        return super().destroy(request, pk)
 
     def update(self, request, pk=None):
+        """
+        Update all the fields, checking the password before saving the new changes.
+
+        All the fields will be updated. All the fields are required.
+        """
         user = self.get_object()
         serializer = serializers.UserSerializer(data=request.data)
 
@@ -44,10 +83,17 @@ class UserViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, pk=None):
+        """
+        Update only the fields that are in the request, checking the password.
+        """
         user = self.get_object()
         serializer = serializers.UserSerializer(data=request.data, partial = True)
 
         if serializer.is_valid():
+            if 'password' not in serializer.validated_data:
+                return Response({'password': 'password field is required'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
             if user.check_password(serializer.validated_data['password']):
                 if 'email' in serializer.validated_data:
                     user.email = serializer.validated_data['email']
@@ -62,8 +108,11 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
-    @detail_route(methods=['post'], permission_classes=[permissions.UserPermission])
+    @detail_route(methods=['post'], permission_classes=[permissions.UserPermission], serializer_class= serializers.PasswordSerializer)
     def set_password(self, request, pk=None):
+        """
+        API View that change the password of the current user in request.
+        """
         user = self.get_object()
         serializer = serializers.PasswordSerializer(data=request.data)
         if serializer.is_valid():
@@ -79,6 +128,7 @@ class UserViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
+
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
@@ -87,10 +137,74 @@ class QuestionViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    def list(self, request):
+        """
+        List all the questions
+        """
+        return super().list(request)
+
+    def create(self, request):
+        """
+        Create a new question
+
+        level parameter:
+        A string containing one of the following options: "E" (easy), "M" ('medium'), "H" (hard) or null\n
+        \n
+        tags parameters:
+        An array containing strings that will be the tags\n
+        Example:\n
+        "tags" : ["enem", "química orgânica"]\n
+        \n
+        Answers parameters:
+        An array containing objects that has two parameters: 'answer_text' containing the answer text
+        and 'is_correct' that if the answer is correct or not. \n
+        The anwer must have one and only one correct answer.\n
+        Correct Example:\n
+        "answers" : [
+            {
+                "answer_text" : "Sim",
+                "is_correct" : true
+            },
+            {
+                "answer_text" : "Não",
+                "is_correct" : false
+            }
+        ]\n
+        Wrong Example:\n
+        "answers" : [
+            {
+                "answer_text" : "Errado",
+                "is_correct" : false
+            },
+            {
+                "answer_text" : "Não",
+                "is_correct" : false
+            }
+        ]\n
+        """
+        return super().create(request)
+
+    def retrieve(self, request, pk=None):
+        """
+        Get the id's related question
+        """
+        return super().retrieve(request, pk)
+
+    def destroy(self, request, pk=None):
+        """
+        Delete the id's related question.
+
+        The question will only be deleted if the current authenticated user is the author.
+        """
+        return super().destroy(request, pk)
+
     @list_route(permission_classes=[IsAuthenticated])
     def user_avaiable_questions(self, request):
-        profile = self.request.user.profile
-        avaiable_questions = profile.avaiable_questions.all()
+        """
+        List all the purcharsed questions of the current authenticated user.
+        """
+        user = self.request.user
+        avaiable_questions = user.profile.avaiable_questions.all()
 
         page = self.paginate_queryset(avaiable_questions)
         if page is not None:
@@ -102,6 +216,10 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
     @detail_route(methods=['post'], permission_classes=[IsAuthenticated])
     def trade_question(self, request, pk=None):
+        """
+        Trade the question, if the current authenticated user has founds and hasn't already
+        bought the question
+        """
         bought_question = self.get_object()
         buyer_profile = self.request.user.profile
         seller_profile = bought_question.author.profile
@@ -122,9 +240,14 @@ class QuestionViewSet(viewsets.ModelViewSet):
         seller_profile.save()
         return Response({"status" : "success"})
 
+
+
 class Question_ListViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.Question_ListSerializer
     permission_classes = (permissions.Question_ListPermission,)
+
+    def get_serializer_class(self):
+        return serializers.Question_ListSerializer
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -136,8 +259,81 @@ class Question_ListViewSet(viewsets.ModelViewSet):
             queryset = serializers.Question_List.objects.filter(private=False)
         return queryset
 
+    def list(self, request):
+        """
+        List all the question_lists, excluding the private (unless the request user is the owner)
+        """
+        return super().list(request)
+
+    def create(self, request):
+        """
+        Create a new question_list
+
+        Questions parameters:
+        An array containing objects that has two parameters: 'question' containing the question URL and
+        'order', the order that the question will appear in the list. \n
+
+        The question list order starts at 1 and should respect the ascending order so if the list has
+        3 questions it's necessary that the array has three questions containing 1, 2 and 3 order. \n
+        \n
+        Correct Example:\n
+        "questions" : [
+            {
+                "question" : "http://localhost:8000/rest/questions/1/",
+                "order" : 2
+            },
+            {
+                "question" : "http://localhost:8000/rest/questions/4/",
+                "order" : 1
+            }
+        ]\n
+
+        Wrong Example 1:\n
+        "questions" : [
+            {
+                "question" : "http://localhost:8000/rest/questions/1/",
+                "order" : 1
+            },
+            {
+                "question" : "http://localhost:8000/rest/questions/4/",
+                "order" : 1
+            }
+        ]\n
+        Wrong Example 2:\n
+        "questions" : [
+            {
+                "question" : "http://localhost:8000/rest/questions/1/",
+                "order" : 2
+            },
+            {
+                "question" : "http://localhost:8000/rest/questions/4/",
+                "order" : 3
+            }
+        ]\n
+        """
+        return super().create(request)
+
+    def retrieve(self, request, pk=None):
+        """
+        Get the id's related question_list
+        """
+        return super().retrieve(request, pk)
+
+
+
+    def destroy(self, request, pk=None):
+        """
+        Delete the id's related question_list.
+
+        The question_list will only be deleted if the current authenticated user is the owner.
+        """
+        return super().destroy(request, pk)
+
     @detail_route(methods=['post'])
     def clone_list(self, request, pk=None):
+        """
+        Clone the list, copying all the questions and giving a new name and setting private or not.
+        """
         original_list = self.get_object()
 
         serializer = serializers.Question_ListSerializer(data=request.data)
@@ -147,18 +343,44 @@ class Question_ListViewSet(viewsets.ModelViewSet):
 
         if serializer.is_valid():
             print(serializer.validated_data)
-            cloned_list = serializer.save(owner=self.request.user, cloned_from=original_list)
+            serializer.save(owner=self.request.user, cloned_from=original_list)
             return Response({"status" : "success"})
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class QuestionSearchView(HaystackViewSet):
+
+
+class QuestionSearchView(ListModelMixin, ViewSetMixin, HaystackGenericAPIView):
     index_models = [Question]
 
     serializer_class = serializers.QuestionSearchSerializer
 
-class TagSearchView(HaystackViewSet):
+    def list(self, request):
+        """
+        List questions. It can be used filters passed in the queryset.
+
+        Examples:
+        admin's Questions: http://localhost:8000/rest/question/search/?author=admin\n
+        Questions with 'enem' and 'Facil' tags: http://localhost:8000/rest/question/search/?tags=enem&level=Facil\n
+        Questions with 'popular' and 'conhecimentos gerais' tags: http://localhost:8000/rest/question/search/?tags=popular&tags=conhecimentos_gerais (whitespaces should be replace with _)\n
+        Questions with 'D'águas de lindóia' tag: http://localhost:8000/rest/question/search/?tags=D%27%C3%A1guas_de_lind%C3%B3ia\n
+        Questions containing 'Quantos' word: http://localhost:8000/rest/question/search/?text__content=Quantos
+        """
+        return super().list(request)
+
+
+
+class TagSearchView(ListModelMixin, ViewSetMixin, HaystackGenericAPIView):
     index_models = [Tag]
 
     serializer_class = serializers.TagSearchSerializer
     filter_backends = [HaystackAutocompleteFilter]
+
+    def list(self, request):
+        """
+        List tags. Useful with autocomplete. Need at least 2 characters to work.
+
+        Examples:
+        Tags starting with 'bio': http://localhost:8000/rest/tag/search/?q=bio
+        """
+        return super().list(request)

@@ -13,7 +13,7 @@ from django.views.generic import TemplateView
 
 from mupi_question_database.questions.views import QuestionListView
 
-from ckeditor_uploader import views as ckeditor_uploader_views
+# from ckeditor_uploader import views as ckeditor_uploader_views
 
 urlpatterns = [
     url(r'^$', QuestionListView.as_view(template_name='pages/home.html'), name='home'),
@@ -30,16 +30,16 @@ urlpatterns = [
     url(r'^rest/', include('mupi_question_database.questions.urls', namespace='mupi_question_database')),
     url(r'^search/', include('haystack.urls')),
 
-    url(
-        r'^ckeditor/upload/',
-        csrf_exempt(login_required(ckeditor_uploader_views.upload)),
-         name='ckeditor_upload'
-    ),
-    url(
-        r'^ckeditor/browse/',
-        csrf_exempt(never_cache(login_required(ckeditor_uploader_views.browse))),
-        name='ckeditor_browse'
-    ),
+    # url(
+    #     r'^ckeditor/upload/',
+    #     csrf_exempt(login_required(ckeditor_uploader_views.upload)),
+    #      name='ckeditor_upload'
+    # ),
+    # url(
+    #     r'^ckeditor/browse/',
+    #     csrf_exempt(never_cache(login_required(ckeditor_uploader_views.browse))),
+    #     name='ckeditor_browse'
+    # ),
 
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 

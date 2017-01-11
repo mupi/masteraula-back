@@ -3,6 +3,7 @@ from rest_framework import renderers
 from rest_framework.routers import DefaultRouter
 
 from rest_framework_jwt.views import obtain_jwt_token, verify_jwt_token
+from rest_framework_swagger.views import get_swagger_view
 
 from . import views
 from . import rest_views
@@ -14,8 +15,10 @@ router.register(r'questions', rest_views.QuestionViewSet, base_name='questions')
 router.register(r'users', rest_views.UserViewSet, base_name='users')
 router.register(r'question_lists', rest_views.Question_ListViewSet, base_name='question_lists')
 
-router.register(r'question/search', rest_views.QuestionSearchView, base_name='questions-search')
-router.register(r'tag/search', rest_views.TagSearchView, base_name='tags-search')
+router.register(r'question/search', rest_views.QuestionSearchView, base_name='questions_search')
+router.register(r'tag/search', rest_views.TagSearchView, base_name='tags_search')
+
+schema_view = get_swagger_view(title='Mupi Question API')
 
 urlpatterns = [
     # url(r'^$', views.QuestionSearchView.as_view(), name='list'),
@@ -52,4 +55,5 @@ urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^api-token-auth/', obtain_jwt_token),
     url(r'^api-token-verify/', verify_jwt_token),
+    url(r'^docs/$', schema_view),
 ]

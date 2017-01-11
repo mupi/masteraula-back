@@ -54,3 +54,4 @@ whoosh==2.7.4
 django-role-permissions==1.2.1
 djangorestframework-jwt==1.9.0
 drf-haystack==1.6.0
+django-rest-swagger==2.1.1
