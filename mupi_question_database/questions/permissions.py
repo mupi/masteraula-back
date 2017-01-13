@@ -53,12 +53,12 @@ class UserPermission(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # super-usuarios podem criar novos usuarios
+        # super-usuarios tem privilegio total
         if request.user.is_superuser:
             return True
-        # Somente pode criar novos usuarios, pessoas nao logadas
+        # Somente pode criar novos usuarios pessoas nao logadas
         if view.action == 'create':
-            return True
+            return not request.user.is_authenticated()
         # garante acesso aos demais metodos nao SAFE
         return request.user.is_authenticated()
 
