@@ -156,6 +156,10 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
             new_answer = Answer.objects.create(question=question, **answer)
             question.answers.add(new_answer)
 
+        # Adiciona a questoa a lista de disponiveis
+        author = question.author
+        author.profile.avaiable_questions.add(question)
+
         # Atualiza o indice haystack
         QuestionIndex().update_object(question)
         return question
