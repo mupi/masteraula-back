@@ -1,12 +1,11 @@
 from drf_haystack.filters import HaystackAutocompleteFilter
 from drf_haystack.generics import HaystackGenericAPIView
 
-from rest_framework import generics, response, viewsets, status
+from rest_framework import generics, response, viewsets, status, mixins, viewsets
 from rest_framework.decorators import detail_route, list_route
-from rest_framework.mixins import ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import ViewSetMixin
+from rest_framework import viewsets
 
 from taggit.models import Tag
 
@@ -18,17 +17,13 @@ from . import serializers as serializers
 
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(mixins.CreateModelMixin,
+                    mixins.ListModelMixin,
+                    mixins.RetrieveModelMixin,
+                    viewsets.GenericViewSet):
     queryset = User.objects.all()
     permission_classes = (permissions.UserPermission,)
-
-    def get_serializer_class(self):
-        user = self.request.user
-        if (self.action == 'set_password'):
-            return serializers.PasswordSerializer
-        if (self.action == 'retrieve' and user == self.get_object()) or user.is_superuser:
-            return serializers.UserProfileSerializer
-        return serializers.UserSerializer
+    serializer_class = serializers.UserSerializer
 
     def list(self, request):
         """
@@ -52,22 +47,27 @@ class UserViewSet(viewsets.ModelViewSet):
         """
         return super().retrieve(request)
 
-    def destroy(self, request, pk=None):
+    @list_route(methods=['delete'], permission_classes=[IsAuthenticated])
+    def current_destroy(self, request, pk=None):
         """
         Delete the id's related user.
 
         The user will only be deleted if the current authenticated user is the deleted one.
         """
-        return super().destroy(request, pk)
+        user = request.user
+        user.is_active = False
+        user.save()
+        return Response({'status': 'deleted'})
 
-    def update(self, request, pk=None):
+    @list_route(methods=['patch'], permission_classes=[IsAuthenticated], serializer_class=serializers.UserUpdateSerializer)
+    def current_update(self, request):
         """
         Update all the fields, checking the password before saving the new changes.
 
         All the fields will be updated. All the fields are required.
         """
-        user = self.get_object()
-        serializer = serializers.UserSerializer(data=request.data)
+        user = request.user
+        serializer = serializers.UserUpdateSerializer(data=request.data)
 
         if serializer.is_valid():
             if user.check_password(serializer.validated_data['password']):
@@ -82,12 +82,13 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
-    def partial_update(self, request, pk=None):
+    @list_route(methods=['put'], permission_classes=[IsAuthenticated], serializer_class=serializers.UserUpdateSerializer)
+    def current_partial_update(self, request):
         """
         Update only the fields that are in the request, checking the password.
         """
-        user = self.get_object()
-        serializer = serializers.UserSerializer(data=request.data, partial = True)
+        user = request.user
+        serializer = serializers.UserUpdateSerializer(data=request.data, partial = True)
 
         if serializer.is_valid():
             if 'password' not in serializer.validated_data:
@@ -108,12 +109,21 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
-    @detail_route(methods=['post'], permission_classes=[permissions.UserPermission], serializer_class= serializers.PasswordSerializer)
-    def set_password(self, request, pk=None):
+    @list_route(methods=['get'], permission_classes=[IsAuthenticated])
+    def current(self, request):
+        """
+        show current user
+        """
+        user = request.user
+        serializer = serializers.UserProfileSerializer(user, context={'request': request})
+        return Response(serializer.data)
+
+    @list_route(methods=['post'], permission_classes=[IsAuthenticated], serializer_class=serializers.PasswordSerializer)
+    def set_password(self, request):
         """
         API View that change the password of the current user in request.
         """
-        user = self.get_object()
+        user = request.user
         serializer = serializers.PasswordSerializer(data=request.data)
         if serializer.is_valid():
             if user.check_password(serializer.validated_data['previous_password']):
@@ -350,7 +360,7 @@ class Question_ListViewSet(viewsets.ModelViewSet):
 
 
 
-class QuestionSearchView(ListModelMixin, ViewSetMixin, HaystackGenericAPIView):
+class QuestionSearchView(mixins.ListModelMixin, viewsets.ViewSetMixin, HaystackGenericAPIView):
     index_models = [Question]
 
     serializer_class = serializers.QuestionSearchSerializer
@@ -370,7 +380,7 @@ class QuestionSearchView(ListModelMixin, ViewSetMixin, HaystackGenericAPIView):
 
 
 
-class TagSearchView(ListModelMixin, ViewSetMixin, HaystackGenericAPIView):
+class TagSearchView(mixins.ListModelMixin, viewsets.ViewSetMixin, HaystackGenericAPIView):
     index_models = [Tag]
 
     serializer_class = serializers.TagSearchSerializer

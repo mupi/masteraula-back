@@ -37,7 +37,6 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:users-detail')
-    password = serializers.CharField(max_length=200)
 
     class Meta:
         model = User
@@ -83,6 +82,11 @@ class UserProfileSerializer(serializers.HyperlinkedModelSerializer):
 class PasswordSerializer(serializers.Serializer):
     password = serializers.CharField(max_length=200)
     previous_password = serializers.CharField(max_length=200)
+
+class UserUpdateSerializer(serializers.Serializer):
+    password = serializers.CharField(max_length=200)
+    name = serializers.CharField(max_length=200)
+    email = serializers.EmailField()
 
 
 class AnswerSerializer(serializers.ModelSerializer):
