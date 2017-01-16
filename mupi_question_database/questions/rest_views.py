@@ -21,38 +21,34 @@ class UserViewSet(mixins.CreateModelMixin,
                     mixins.ListModelMixin,
                     mixins.RetrieveModelMixin,
                     viewsets.GenericViewSet):
-    queryset = User.objects.all()
-    permission_classes = (permissions.UserPermission,)
-    serializer_class = serializers.UserSerializer
-
-    def list(self, request):
-        """
+    """
+    list:
         List all the users with basic information (without profile info)
-        """
-        return super().list(request)
 
-    def create(self, request):
-        """
+    create:
         Create a new User with some required fields
 
         Only the name is not required.\n
         Email has to be a valid email.\n
         Username has to be a new one (can't repeat)
-        """
-        return super().create(request)
 
-    def retrieve(self, request, pk=None):
-        """
+    retrieve:
         Get the id's related user. If the user is authenticated, more info will be displayed.
-        """
-        return super().retrieve(request)
+
+    delete:
+        Delete the id's related user.
+
+        The user will only be deleted if the current authenticated user is the deleted one.
+
+    """
+    queryset = User.objects.all()
+    permission_classes = (permissions.UserPermission,)
+    serializer_class = serializers.UserSerializer
 
     @list_route(methods=['delete'], permission_classes=[IsAuthenticated])
     def current_destroy(self, request, pk=None):
         """
-        Delete the id's related user.
-
-        The user will only be deleted if the current authenticated user is the deleted one.
+        Delete the current authenticated user
         """
         user = request.user
         user.is_active = False
@@ -112,7 +108,7 @@ class UserViewSet(mixins.CreateModelMixin,
     @list_route(methods=['get'], permission_classes=[IsAuthenticated])
     def current(self, request):
         """
-        show current user
+        Show current authenticated user
         """
         user = request.user
         serializer = serializers.UserProfileSerializer(user, context={'request': request})
@@ -138,23 +134,12 @@ class UserViewSet(mixins.CreateModelMixin,
                             status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class QuestionViewSet(viewsets.ModelViewSet):
-    queryset = Question.objects.all()
-    serializer_class = serializers.QuestionSerializer
-    permission_classes = (permissions.QuestionPermission,)
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
-    def list(self, request):
-        """
+    """
+    list:
         List all the questions
-        """
-        return super().list(request)
 
-    def create(self, request):
-        """
+    create:
         Create a new question
 
         level parameter:
@@ -191,22 +176,32 @@ class QuestionViewSet(viewsets.ModelViewSet):
                 "is_correct" : false
             }
         ]\n
-        """
-        return super().create(request)
 
-    def retrieve(self, request, pk=None):
-        """
+    retrieve:
         Get the id's related question
-        """
-        return super().retrieve(request, pk)
 
-    def destroy(self, request, pk=None):
-        """
+    delete:
         Delete the id's related question.
 
+    update:
+        Update all the fields. All the fields are required.
+
+        The question will only be updated if the current authenticated user is the author.
+
+    partial_update:
+        Update only the fields that are in the request.
+
+        The question will only be updated if the current authenticated user is the author.
+
+    delete:
         The question will only be deleted if the current authenticated user is the author.
-        """
-        return super().destroy(request, pk)
+    """
+    queryset = Question.objects.all()
+    serializer_class = serializers.QuestionSerializer
+    permission_classes = (permissions.QuestionPermission,)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
     @list_route(permission_classes=[IsAuthenticated])
     def user_avaiable_questions(self, request):
@@ -253,30 +248,11 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
 
 class Question_ListViewSet(viewsets.ModelViewSet):
-    serializer_class = serializers.Question_ListSerializer
-    permission_classes = (permissions.Question_ListPermission,)
-
-    def get_serializer_class(self):
-        return serializers.Question_ListSerializer
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-    def get_queryset(self):
-        if self.request.user.is_superuser:
-            queryset = serializers.Question_List.objects.all()
-        else:
-            queryset = serializers.Question_List.objects.filter(private=False)
-        return queryset
-
-    def list(self, request):
-        """
+    """
+    list:
         List all the question_lists, excluding the private (unless the request user is the owner)
-        """
-        return super().list(request)
 
-    def create(self, request):
-        """
+    create:
         Create a new question_list
 
         Questions parameters:
@@ -320,24 +296,40 @@ class Question_ListViewSet(viewsets.ModelViewSet):
                 "order" : 3
             }
         ]\n
-        """
-        return super().create(request)
 
-    def retrieve(self, request, pk=None):
-        """
+    retrieve:
         Get the id's related question_list
-        """
-        return super().retrieve(request, pk)
 
+    update:
+        Update all the fields. All the fields are required.
 
+        The question will only be updated if the current authenticated user is the owner.
 
-    def destroy(self, request, pk=None):
-        """
+    partial_update:
+        Update only the fields that are in the request.
+
+        The question will only be updated if the current authenticated user is the owner.
+
+    destroy:
         Delete the id's related question_list.
 
         The question_list will only be deleted if the current authenticated user is the owner.
-        """
-        return super().destroy(request, pk)
+    """
+    serializer_class = serializers.Question_ListSerializer
+    permission_classes = (permissions.Question_ListPermission,)
+
+    def get_serializer_class(self):
+        return serializers.Question_ListSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            queryset = serializers.Question_List.objects.all()
+        else:
+            queryset = serializers.Question_List.objects.filter(private=False)
+        return queryset
 
     @detail_route(methods=['post'])
     def clone_list(self, request, pk=None):
@@ -361,12 +353,8 @@ class Question_ListViewSet(viewsets.ModelViewSet):
 
 
 class QuestionSearchView(mixins.ListModelMixin, viewsets.ViewSetMixin, HaystackGenericAPIView):
-    index_models = [Question]
-
-    serializer_class = serializers.QuestionSearchSerializer
-
-    def list(self, request):
-        """
+    """
+    list:
         List questions. It can be used filters passed in the queryset.
 
         Examples:
@@ -375,22 +363,20 @@ class QuestionSearchView(mixins.ListModelMixin, viewsets.ViewSetMixin, HaystackG
         Questions with 'popular' and 'conhecimentos gerais' tags: http://localhost:8000/rest/question/search/?tags=popular&tags=conhecimentos_gerais (whitespaces should be replace with _)\n
         Questions with 'D'águas de lindóia' tag: http://localhost:8000/rest/question/search/?tags=D%27%C3%A1guas_de_lind%C3%B3ia\n
         Questions containing 'Quantos' word: http://localhost:8000/rest/question/search/?text__content=Quantos
-        """
-        return super().list(request)
+    """
+    index_models = [Question]
 
-
+    serializer_class = serializers.QuestionSearchSerializer
 
 class TagSearchView(mixins.ListModelMixin, viewsets.ViewSetMixin, HaystackGenericAPIView):
-    index_models = [Tag]
-
-    serializer_class = serializers.TagSearchSerializer
-    filter_backends = [HaystackAutocompleteFilter]
-
-    def list(self, request):
-        """
+    """
+    list:
         List tags. Useful with autocomplete. Need at least 2 characters to work.
 
         Examples:
         Tags starting with 'bio': http://localhost:8000/rest/tag/search/?q=bio
-        """
-        return super().list(request)
+    """
+    index_models = [Tag]
+
+    serializer_class = serializers.TagSearchSerializer
+    filter_backends = [HaystackAutocompleteFilter]
