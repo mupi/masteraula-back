@@ -126,25 +126,29 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
         )
         extra_kwargs = {'tags': {'required' : True}, 'answers' : {'required' : True}}
 
-    def create(self, validated_data):
-        tags = validated_data.pop('tags')
-        answers = validated_data.pop('answers')
-
-        # Verifica se ha duas questoes corretas na mesma pergunta
+    def validate_answers(self, value):
         has_correct = False
         error = None
-        for answer in answers:
-            if answer["is_correct"]:
+        for answer in value:
+            if answer['is_correct']:
                 if has_correct:
-                    error = 'The question has two correct answers'
-                    break
+                    raise serializers.ValidationError('The question has two correct answers')
                 has_correct = True
 
         # Verifica se ha ao menos uma resposta correta
         if not has_correct:
-            error = 'The question does not have any correct answer'
-        if error is not None:
-            raise ParseError(error)
+            raise serializers.ValidationError('The question does not have any correct answer')
+
+        list_id = [answer['id'] for answer in value if 'id' in answer]
+        dblist_id = Answer.objects.filter(id__in=list_id)
+        if len(list_id) != len(dblist_id):
+            raise serializers.ValidationError('There is a answer with a new id that did not exist before')
+
+        return value
+
+    def create(self, validated_data):
+        tags = validated_data.pop('tags')
+        answers = validated_data.pop('answers')
 
         question = Question.objects.create(question_header=validated_data['question_header'],
                                             question_text=validated_data['question_text'],
@@ -173,31 +177,10 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
         if 'answers' in validated_data:
             answers = validated_data.pop('answers')
 
-            # Verifica se ha duas questoes corretas na mesma pergunta
-            has_correct = False
-            error = None
-            for answer in answers:
-                if answer["is_correct"]:
-                    if has_correct:
-                        error = 'The question has two correct answers'
-                        break
-                    has_correct = True
-
-            # Verifica se ha ao menos uma resposta correta
-            if not has_correct:
-                error = 'The question does not have any correct answer'
-
             # Prepara listas para exclusao de respostas que nao fazem mais parte da pergunta
             dbanswer = [answer.id for answer in list(instance.answers.all())]
             answer_aux = [answer['id'] for answer in answers if 'id' in answer]
             to_delete = list(set(dbanswer) - set(answer_aux))
-            to_create = list(set(answer_aux) - set(dbanswer))
-
-            # Nao pode haver ids 'to_create' para nao gerar inconsistencia no banco de dados
-            if to_create:
-                error = 'There is a question with a new id that did not exist before'
-            if error is not None:
-                raise ParseError(error)
 
             # Deleta as respostas que nao estao mais sendo usadas
             for id_answer in to_delete:
@@ -272,19 +255,31 @@ class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
         )
         extra_kwargs = {'cloned_from': {'required' : False}}
 
+    def validate_questions(self, value):
+        questions_order = sorted(value, key=lambda k: k['order'])
+        questions_id = []
+
+        # Verifica a ordem da lista de ordens
+        expected = 1
+        for question_order in questions_order:
+            if question_order['order'] != expected:
+                raise serializers.ValidationError('Invalid questions order')
+            expected = expected + 1
+            questions_id.append(question_order['question'])
+
+        if (len(questions_id) != len(set(questions_id))):
+            raise serializers.ValidationError('Duplicate question in the list')
+
+
+        return value
+
     def create(self, validated_data):
         if 'questionquestion_list_set' in validated_data:
             questions_order = validated_data.pop('questionquestion_list_set')
             questions_order = sorted(questions_order, key=lambda k: k['order'])
 
-            # Verifica a ordem da lista de ordens
-            expected = 1
-            for question_order in questions_order:
-                if question_order['order'] != expected:
-                    raise ParseError("Invalid questions order")
-                expected = expected + 1
-
         new_list = Question_List.objects.create(**validated_data)
+
         for question_order in questions_order:
             QuestionQuestion_List.objects.create(question_list=new_list, **question_order)
         return new_list
@@ -293,27 +288,22 @@ class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
         if 'questionquestion_list_set' in validated_data:
             questions_order = validated_data.pop('questionquestion_list_set')
             questions_order = sorted(questions_order, key=lambda k: k['order'])
-            print(questions_order)
-
-            # Verifica a ordem da lista de ordens
-            expected = 1
-            for question_order in questions_order:
-                if question_order['order'] != expected:
-                    raise ParseError("Invalid questions order")
-                expected = expected + 1
 
             questions_ids = [item['question'].id for item in questions_order]
 
             for question in instance.questions.all():
+                # Apaga as questoes que sumiram da lista
                 if question.id not in questions_ids:
                     QuestionQuestion_List.objects.get(question=question.id,question_list=instance).delete()
 
             for question_order in questions_order:
                 try:
+                    # Se somente trocou a ordem (ou seja, o objeto ja existia)
                     question = QuestionQuestion_List.objects.get(question=question_order['question'],question_list=instance)
                     question.order = question_order['order']
                     question.save()
                 except:
+                    # Se for para criar um novo par
                     QuestionQuestion_List.objects.create(question_list=instance, **question_order)
 
         return super().update(instance, validated_data)
