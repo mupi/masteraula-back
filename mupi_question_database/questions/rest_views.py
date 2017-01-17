@@ -22,23 +22,33 @@ class UserViewSet(mixins.CreateModelMixin,
                     mixins.RetrieveModelMixin,
                     viewsets.GenericViewSet):
     """
-    list:
-        List all the users with basic information (without profile info)
+list:
 
-    create:
-        Create a new User with some required fields
+List all the users with basic information (without profile info)
+<hr>
 
-        Only the name is not required.\n
-        Email has to be a valid email.\n
-        Username has to be a new one (can't repeat)
+create:
 
-    retrieve:
-        Get the id's related user. If the user is authenticated, more info will be displayed.
+Create a new User with some required fields
 
-    delete:
-        Delete the id's related user.
+##Parameters
+* Only the name is not required. All the others are.
+* Email has to be a valid email.
+* Username has to be a new one (can't repeat)
 
-        The user will only be deleted if the current authenticated user is the deleted one.
+<hr>
+
+retrieve:
+
+Get the id's related user. If the user is authenticated, more info will be displayed.
+<hr>
+
+delete:
+
+Delete the id's related user.
+
+The user will only be deleted if the current authenticated user is the deleted one.
+<hr>
 
     """
     queryset = User.objects.all()
@@ -136,65 +146,91 @@ class UserViewSet(mixins.CreateModelMixin,
 
 class QuestionViewSet(viewsets.ModelViewSet):
     """
-    list:
-        List all the questions
+list:
 
-    create:
-        Create a new question
+List all the questions
+<hr>
 
-        level parameter:
-        A string containing one of the following options: "E" (easy), "M" ('medium'), "H" (hard) or null\n
-        \n
-        tags parameters:
-        An array containing strings that will be the tags\n
-        Example:\n
-        "tags" : ["enem", "química orgânica"]\n
-        \n
-        Answers parameters:
-        An array containing objects that has two parameters: 'answer_text' containing the answer text
-        and 'is_correct' that if the answer is correct or not. \n
-        The anwer must have one and only one correct answer.\n
-        Correct Example:\n
-        "answers" : [
-            {
-                "answer_text" : "Sim",
-                "is_correct" : true
-            },
-            {
-                "answer_text" : "Não",
-                "is_correct" : false
-            }
-        ]\n
-        Wrong Example:\n
-        "answers" : [
-            {
-                "answer_text" : "Errado",
-                "is_correct" : false
-            },
-            {
-                "answer_text" : "Não",
-                "is_correct" : false
-            }
-        ]\n
+create:
 
-    retrieve:
-        Get the id's related question
+Create a new question
 
-    delete:
-        Delete the id's related question.
+###Parameters
 
-    update:
-        Update all the fields. All the fields are required.
+###resolution
+Resolution is a string that saves the author opinion and/or how to solve it.
 
-        The question will only be updated if the current authenticated user is the author.
+####level
+A string containing one of the following options: "E" (easy), "M" ('medium'), "H" (hard) or null
 
-    partial_update:
-        Update only the fields that are in the request.
+####tags
+An array containing strings representing the tags.
 
-        The question will only be updated if the current authenticated user is the author.
+E.g.:
+```"tags" : ["enem", "química orgânica"]```
 
-    delete:
-        The question will only be deleted if the current authenticated user is the author.
+####Answers
+An array containing objects that has two parameters: 'answer_text' containing the answer text
+and 'is_correct' that if the answer is correct or not.
+The anwer must have one and only one correct answer.
+
+Correct E.g.:
+
+```
+"answers" : [
+    {
+        "answer_text" : "Sim",
+        "is_correct" : true
+    },
+    {
+        "answer_text" : "Não",
+        "is_correct" : false
+    }
+]```
+
+Wrong E.g.:
+
+```
+"answers" : [
+    {
+        "answer_text" : "Errado",
+        "is_correct" : false
+    },
+    {
+        "answer_text" : "Não",
+        "is_correct" : false
+    }
+]```
+<hr>
+
+retrieve:
+
+Get the id's related question.
+<hr>
+
+delete:
+
+Delete the id's related question.
+<hr>
+
+update:
+
+Update all the fields. All the fields are required.
+
+The question will only be updated if the current authenticated user is the author.
+<hr>
+
+partial_update:
+
+Update only the fields that are in the request.
+
+The question will only be updated if the current authenticated user is the author.
+<hr>
+
+delete:
+
+The question will only be deleted if the current authenticated user is the author.
+<hr>
     """
     queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
@@ -249,71 +285,99 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
 class Question_ListViewSet(viewsets.ModelViewSet):
     """
-    list:
-        List all the question_lists, excluding the private (unless the request user is the owner)
+list:
 
-    create:
-        Create a new question_list
+List all the question_lists, excluding the private (unless the request user is the owner)
 
-        Questions parameters:
-        An array containing objects that has two parameters: 'question' containing the question URL and
-        'order', the order that the question will appear in the list. \n
+create:
 
-        The question list order starts at 1 and should respect the ascending order so if the list has
-        3 questions it's necessary that the array has three questions containing 1, 2 and 3 order. \n
-        \n
-        Correct Example:\n
-        "questions" : [
-            {
-                "question" : "http://localhost:8000/rest/questions/1/",
-                "order" : 2
-            },
-            {
-                "question" : "http://localhost:8000/rest/questions/4/",
-                "order" : 1
-            }
-        ]\n
+Create a new question_list
 
-        Wrong Example 1:\n
-        "questions" : [
-            {
-                "question" : "http://localhost:8000/rest/questions/1/",
-                "order" : 1
-            },
-            {
-                "question" : "http://localhost:8000/rest/questions/4/",
-                "order" : 1
-            }
-        ]\n
-        Wrong Example 2:\n
-        "questions" : [
-            {
-                "question" : "http://localhost:8000/rest/questions/1/",
-                "order" : 2
-            },
-            {
-                "question" : "http://localhost:8000/rest/questions/4/",
-                "order" : 3
-            }
-        ]\n
+##Parameters
+###questions:
+An array containing objects that has two parameters: 'question' containing the question URL and
+'order', the order that the question will appear in the list.
 
-    retrieve:
-        Get the id's related question_list
+The question list order starts at 1 and should respect the ascending order so if the list has
+3 questions it's necessary that the array has three questions containing 1, 2 and 3 order.
 
-    update:
-        Update all the fields. All the fields are required.
+Correct E.g.:
 
-        The question will only be updated if the current authenticated user is the owner.
+```
+"questions" : [
+    {
+        "question" : "http://localhost:8000/rest/questions/1/",
+        "order" : 2
+    },
+    {
+        "question" : "http://localhost:8000/rest/questions/4/",
+        "order" : 1
+    }
+]```
 
-    partial_update:
-        Update only the fields that are in the request.
+Wrong E.g. 1 (duplicated order):
 
-        The question will only be updated if the current authenticated user is the owner.
+```
+"questions" : [
+    {
+        "question" : "http://localhost:8000/rest/questions/1/",
+        "order" : 1
+    },
+    {
+        "question" : "http://localhost:8000/rest/questions/4/",
+        "order" : 1
+    }
+]```
 
-    destroy:
-        Delete the id's related question_list.
+Wrong E.g. 2 (Invalid order):
 
-        The question_list will only be deleted if the current authenticated user is the owner.
+```
+"questions" : [
+    {
+        "question" : "http://localhost:8000/rest/questions/1/",
+        "order" : 2
+    },
+    {
+        "question" : "http://localhost:8000/rest/questions/4/",
+        "order" : 3
+    }
+]```
+
+Wrong E.g. 3 (duplicate question):
+
+```
+"questions" : [
+    {
+        "question" : "http://localhost:8000/rest/questions/1/",
+        "order" : 2
+    },
+    {
+        "question" : "http://localhost:8000/rest/questions/1/",
+        "order" : 1
+    }
+]```
+
+retrieve:
+
+Get the id's related question_list
+
+update:
+
+Update all the fields. All the fields are required.
+
+The question will only be updated if the current authenticated user is the owner.
+
+partial_update:
+
+Update only the fields that are in the request.
+
+The question will only be updated if the current authenticated user is the owner.
+
+destroy:
+
+Delete the id's related question_list.
+
+The question_list will only be deleted if the current authenticated user is the owner.
     """
     serializer_class = serializers.Question_ListSerializer
     permission_classes = (permissions.Question_ListPermission,)
@@ -354,15 +418,17 @@ class Question_ListViewSet(viewsets.ModelViewSet):
 
 class QuestionSearchView(mixins.ListModelMixin, viewsets.ViewSetMixin, HaystackGenericAPIView):
     """
-    list:
-        List questions. It can be used filters passed in the queryset.
+list:
 
-        Examples:
-        admin's Questions: http://localhost:8000/rest/question/search/?author=admin\n
-        Questions with 'enem' and 'Facil' tags: http://localhost:8000/rest/question/search/?tags=enem&level=Facil\n
-        Questions with 'popular' and 'conhecimentos gerais' tags: http://localhost:8000/rest/question/search/?tags=popular&tags=conhecimentos_gerais (whitespaces should be replace with _)\n
-        Questions with 'D'águas de lindóia' tag: http://localhost:8000/rest/question/search/?tags=D%27%C3%A1guas_de_lind%C3%B3ia\n
-        Questions containing 'Quantos' word: http://localhost:8000/rest/question/search/?text__content=Quantos
+List questions. It can be used filters passed in the queryset.
+
+E.g.s:
+
++ admin's Questions: [http://localhost:8000/rest/search/question/?author=admin](http://localhost:8000/rest/search/question/?author=admin)
++ Questions with 'enem' and 'Facil' tags: [http://localhost:8000/rest/search/question/?tags=enem&level=Facil](http://localhost:8000/rest/search/question/?tags=enem&level=Facil)
++ Questions with 'popular' and 'conhecimentos gerais' tags: [http://localhost:8000/rest/search/question/?tags=popular&tags=conhecimentos_gerais](http://localhost:8000/rest/search/question/?tags=popular&tags=conhecimentos_gerais) (whitespaces should be replace with _)
++ Questions with 'D'águas de lindóia' tag: [http://localhost:8000/rest/search/question/?tags=D%27%C3%A1guas_de_lind%C3%B3ia](http://localhost:8000/rest/search/question/?tags=D%27%C3%A1guas_de_lind%C3%B3ia)
++ Questions containing 'Quantos' word: [http://localhost:8000/rest/search/question/?text__content=Quantos](http://localhost:8000/rest/search/question/?text__content=Quantos)
     """
     index_models = [Question]
 
@@ -370,11 +436,12 @@ class QuestionSearchView(mixins.ListModelMixin, viewsets.ViewSetMixin, HaystackG
 
 class TagSearchView(mixins.ListModelMixin, viewsets.ViewSetMixin, HaystackGenericAPIView):
     """
-    list:
-        List tags. Useful with autocomplete. Need at least 2 characters to work.
+list:
 
-        Examples:
-        Tags starting with 'bio': http://localhost:8000/rest/tag/search/?q=bio
+List tags. Useful with autocomplete. Need at least 2 characters to work.
+
+E.g.s:
+Tags starting with 'bio': [http://localhost:8000/rest/search/tag/?q=bio](http://localhost:8000/rest/search/tag/?q=bio)
     """
     index_models = [Tag]
 
