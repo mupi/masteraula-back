@@ -29,6 +29,8 @@ List all the users with basic information (without profile info)
 
 create:
 
+WARNING - You may consider using django-rest-auth registration method instead
+
 Create a new User with some required fields
 
 ##Parameters
@@ -40,34 +42,28 @@ Create a new User with some required fields
 
 retrieve:
 
-Get the id's related user. If the user is authenticated, more info will be displayed.
+Get the id's related user. 
 <hr>
-
-delete:
-
-Delete the id's related user.
-
-The user will only be deleted if the current authenticated user is the deleted one.
-<hr>
-
     """
     queryset = User.objects.all()
     permission_classes = (permissions.UserPermission,)
     serializer_class = serializers.UserSerializer
 
-    @list_route(methods=['delete'], permission_classes=[IsAuthenticated])
-    def current_destroy(self, request, pk=None):
-        """
-        Delete the current authenticated user
-        """
-        user = request.user
-        user.is_active = False
-        user.save()
-        return Response({'status': 'deleted'})
+    # @list_route(methods=['delete'], permission_classes=[IsAuthenticated])
+    # def current_destroy(self, request, pk=None):
+    #     """
+    #     Delete the current authenticated user
+    #     """
+    #     user = request.user
+    #     user.is_active = False
+    #     user.save()
+    #     return Response({'status': 'deleted'})
 
     @list_route(methods=['patch'], permission_classes=[IsAuthenticated], serializer_class=serializers.UserUpdateSerializer)
     def current_update(self, request):
         """
+        WARNING - You may consider using django-rest-auth patch method instead
+
         Update all the fields, checking the password before saving the new changes.
 
         All the fields will be updated. All the fields are required.
@@ -91,6 +87,8 @@ The user will only be deleted if the current authenticated user is the deleted o
     @list_route(methods=['put'], permission_classes=[IsAuthenticated], serializer_class=serializers.UserUpdateSerializer)
     def current_partial_update(self, request):
         """
+        WARNING - You may consider using django-rest-auth put method instead
+
         Update only the fields that are in the request, checking the password.
         """
         user = request.user
@@ -118,6 +116,8 @@ The user will only be deleted if the current authenticated user is the deleted o
     @list_route(methods=['get'], permission_classes=[IsAuthenticated])
     def current(self, request):
         """
+        WARNING - You may consider using django-rest-auth get method instead
+
         Show current authenticated user
         """
         user = request.user
@@ -127,6 +127,8 @@ The user will only be deleted if the current authenticated user is the deleted o
     @list_route(methods=['post'], permission_classes=[IsAuthenticated], serializer_class=serializers.PasswordSerializer)
     def set_password(self, request):
         """
+        WARNING - You may consider using django-rest-auth password change method instead
+
         API View that change the password of the current user in request.
         """
         user = request.user

@@ -16,7 +16,8 @@ from mupi_question_database.questions.views import QuestionListView
 # from ckeditor_uploader import views as ckeditor_uploader_views
 
 urlpatterns = [
-    url(r'^$', QuestionListView.as_view(template_name='pages/home.html'), name='home'),
+    # url(r'^$', QuestionListView.as_view(template_name='pages/home.html'), name='home'),
+    url(r'^', include('django.contrib.auth.urls')),
     url(r'^about/$', TemplateView.as_view(template_name='pages/about.html'), name='about'),
 
     # Django Admin, use {% url 'admin:index' %}
@@ -28,7 +29,7 @@ urlpatterns = [
 
     # Your stuff: custom urls includes go here
     url(r'^rest/', include('mupi_question_database.questions.urls', namespace='mupi_question_database')),
-    url(r'^search/', include('haystack.urls')),
+    # url(r'^search/', include('haystack.urls')),
 
     # url(
     #     r'^ckeditor/upload/',

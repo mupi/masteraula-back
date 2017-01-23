@@ -49,7 +49,9 @@ THIRD_PARTY_APPS = (
     'ckeditor_uploader',
     'rolepermissions',
     'rest_framework.authtoken',
-    'rest_framework_swagger'
+    'rest_framework_swagger',
+    'rest_auth',
+    'rest_auth.registration'
 )
 
 # Apps specific for this project go here.
@@ -312,4 +314,18 @@ SWAGGER_SETTINGS = {
             'in': 'header'
         },
     },
+}
+
+REST_USE_JWT = True
+ACCOUNT_LOGOUT_ON_GET = False
+OLD_PASSWORD_FIELD_ENABLED = True
+
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER' : 'mupi_question_database.questions.serializers.UserDetailsSerializer',
+    'JWT_SERIALIZER' : 'mupi_question_database.questions.serializers.JWTSerializer',
+    'LOGIN_SERIALIZER': 'mupi_question_database.questions.serializers.LoginSerializer',
+}
+
+REST_AUTH_REGISTER_SERIALIZERS = {
+    'REGISTER_SERIALIZER': 'mupi_question_database.questions.serializers.RegisterSerializer'
 }
