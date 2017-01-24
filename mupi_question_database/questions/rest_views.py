@@ -1,3 +1,5 @@
+from django.http import HttpResponse
+
 from drf_haystack.filters import HaystackAutocompleteFilter
 from drf_haystack.generics import HaystackGenericAPIView
 
@@ -5,17 +7,19 @@ from rest_framework import generics, response, viewsets, status, mixins, viewset
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import viewsets
+from rest_framework import viewsets, exceptions
 
 from taggit.models import Tag
 
 from mupi_question_database.users.models import User
 
 from .models import Question, Question_List, Profile, QuestionQuestion_List
+from .docx_parsers import Question_Parser
 from . import permissions as permissions
 from . import serializers as serializers
 
-
+import os
+import time
 
 class UserViewSet(mixins.CreateModelMixin,
                     mixins.ListModelMixin,
@@ -42,7 +46,7 @@ Create a new User with some required fields
 
 retrieve:
 
-Get the id's related user. 
+Get the id's related user.
 <hr>
     """
     queryset = User.objects.all()
@@ -416,7 +420,34 @@ The question_list will only be deleted if the current authenticated user is the 
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @detail_route(methods=['get'])
+    def generate_list(self, request, pk=None):
+        """
+        Generate a docx file containing all the list
+        """
+        question_list = self.get_object()
+        questions = [q.question for q in QuestionQuestion_List.objects.filter(question_list=question_list)]
 
+        if not questions:
+            raise exceptions.ValidationError('Can not generate an empty list')
+
+        list_header = question_list.question_list_header
+        # Nome aleatorio para nao causar problemas
+        docx_title = list_header + str(round(time.time() * 1000)) + '.docx'
+        parser = Question_Parser(docx_title)
+
+        parser.parse_heading(list_header)
+        parser.parse_list_questions(questions)
+
+        parser.end_parser()
+        data = open(docx_title, "rb").read()
+
+        response = HttpResponse(
+            data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+        # Apaga o arquivo temporario criado
+        os.remove(docx_title)
+        return response
 
 class QuestionSearchView(mixins.ListModelMixin, viewsets.ViewSetMixin, HaystackGenericAPIView):
     """
