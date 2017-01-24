@@ -230,6 +230,25 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
 
         return super().update(instance, validated_data)
 
+class QuestionBasicSerializer(serializers.HyperlinkedModelSerializer):
+    tags = TagListSerializer(read_only=False)
+    author = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:users-detail', read_only=True)
+    url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:questions-detail')
+
+    class Meta:
+        model = Question
+        fields = (
+            'url',
+            'id',
+            'question_header',
+            'question_text',
+            'level',
+            'author',
+            'create_date',
+            'credit_cost',
+            'tags',
+        )
+
 class QuestionOrderSerializer(serializers.ModelSerializer):
     question = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:questions-detail', read_only=False, queryset=Question.objects.all())
 
