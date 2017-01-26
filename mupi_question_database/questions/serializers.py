@@ -265,7 +265,7 @@ class QuestionOrderSerializer(serializers.ModelSerializer):
 
 class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
     questions = QuestionOrderSerializer(many=True, source='questionquestion_list_set', read_only=False)
-    owner = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:users-detail', read_only=True)
+    owner = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:users-detail', read_only=False, queryset=User.objects.all())
     cloned_from = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:question_lists-detail', read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:question_lists-detail')
 
@@ -281,7 +281,8 @@ class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
             'cloned_from',
             'questions'
         )
-        extra_kwargs = {'cloned_from': {'required' : False}}
+        extra_kwargs = {'cloned_from': {'required' : False},
+                        'author' : {'required' : False}}
 
     def validate_questions(self, value):
         questions_order = sorted(value, key=lambda k: k['order'])
@@ -300,6 +301,22 @@ class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
 
 
         return value
+
+    def validate(self, attrs):
+        owner = attrs.get('owner')
+        question_orders = attrs.get('questionquestion_list_set')
+
+        msg = None
+
+        for question_order in question_orders:
+            question = question_order.get('question')
+            if question not in owner.profile.avaiable_questions.all():
+                msg = _('The question with id ' + str(question.id) + ' is not avaiable for this user')
+
+        if msg:
+            raise exceptions.ValidationError(msg)
+
+        return attrs
 
     def create(self, validated_data):
         if 'questionquestion_list_set' in validated_data:

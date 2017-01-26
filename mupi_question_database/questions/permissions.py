@@ -37,6 +37,9 @@ class QuestionPermission(permissions.BasePermission):
         return request.user.is_authenticated()
 
     def has_object_permission(self, request, view, obj):
+        if view.action == 'generate_list' and obj.owner != request.user:
+            return False
+
         # Qualquer usuario pode ver as questoes
         if request.method in permissions.SAFE_METHODS:
             return True

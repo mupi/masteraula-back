@@ -404,6 +404,11 @@ The question_list will only be deleted if the current authenticated user is the 
     def get_serializer_class(self):
         return serializers.Question_ListSerializer
 
+    def create(self, request):
+        user_serializer = serializers.UserSerializer(self.request.user, context={'request': request})
+        request.data['owner'] = user_serializer.data['url']
+        return super().create(request)
+
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
@@ -427,7 +432,6 @@ The question_list will only be deleted if the current authenticated user is the 
                 QuestionQuestion_List.objects.filter(question_list=original_list), many=True, context={'request': request}).data
 
         if serializer.is_valid():
-            print(serializer.validated_data)
             serializer.save(owner=self.request.user, cloned_from=original_list)
             return Response({"status" : "success"})
         else:
@@ -436,7 +440,7 @@ The question_list will only be deleted if the current authenticated user is the 
     @detail_route(methods=['get'])
     def generate_list(self, request, pk=None):
         """
-        Generate a docx file containing all the list
+        Generate a docx file containing all the list.
         """
         question_list = self.get_object()
         questions = [q.question for q in QuestionQuestion_List.objects.filter(question_list=question_list)]
