@@ -235,6 +235,7 @@ The question will only be updated if the current authenticated user is the autho
 
 delete:
 
+WARNING: Deleting questions may impact questions_lists(the orders will be affected causing a huge problem)
 The question will only be deleted if the current authenticated user is the author.
 <hr>
     """
@@ -426,16 +427,18 @@ The question_list will only be deleted if the current authenticated user is the 
         """
         original_list = self.get_object()
 
-        serializer = serializers.Question_ListSerializer(data=request.data)
+        user_serializer = serializers.UserSerializer(self.request.user, context={'request': request})
+        request.data['owner'] = user_serializer.data['url']
+        serializer = self.get_serializer(data=request.data)
 
         serializer.initial_data['questions'] = serializers.QuestionOrderSerializer(
                 QuestionQuestion_List.objects.filter(question_list=original_list), many=True, context={'request': request}).data
 
-        if serializer.is_valid():
-            serializer.save(owner=self.request.user, cloned_from=original_list)
-            return Response({"status" : "success"})
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save(owner=self.request.user, cloned_from=original_list)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @detail_route(methods=['get'])
     def generate_list(self, request, pk=None):
