@@ -45,9 +45,6 @@ THIRD_PARTY_APPS = (
     'taggit',
     'haystack',
     'rest_framework',
-    'ckeditor',
-    'ckeditor_uploader',
-    'rolepermissions',
     'rest_framework.authtoken',
     'rest_framework_swagger',
     'rest_auth',
@@ -279,26 +276,7 @@ REST_FRAMEWORK = {
     )
 }
 
-CKEDITOR_UPLOAD_PATH = 'uploads/'
-CKEDITOR_JQUERY_URL = '//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js'
-CKEDITOR_ALLOW_NONIMAGE_FILES = False
-
-CKEDITOR_CONFIGS = {
-    'default': {
-        'language': 'pt-br',
-        'toolbar': 'Custom',
-        'toolbar_Custom': [
-            ['Bold', 'Italic', 'Underline'],
-            ['NumberedList', 'BulletedList'],
-            ['Image', 'Table'],
-            ['RemoveFormat', 'Source'],
-        ]
-    }
-}
-
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
-
-ROLEPERMISSIONS_MODULE = 'mupi_question_database.users.roles'
 
 ACCOUNT_SIGNUP_FORM_CLASS = 'mupi_question_database.users.forms.SignupForm'
 

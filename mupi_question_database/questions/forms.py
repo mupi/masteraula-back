@@ -3,8 +3,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from haystack.query import SearchQuerySet
 
-from ckeditor.widgets import CKEditorWidget
-
 from haystack.forms import SearchForm
 
 from .models import Question, Answer

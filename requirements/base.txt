@@ -45,14 +45,13 @@ redis>=2.10.5
 
 
 # Your custom requirements go here
-# python-docx==0.8.6
+python-docx==0.8.6
 django-taggit==0.21.2
 django-haystack==2.5.0
 djangorestframework==3.4.7
-# django-ckeditor==5.1.1
 whoosh==2.7.4
-# django-role-permissions==1.2.1
 djangorestframework-jwt==1.9.0
 drf-haystack==1.6.0
 django-rest-swagger==2.1.1
 markdown==2.6.7
+django-rest-auth==0.9.0

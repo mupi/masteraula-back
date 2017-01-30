@@ -11,9 +11,6 @@ from django.urls import reverse
 from haystack.generic_views import SearchView
 from haystack.query import SearchQuerySet
 
-from rolepermissions.mixins import HasRoleMixin
-from rolepermissions.decorators import has_role_decorator
-
 from taggit.models import Tag
 
 import json
@@ -60,11 +57,10 @@ class Question_ListDeleteView(LoginRequiredMixin, DeleteView):
             return redirect(reverse('questions:question_list_detail', args=(self.kwargs['pk'],)))
         return super(Question_ListDeleteView, self).dispatch(request, *args, **kwargs)
 
-class Question_ListCreateView(HasRoleMixin, LoginRequiredMixin, CreateView):
+class Question_ListCreateView(LoginRequiredMixin, CreateView):
     model = Question_List
     fields = ['question_list_header', 'private']
     template_name = "questions/question_list_create.html"
-    allowed_roles = 'teacher'
 
     # Necessario para passar informacoes para o front-end disponibilizar quais
     # exercicios foram selecionados, mosrtando no check-box
@@ -235,12 +231,11 @@ class Question_ListListView(LoginRequiredMixin, ListView):
         context['question_list_list'] = Question_List.objects.filter(Q(private=False) | Q(owner=self.request.user.id))
         return context
 
-class Question_ListOwnListView(HasRoleMixin, LoginRequiredMixin, ListView):
+class Question_ListOwnListView(LoginRequiredMixin, ListView):
     model = Question_List
     template_name = "questions/question_list_own_list.html"
     context_object_name = "question_list_list"
     success_url = "/questions"
-    allowed_roles = 'teacher'
 
     def get_context_data(self, *args, **kwargs):
         context = super(Question_ListOwnListView, self).get_context_data(**kwargs)
@@ -248,12 +243,11 @@ class Question_ListOwnListView(HasRoleMixin, LoginRequiredMixin, ListView):
         context['question_list_list'] = Question_List.objects.filter(owner=self.request.user.id)
         return context
 
-class Question_ListCloneView(HasRoleMixin, LoginRequiredMixin, CreateView):
+class Question_ListCloneView(LoginRequiredMixin, CreateView):
     model = Question_List
     fields = ['question_list_header', 'private']
     template_name = "questions/question_list_clone.html"
     context_object_name = "question_list"
-    allowed_roles = 'teacher'
 
     def get_context_data(self, *args, **kwargs):
         context = super(Question_ListCloneView, self).get_context_data(**kwargs)
@@ -395,10 +389,9 @@ def clear_questions_edit_add_list(request):
         )
     raise Http404("Method GET not allowed in check_question!")
 
-class QuestionCreate(LoginRequiredMixin, HasRoleMixin, CreateView):
+class QuestionCreate(LoginRequiredMixin, CreateView):
     model = Question
     form_class = QuestionForm
-    allowed_roles = 'teacher'
 
     def form_valid(self, form):
         new_question = form.save(commit=False)
@@ -426,7 +419,6 @@ class QuestionCreate(LoginRequiredMixin, HasRoleMixin, CreateView):
 
 
 # Gera um arquivo .docx contendo a lista de exercicios selecionadas
-@has_role_decorator('teacher')
 def list_generator(request):
     # Metodo GET gera a lista preparada pelo POST e realiza seu download
     if (request.method == 'GET'):
@@ -482,7 +474,6 @@ def list_generator(request):
 
 
 # Gera um arquivo .docx contendo a lista de exercicios selecionadas
-@has_role_decorator('teacher')
 def answer_list_generator(request):
     # Metodo GET gera a lista preparada pelo POST e realiza seu download
     if (request.method == 'GET'):

@@ -2,7 +2,6 @@ import datetime
 from django.db import models
 from mupi_question_database.users.models import User
 from taggit.managers import TaggableManager
-from ckeditor_uploader.fields import RichTextUploadingField
 
 class Question(models.Model):
     LEVEL_CHOICES = (
@@ -13,8 +12,8 @@ class Question(models.Model):
     )
 
     question_header = models.CharField(max_length=50)
-    question_text = RichTextUploadingField()
-    resolution = RichTextUploadingField(null=True, blank=True)
+    question_text = models.TextField()
+    resolution = models.TextField(null=True, blank=True)
     level = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)
     author = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     create_date = models.DateTimeField(auto_now_add=True)
@@ -31,7 +30,7 @@ class Question(models.Model):
 
 class Answer(models.Model):
     question = models.ForeignKey('Question', related_name='answers', on_delete=models.CASCADE)
-    answer_text = RichTextUploadingField()
+    answer_text = models.TextField()
     is_correct = models.BooleanField()
 
     class Meta:
@@ -68,7 +67,7 @@ class QuestionQuestion_List(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     credit_balance = models.PositiveIntegerField(null=False, blank=True, default=0)
-    avaiable_questions = models.ManyToManyField(Question, null=False, blank=True)
+    avaiable_questions = models.ManyToManyField(Question, blank=True)
 
     def __str__(self):
         return u'Profile de %s' % (self.user.username)
