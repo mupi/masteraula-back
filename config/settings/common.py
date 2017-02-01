@@ -48,7 +48,8 @@ THIRD_PARTY_APPS = (
     'rest_framework.authtoken',
     'rest_framework_swagger',
     'rest_auth',
-    'rest_auth.registration'
+    'rest_auth.registration',
+    'corsheaders'
 )
 
 # Apps specific for this project go here.
@@ -72,6 +73,7 @@ MIDDLEWARE = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 )
 
 # MIGRATIONS CONFIGURATION
