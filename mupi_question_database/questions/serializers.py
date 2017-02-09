@@ -13,6 +13,8 @@ from rest_auth import serializers as auth_serializers
 
 from rest_framework import serializers, exceptions
 
+from taggit.models import Tag
+
 from mupi_question_database.users.models import User
 
 from .models import Question, Answer, Question_List, QuestionQuestion_List, Profile
@@ -353,6 +355,11 @@ class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
 
         return super().update(instance, validated_data)
 
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ['name', 'slug']
+
 class QuestionSearchSerializer(HaystackSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:questions-detail')
 
@@ -367,10 +374,10 @@ class QuestionSearchSerializer(HaystackSerializer):
 class TagSearchSerializer(HaystackSerializer):
     class Meta:
         index_classes = [TagIndex]
-        fields = ["name", "tags_auto"]
-        ignore_fields = ["tags_auto"]
+        fields = ['name', 'slug', 'tags_auto']
+        ignore_fields = ['tags_auto']
         field_aliases = {
-            "q": "tags_auto"
+            'q': 'tags_auto'
         }
 
 
