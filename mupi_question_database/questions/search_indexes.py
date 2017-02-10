@@ -13,6 +13,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     author = indexes.CharField(model_attr='author')
     create_date = indexes.DateTimeField(model_attr='create_date')
     level = indexes.CharField(model_attr='level', null=True)
+    question_header = indexes.CharField(model_attr='question_header')
     question_text = indexes.CharField(model_attr='question_text')
     tags = indexes.MultiValueField()
 
