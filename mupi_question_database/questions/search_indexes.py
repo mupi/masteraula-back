@@ -13,6 +13,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     author = indexes.CharField(model_attr='author')
     create_date = indexes.DateTimeField(model_attr='create_date')
     level = indexes.CharField(model_attr='level', null=True)
+    question_header = indexes.CharField(model_attr='question_header')
     question_text = indexes.CharField(model_attr='question_text')
     tags = indexes.MultiValueField()
 
@@ -38,12 +39,13 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         return ''
 
     def prepare_tags(self, obj):
-        return [tag.name.replace(' ','_') for tag in obj.tags.all()]
+        return [tag.slug for tag in obj.tags.all()]
 
 class TagIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True,use_template=True)
     name = indexes.CharField(model_attr='name')
-    tags_auto = indexes.EdgeNgramField(model_attr='name')
+    slug = indexes.CharField(model_attr='slug')
+    tags_auto = indexes.EdgeNgramField(model_attr='slug')
 
     def get_model(self):
         return Tag

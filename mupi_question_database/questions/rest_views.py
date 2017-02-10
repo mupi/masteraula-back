@@ -469,6 +469,11 @@ The question_list will only be deleted if the current authenticated user is the 
         os.remove(docx_title)
         return response
 
+class TagListView(mixins.ListModelMixin, viewsets.GenericViewSet):
+    queryset = Question.tags.most_common()
+    pagination_class = None
+    serializer_class = serializers.TagSerializer
+
 class QuestionSearchView(mixins.ListModelMixin, viewsets.ViewSetMixin, HaystackGenericAPIView):
     """
 list:
@@ -479,9 +484,9 @@ E.g.s:
 
 + admin's Questions: [http://localhost:8000/rest/search/question/?author=admin](http://localhost:8000/rest/search/question/?author=admin)
 + Questions with 'enem' and 'Facil' tags: [http://localhost:8000/rest/search/question/?tags=enem&level=Facil](http://localhost:8000/rest/search/question/?tags=enem&level=Facil)
-+ Questions with 'popular' and 'conhecimentos gerais' tags: [http://localhost:8000/rest/search/question/?tags=popular&tags=conhecimentos_gerais](http://localhost:8000/rest/search/question/?tags=popular&tags=conhecimentos_gerais) (whitespaces should be replace with _)
-+ Questions with 'D'águas de lindóia' tag: [http://localhost:8000/rest/search/question/?tags=D%27%C3%A1guas_de_lind%C3%B3ia](http://localhost:8000/rest/search/question/?tags=D%27%C3%A1guas_de_lind%C3%B3ia)
-+ Questions containing 'Quantos' word: [http://localhost:8000/rest/search/question/?text__content=Quantos](http://localhost:8000/rest/search/question/?text__content=Quantos)
++ Questions with 'enem' and 'erro' tags: [http://localhost:8000/rest/search/question/?tags=enem&tags=erro](http://localhost:8000/rest/search/question/?tags=enem&tags=erro)
++ Questions with 'D'águas de lindóia' tag: [http://localhost:8000/rest/search/question/?tags=daguas-de-lindoia](http://localhost:8000/rest/search/question/?tags=daguas-de-lindoia)
++ Questions containing 'Quantas' word: [http://localhost:8000/rest/search/question/?text__content=Quantas](http://localhost:8000/rest/search/question/?text__content=Quantas)
     """
     index_models = [Question]
 
@@ -497,6 +502,6 @@ E.g.s:
 Tags starting with 'bio': [http://localhost:8000/rest/search/tag/?q=bio](http://localhost:8000/rest/search/tag/?q=bio)
     """
     index_models = [Tag]
-
+    pagination_class = None
     serializer_class = serializers.TagSearchSerializer
     filter_backends = [HaystackAutocompleteFilter]

@@ -6,12 +6,14 @@ from allauth.account.utils import setup_user_email
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
-from drf_haystack.serializers import HaystackSerializer
+from drf_haystack.serializers import HaystackSerializer, HaystackSerializerMixin
 
 from rest_auth.registration import serializers as auth_register_serializers
 from rest_auth import serializers as auth_serializers
 
 from rest_framework import serializers, exceptions
+
+from taggit.models import Tag
 
 from mupi_question_database.users.models import User
 
@@ -353,24 +355,28 @@ class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
 
         return super().update(instance, validated_data)
 
-class QuestionSearchSerializer(HaystackSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:questions-detail')
-
+class TagSerializer(serializers.ModelSerializer):
     class Meta:
-        index_classes = [QuestionIndex]
+        model = Tag
+        fields = ['name', 'slug']
 
-        fields = [
-            "url", "text", "question_id", "author", "create_date", "level", "question_text", "tags",
+class QuestionSearchSerializer(HaystackSerializerMixin, QuestionBasicSerializer):
+
+    class Meta(QuestionBasicSerializer.Meta):
+        search_fields = [
+            'text',
         ]
-        ignore_fields = ["text"]
+        field_aliases = []
+        exclude = []
+        ignore_fields = ['text']
 
 class TagSearchSerializer(HaystackSerializer):
     class Meta:
         index_classes = [TagIndex]
-        fields = ["name", "tags_auto"]
-        ignore_fields = ["tags_auto"]
+        fields = ['name', 'slug', 'tags_auto']
+        ignore_fields = ['tags_auto']
         field_aliases = {
-            "q": "tags_auto"
+            'q': 'tags_auto'
         }
 
 
