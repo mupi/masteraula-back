@@ -7,7 +7,7 @@ from rest_framework import generics, response, viewsets, status, mixins, viewset
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import viewsets, exceptions
+from rest_framework import viewsets, exceptions, pagination
 
 from taggit.models import Tag
 
@@ -149,6 +149,8 @@ Get the id's related user.
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
+class QuestionPagination(pagination.PageNumberPagination):
+       page_size = 9
 
 class QuestionViewSet(viewsets.ModelViewSet):
     """
@@ -242,6 +244,7 @@ The question will only be deleted if the current authenticated user is the autho
     queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
     permission_classes = (permissions.QuestionPermission,)
+    pagination_class = QuestionPagination
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -489,6 +492,7 @@ E.g.s:
 + Questions containing 'Quantas' word: [http://localhost:8000/rest/search/question/?text__content=Quantas](http://localhost:8000/rest/search/question/?text__content=Quantas)
     """
     index_models = [Question]
+    pagination_class = QuestionPagination
 
     serializer_class = serializers.QuestionSearchSerializer
 
