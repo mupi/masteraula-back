@@ -456,13 +456,26 @@ The question_list will only be deleted if the current authenticated user is the 
 
         list_header = question_list.question_list_header
         # Nome aleatorio para nao causar problemas
-        docx_title = list_header + str(round(time.time() * 1000)) + '.docx'
+        docx_title = pk + list_header + '.docx'
         parser = Question_Parser(docx_title)
 
         parser.parse_heading(list_header)
         parser.parse_list_questions(questions)
 
         parser.end_parser()
+        data = open(docx_title, "rb").read()
+
+        return Response({'code': pk})
+
+    @detail_route(methods=['get'])
+    def get_list(self, request, pk=None):
+        """
+        Generate a docx file containing all the list.
+        """
+        question_list = self.get_object()
+        list_header = question_list.question_list_header
+        docx_title = pk + list_header + '.docx'
+
         data = open(docx_title, "rb").read()
 
         response = HttpResponse(
