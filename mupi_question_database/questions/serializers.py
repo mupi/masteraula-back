@@ -47,13 +47,13 @@ class ProfileSerializer(serializers.ModelSerializer):
             'credit_balance',
         )
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:users-detail')
+class UserSerializer(serializers.ModelSerializer):
+    # url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:users-detail')
 
     class Meta:
         model = User
         fields = (
-            'url',
+            # 'url',
             'id',
             'username',
             'name',
@@ -74,14 +74,14 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
         return user
 
-class UserProfileSerializer(serializers.HyperlinkedModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:users-detail')
+class UserProfileSerializer(serializers.ModelSerializer):
+    # url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:users-detail')
     profile = ProfileSerializer(read_only=True)
 
     class Meta:
         model = User
         fields = (
-            'url',
+            # 'url',
             'id',
             'username',
             'name',
@@ -114,16 +114,16 @@ class AnswerSerializer(serializers.ModelSerializer):
                         }
 
 
-class QuestionSerializer(serializers.HyperlinkedModelSerializer):
+class QuestionSerializer(serializers.ModelSerializer):
     answers = AnswerSerializer(many=True, read_only=False)
     tags = TagListSerializer(read_only=False)
-    author = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:users-detail', read_only=True)
-    url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:questions-detail')
+    author = UserSerializer(read_only=True)
+    # url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:questions-detail')
 
     class Meta:
         model = Question
         fields = (
-            'url',
+            # 'url',
             'id',
             'question_header',
             'question_text',
@@ -232,15 +232,15 @@ class QuestionSerializer(serializers.HyperlinkedModelSerializer):
 
         return super().update(instance, validated_data)
 
-class QuestionBasicSerializer(serializers.HyperlinkedModelSerializer):
+class QuestionBasicSerializer(serializers.ModelSerializer):
     tags = TagListSerializer(read_only=False)
-    author = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:users-detail', read_only=True)
-    url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:questions-detail')
+    author = UserSerializer(read_only=True)
+    # url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:questions-detail')
 
     class Meta:
         model = Question
         fields = (
-            'url',
+            # 'url',
             'id',
             'question_header',
             'question_text',
@@ -252,7 +252,7 @@ class QuestionBasicSerializer(serializers.HyperlinkedModelSerializer):
         )
 
 class QuestionOrderSerializer(serializers.ModelSerializer):
-    question = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:questions-detail', read_only=False, queryset=Question.objects.all())
+    question = serializers.PrimaryKeyRelatedField(read_only=False, queryset=Question.objects.all())
 
     class Meta:
         model = QuestionQuestion_List
@@ -263,24 +263,57 @@ class QuestionOrderSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         question = validated_data.pop('question')
-        print(question)
 
-class Question_ListSerializer(serializers.HyperlinkedModelSerializer):
-    questions = QuestionOrderSerializer(many=True, source='questionquestion_list_set', read_only=False)
-    owner = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:users-detail', read_only=False, queryset=User.objects.all())
-    cloned_from = serializers.HyperlinkedRelatedField(view_name='mupi_question_database:question_lists-detail', read_only=True)
-    url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:question_lists-detail')
+class QuestionOrderDetailSerializer(serializers.ModelSerializer):
+    question = QuestionSerializer(read_only=False)
+
+    class Meta:
+        model = QuestionQuestion_List
+        fields = (
+            'question',
+            'order',
+        )
+
+    def create(self, validated_data):
+        question = validated_data.pop('question')
+
+class Question_ListDetailSerializer(serializers.ModelSerializer):
+    questions = QuestionOrderDetailSerializer(many=True, source='questionquestion_list_set', read_only=False)
+    owner = serializers.PrimaryKeyRelatedField(read_only=False, queryset=User.objects.all())
+    # cloned_from = serializers.PrimaryKeyRelatedField(view_name='mupi_question_database:question_lists-detail', read_only=True)
+    # url = serializers.PrimaryKeyRelatedField(view_name='mupi_question_database:question_lists-detail')
 
     class Meta:
         model = Question_List
         fields = (
-            'url',
+            # 'url',
             'id',
             'owner',
             'question_list_header',
             'private',
             'create_date',
-            'cloned_from',
+            # 'cloned_from',
+            'questions'
+        )
+        extra_kwargs = {'cloned_from': {'required' : False},
+                        'author' : {'required' : False}}
+
+class Question_ListSerializer(serializers.ModelSerializer):
+    questions = QuestionOrderSerializer(many=True, source='questionquestion_list_set', read_only=False)
+    owner = serializers.PrimaryKeyRelatedField(read_only=False, queryset=User.objects.all())
+    # cloned_from = serializers.PrimaryKeyRelatedField(view_name='mupi_question_database:question_lists-detail', read_only=True)
+    # url = serializers.PrimaryKeyRelatedField(view_name='mupi_question_database:question_lists-detail')
+
+    class Meta:
+        model = Question_List
+        fields = (
+            # 'url',
+            'id',
+            'owner',
+            'question_list_header',
+            'private',
+            'create_date',
+            # 'cloned_from',
             'questions'
         )
         extra_kwargs = {'cloned_from': {'required' : False},
