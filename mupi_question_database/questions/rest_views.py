@@ -329,11 +329,11 @@ Correct E.g.:
 ```
 "questions" : [
     {
-        "question" : "http://localhost:8000/rest/questions/1/",
+        "question" : 1,
         "order" : 2
     },
     {
-        "question" : "http://localhost:8000/rest/questions/4/",
+        "question" : 4,
         "order" : 1
     }
 ]```
@@ -343,11 +343,11 @@ Wrong E.g. 1 (duplicated order):
 ```
 "questions" : [
     {
-        "question" : "http://localhost:8000/rest/questions/1/",
+        "question" : 1,
         "order" : 1
     },
     {
-        "question" : "http://localhost:8000/rest/questions/4/",
+        "question" : 4,
         "order" : 1
     }
 ]```
@@ -357,11 +357,11 @@ Wrong E.g. 2 (Invalid order):
 ```
 "questions" : [
     {
-        "question" : "http://localhost:8000/rest/questions/1/",
+        "question" : 1,
         "order" : 2
     },
     {
-        "question" : "http://localhost:8000/rest/questions/4/",
+        "question" : 4,
         "order" : 3
     }
 ]```
@@ -371,11 +371,11 @@ Wrong E.g. 3 (duplicate question):
 ```
 "questions" : [
     {
-        "question" : "http://localhost:8000/rest/questions/1/",
+        "question" : 1,
         "order" : 2
     },
     {
-        "question" : "http://localhost:8000/rest/questions/1/",
+        "question" : 1,
         "order" : 1
     }
 ]```
@@ -406,11 +406,23 @@ The question_list will only be deleted if the current authenticated user is the 
     permission_classes = (permissions.Question_ListPermission,)
 
     def get_serializer_class(self):
+        if self.action == 'list' or self.action == 'retrieve':
+            return serializers.Question_ListDetailSerializer
         return serializers.Question_ListSerializer
 
     def create(self, request):
         user_serializer = serializers.UserSerializer(self.request.user, context={'request': request})
-        request.data['owner'] = user_serializer.data['url']
+        request.data['owner'] = user_serializer.data['id']
+        return super().create(request)
+
+    def update(self, request, pk=None):
+        user_serializer = serializers.UserSerializer(self.request.user, context={'request': request})
+        request.data['owner'] = user_serializer.data['id']
+        return super().create(request)
+
+    def partial_update(self, request, pk=None):
+        user_serializer = serializers.UserSerializer(self.request.user, context={'request': request})
+        request.data['owner'] = user_serializer.data['id']
         return super().create(request)
 
     def perform_create(self, serializer):
