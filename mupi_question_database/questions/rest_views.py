@@ -435,6 +435,22 @@ The question_list will only be deleted if the current authenticated user is the 
             queryset = serializers.Question_List.objects.filter(private=False)
         return queryset
 
+    @list_route(permission_classes=[IsAuthenticated])
+    def user_list_questions(self, request):
+        """
+        List all the question lists of the current authenticated user.
+        """
+        user = self.request.user
+        avaiable_lists = user.question_list_set.all()
+
+        page = self.paginate_queryset(avaiable_lists)
+        if page is not None:
+            serializer = serializers.Question_ListDetailSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(recent_users, many=True)
+        return Response(serializer.data)
+
     @detail_route(methods=['post'])
     def clone_list(self, request, pk=None):
         """

@@ -279,7 +279,7 @@ class QuestionOrderDetailSerializer(serializers.ModelSerializer):
 
 class Question_ListDetailSerializer(serializers.ModelSerializer):
     questions = QuestionOrderDetailSerializer(many=True, source='questionquestion_list_set', read_only=False)
-    owner = serializers.PrimaryKeyRelatedField(read_only=False, queryset=User.objects.all())
+    owner = UserSerializer(read_only=False)
     # cloned_from = serializers.PrimaryKeyRelatedField(view_name='mupi_question_database:question_lists-detail', read_only=True)
     # url = serializers.PrimaryKeyRelatedField(view_name='mupi_question_database:question_lists-detail')
 
