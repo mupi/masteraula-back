@@ -248,6 +248,11 @@ ACCOUNT_ALLOW_REGISTRATION = env.bool('DJANGO_ACCOUNT_ALLOW_REGISTRATION', True)
 ACCOUNT_ADAPTER = 'mupi_question_database.users.adapters.AccountAdapter'
 SOCIALACCOUNT_ADAPTER = 'mupi_question_database.users.adapters.SocialAccountAdapter'
 
+
+# Change the verifyemail url
+ACCOUNT_ADAPTER = 'mupi_question_database.users.adapters.CustomDefaultAccountAdapter'
+URL_FRONT = 'http://localhost:8080/'
+
 # Custom user app defaults
 # Select the correct user model
 AUTH_USER_MODEL = 'users.User'
