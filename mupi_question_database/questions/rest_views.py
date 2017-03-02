@@ -418,12 +418,12 @@ The question_list will only be deleted if the current authenticated user is the 
     def update(self, request, pk=None):
         user_serializer = serializers.UserSerializer(self.request.user, context={'request': request})
         request.data['owner'] = user_serializer.data['id']
-        return super().create(request)
+        return super().update(request, pk)
 
     def partial_update(self, request, pk=None):
         user_serializer = serializers.UserSerializer(self.request.user, context={'request': request})
         request.data['owner'] = user_serializer.data['id']
-        return super().create(request)
+        return super().update(request, pk)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
