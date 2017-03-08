@@ -3,8 +3,10 @@ from html.parser import HTMLParser
 from docx import *
 from docx.shared import Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+import urllib
 
 import re
+import os
 import datetime
 
 class Question_Parser(HTMLParser):
@@ -71,9 +73,9 @@ class Question_Parser(HTMLParser):
     def end_parser(self):
         '''Finaliza o parser excluindo todos os paragrafos que eventualmente
         ficaram em branco'''
-        for para in self.document.paragraphs:
-            if para.text == "":
-                self.delete_paragraph(para)
+        # for para in self.document.paragraphs:
+        #     if para.text == "":
+        #         self.delete_paragraph(para)
 
         self.document.add_page_break()
         self.document.save(self.docx_title)
@@ -141,7 +143,7 @@ class Question_Parser(HTMLParser):
             # sai a procura das variaveis das imagens
             for attr in attrs:
                 if attr[0] == 'src':
-                    src = 'mupi_question_database' + attr[1]
+                    src = attr[1]
                 elif attr[0] == 'style':
                     values = dict(item.split(":") for item in attr[1].split(";"))
                     for value in values:
@@ -150,11 +152,13 @@ class Question_Parser(HTMLParser):
                         elif value.replace(' ', '') == 'height':
                             height = re.sub('\D', '', values[value])
             # Coloca a imagem de acordo com sua respectiva dimensao definida (supondo DPI = 180)
+            urllib.request.urlretrieve(src, "generateimage.png")
             if width:
-                self.run.add_picture(src, width=Inches(int(width)/180))
+                self.run.add_picture("generateimage.png", width=Inches(int(width)/180))
             else:
-                self.run.add_run().add_picture(src)
-
+                self.run.add_picture("generateimage.png")
+            print(src)
+            os.remove("generateimage.png")
         # Habilita variaveis que alteram os estilo do texto (sublinhado, negrito e italico)
         elif tag == 'u':
             self.underline = True
@@ -300,8 +304,3 @@ class Answer_Parser():
             # resposta
             if not answered:
                 table.cell(question_counter, 1).text = 'Sem resposta'
-
-    def end_parser(self):
-        '''Finaliza o parser'''
-        self.document.add_page_break()
-        self.document.save(self.docx_title)

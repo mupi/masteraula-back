@@ -491,7 +491,6 @@ The question_list will only be deleted if the current authenticated user is the 
         parser.parse_list_questions(questions)
 
         parser.end_parser()
-        data = open(docx_title, "rb").read()
 
         return Response({'code': pk})
 
