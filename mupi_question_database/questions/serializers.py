@@ -345,8 +345,8 @@ class Question_ListSerializer(serializers.ModelSerializer):
 
         for question_order in question_orders:
             question = question_order.get('question')
-            if question not in owner.profile.avaiable_questions.all():
-                msg = _('The question with id ' + str(question.id) + ' is not avaiable for this user')
+            # if question not in owner.profile.avaiable_questions.all():
+            #     msg = _('The question with id ' + str(question.id) + ' is not avaiable for this user')
 
         if msg:
             raise exceptions.ValidationError(msg)

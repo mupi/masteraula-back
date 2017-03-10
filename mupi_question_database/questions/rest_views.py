@@ -252,8 +252,8 @@ The question will only be deleted if the current authenticated user is the autho
     def retrieve(self, request, pk=None):
         user = self.request.user
         question = self.get_object()
-        if (user.is_anonymous() or question not in user.profile.avaiable_questions.all()) and not user.is_superuser:
-            self.serializer_class = serializers.QuestionBasicSerializer
+        # if (user.is_anonymous() or question not in user.profile.avaiable_questions.all()) and not user.is_superuser:
+        #     self.serializer_class = serializers.QuestionBasicSerializer
         return super().retrieve(request, pk)
 
     def list(self, request):
@@ -491,7 +491,6 @@ The question_list will only be deleted if the current authenticated user is the 
         parser.parse_list_questions(questions)
 
         parser.end_parser()
-        data = open(docx_title, "rb").read()
 
         return Response({'code': pk})
 
