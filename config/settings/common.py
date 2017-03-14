@@ -269,14 +269,14 @@ ADMIN_URL = r'^admin/'
 # Your common stuff: Below this line define 3rd party library settings
 # ------------------------------------------------------------------------------
 HAYSTACK_CONNECTIONS = {
-    # 'default': {
-    #     'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
-    #     'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
-    # },
     'default': {
-        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
-        'URL': 'http://localhost:8983/solr',
+        'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+        'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
     },
+    # 'default': {
+    #     'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
+    #     'URL': 'http://localhost:8983/solr',
+    # },
 }
 
 REST_FRAMEWORK = {
