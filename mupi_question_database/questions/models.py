@@ -11,7 +11,7 @@ class Question(models.Model):
         ('H', 'Difícil')
     )
 
-    question_header = models.CharField(max_length=50)
+    question_header = models.TextField()
     question_text = models.TextField()
     resolution = models.TextField(null=True, blank=True)
     level = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)

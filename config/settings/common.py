@@ -273,6 +273,10 @@ HAYSTACK_CONNECTIONS = {
         'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
         'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
     },
+    # 'default': {
+    #     'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
+    #     'URL': 'http://localhost:8983/solr',
+    # },
 }
 
 REST_FRAMEWORK = {
@@ -288,6 +292,7 @@ HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
 ACCOUNT_SIGNUP_FORM_CLASS = 'mupi_question_database.users.forms.SignupForm'
 
 JWT_AUTH = {
+    'JWT_VERIFY_EXPIRATION': False,
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=86400),
 }
 
