@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.conf.urls import url, include
 from rest_framework import renderers
 from rest_framework.routers import DefaultRouter
@@ -55,7 +56,12 @@ urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^api-token-auth/', obtain_jwt_token),
     url(r'^api-token-verify/', verify_jwt_token),
-    url(r'^docs/$', schema_view),
     url(r'^auth/', include('rest_auth.urls')),
     url(r'^auth/registration/', include('rest_auth.registration.urls')),
 ]
+
+
+if settings.DEBUG:
+    urlpatterns += [
+        url(r'^docs/$', schema_view),
+    ]
