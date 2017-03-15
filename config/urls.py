@@ -11,8 +11,6 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 
-from mupi_question_database.questions.views import QuestionListView
-
 # from ckeditor_uploader import views as ckeditor_uploader_views
 
 urlpatterns = [

@@ -63,6 +63,18 @@ Get the id's related user.
     #     user.save()
     #     return Response({'status': 'deleted'})
 
+    def list (self, request):
+        user = self.request.user
+        if not user.is_superuser:
+            self.serializer_class = serializers.UserBasicSerializer
+        return super().retrieve(request)
+
+    def retrieve(self, request, pk=None):
+        user = self.request.user
+        if not user.is_superuser:
+            self.serializer_class = serializers.UserBasicSerializer
+        return super().retrieve(request, pk)
+
     @list_route(methods=['patch'], permission_classes=[IsAuthenticated], serializer_class=serializers.UserUpdateSerializer)
     def current_update(self, request):
         """

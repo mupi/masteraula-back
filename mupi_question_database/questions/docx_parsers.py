@@ -61,11 +61,11 @@ class Question_Parser(HTMLParser):
         auxiliar que faz o parser das respostas de cada questao'''
         for question in list_questions:
             # Titulo de cada questao
-            self.start_question(question.question_header)
+            self.start_question()
             self.init_parser()
 
             # o WysWyg adiciona varios \r, o parser nao trata esse caso especial entao remove-se todas suas ocorrencias
-            self.feed(question.question_text.replace('\r\n\t', ''))
+            self.feed(question.question_statement.replace('\r\n\t', ''))
 
             # Respotas enumeradas de a a quantidade de respostas
             self.parse_list_answers(question.answers.all())
@@ -117,17 +117,17 @@ class Question_Parser(HTMLParser):
         p.getparent().remove(p)
         p._p = p._element = None
 
-    def start_question(self, question_header):
+    def start_question(self):
         '''Prepara a questao para ser tratada, zerando algumas variaveis de
         controle, colocando o cabecalho e aumentando o numero de questoes'''
         self.questionCounter = self.questionCounter + 1
         self.question_item = 'a'
 
         self.document.add_heading('Questao ' + str(self.questionCounter), level=2)
-        p = self.document.add_paragraph('(')
-        p.add_run(question_header).bold = True
-        p.add_run(') ')
+        p = self.document.add_paragraph('')
+
         self.paragraph = p
+
         # Flag de respostas False pois comecara com o enunciado
         self.respostas = False
 

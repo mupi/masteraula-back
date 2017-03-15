@@ -13,8 +13,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     author = indexes.CharField(model_attr='author')
     create_date = indexes.DateTimeField(model_attr='create_date')
     level = indexes.CharField(model_attr='level', null=True)
-    question_header = indexes.CharField(model_attr='question_header')
-    question_text = indexes.CharField(model_attr='question_text')
+    question_statement = indexes.CharField(model_attr='question_statement')
     tags = indexes.MultiValueField()
 
     def get_model(self):
@@ -25,9 +24,9 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         return self.get_model().objects.filter(create_date__lte=timezone.now())
 
 
-    def prepare_question_text(self, obj):
+    def prepare_question_statement(self, obj):
         cleaner = re.compile('<.*?>')
-        return re.sub(cleaner, '', obj.question_text)
+        return re.sub(cleaner, '', obj.question_statement)
 
     def prepare_level(self, obj):
         if obj.level == 'E':

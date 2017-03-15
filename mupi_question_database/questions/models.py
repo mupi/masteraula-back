@@ -11,8 +11,7 @@ class Question(models.Model):
         ('H', 'Difícil')
     )
 
-    question_header = models.TextField()
-    question_text = models.TextField()
+    question_statement = models.TextField()
     resolution = models.TextField(null=True, blank=True)
     level = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)
     author = models.ForeignKey(User, on_delete=models.DO_NOTHING)
@@ -25,7 +24,7 @@ class Question(models.Model):
     #     ordering = ['pk']
 
     def __str__(self):
-        return u'QuestionId%d (%s) %s' % (self.pk, self.question_header ,self.question_text)
+        return u'QuestionId %d %s' % (self.pk, self.question_statement)
 
 
 class Answer(models.Model):
