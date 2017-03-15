@@ -125,8 +125,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = (
             # 'url',
             'id',
-            'question_header',
-            'question_text',
+            'question_statement',
             'resolution',
             'level',
             'author',
@@ -161,8 +160,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         answers = validated_data.pop('answers')
 
-        question = Question.objects.create(question_header=validated_data['question_header'],
-                                            question_text=validated_data['question_text'],
+        question = Question.objects.create(question_statement=validated_data['question_statement'],
                                             resolution=validated_data['resolution'],
                                             level=validated_data['level'],
                                             author=validated_data['author'])
@@ -242,8 +240,7 @@ class QuestionBasicSerializer(serializers.ModelSerializer):
         fields = (
             # 'url',
             'id',
-            'question_header',
-            'question_text',
+            'question_statement',
             'level',
             'author',
             'create_date',

@@ -23,8 +23,7 @@ try:
                 print(message)
                 continue
 
-            question = Question.objects.create(question_text=question_data["question_text"],
-                                                question_header=question_data["question_header"],
+            question = Question.objects.create(question_statement=question_data["question_statement"],
                                                 level=question_data["level"],
                                                 resolution=question_data["resolution"],
                                                 author_id=1)
