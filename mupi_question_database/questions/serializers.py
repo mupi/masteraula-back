@@ -47,6 +47,16 @@ class ProfileSerializer(serializers.ModelSerializer):
             'credit_balance',
         )
 
+class UserBasicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            # 'url',
+            'id',
+            'username',
+            'name',
+        )
+
 class UserSerializer(serializers.ModelSerializer):
     # url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:users-detail')
 
