@@ -7,6 +7,7 @@ from haystack import indexes
 from .models import Question
 
 import re
+import unicodedata
 
 class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True,use_template=True)
@@ -14,6 +15,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     create_date = indexes.DateTimeField(model_attr='create_date')
     level = indexes.CharField(model_attr='level', null=True)
     question_statement = indexes.CharField(model_attr='question_statement')
+    subjects = indexes.MultiValueField()
     tags = indexes.MultiValueField()
 
     def get_model(self):
@@ -39,6 +41,10 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_tags(self, obj):
         return [tag.slug for tag in obj.tags.all()]
+
+    def prepare_subjects(self, obj):
+        return [ unicodedata.normalize('NFKD', subject.subject_name).encode('ASCII', 'ignore')
+                    for subject in obj.subjects.all()]
 
 class TagIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True,use_template=True)

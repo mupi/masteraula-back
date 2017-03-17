@@ -17,7 +17,7 @@ from taggit.models import Tag
 
 from mupi_question_database.users.models import User
 
-from .models import Question, Answer, Question_List, QuestionQuestion_List, Profile
+from .models import Question, Answer, Question_List, QuestionQuestion_List, Profile, Subject
 from .search_indexes import QuestionIndex, TagIndex
 
 class TagListSerializer(serializers.Field):
@@ -123,9 +123,20 @@ class AnswerSerializer(serializers.ModelSerializer):
                         'is_correct' : {'required' : True}
                         }
 
+class SubjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subject
+        fields = (
+            'id',
+            'subject_name'
+        )
+        extra_kwargs =  {'subject_name': {'read_only': True},
+                        'id': {'read_only': False, 'required' : False},
+                        }
 
 class QuestionSerializer(serializers.ModelSerializer):
     answers = AnswerSerializer(many=True, read_only=False)
+    subjects = SubjectSerializer(many=True, read_only=False)
     tags = TagListSerializer(read_only=False)
     author = UserSerializer(read_only=True)
     # url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:questions-detail')
@@ -142,9 +153,10 @@ class QuestionSerializer(serializers.ModelSerializer):
             'create_date',
             'credit_cost',
             'tags',
-            'answers'
+            'answers',
+            'subjects'
         )
-        extra_kwargs = {'tags': {'required' : True}, 'answers' : {'required' : True}}
+        extra_kwargs = {'tags': {'required' : True}, 'answers' : {'required' : True} , 'subjects' : {'required' : True}}
 
     def validate_answers(self, value):
         has_correct = False
@@ -235,12 +247,31 @@ class QuestionSerializer(serializers.ModelSerializer):
             for tag in to_delete:
                 instance.tags.remove(tag)
 
+        # Verifica se existe subjects para partial_update (PATCH)
+        if 'subjects' in validated_data:
+            subjects =  validated_data.pop('subjects')
+            subjects =  [subject['id'] for subject in subjects]
+            # Cria lista para a criacao de novas tags e exclusao de tags que nao fazem mais parte
+            dbsubjects = [subject.id for subject in list(instance.subjects.all())]
+
+            print(dbsubjects)
+            to_delete = list(set(dbsubjects) - set(subjects))
+            to_create = list(set(subjects) - set(dbsubjects))
+
+            for subject_id in to_create:
+                subject = Subject.objects.get(id=subject_id)
+                instance.subjects.add(subject)
+            for subject_id in to_delete:
+                subject = Subject.objects.get(id=subject_id)
+                instance.subjects.remove(subject)
+
         # Atualiza o indice haystack
         QuestionIndex().update_object(instance)
 
         return super().update(instance, validated_data)
 
 class QuestionBasicSerializer(serializers.ModelSerializer):
+    subjects = SubjectSerializer(many=True, read_only=False)
     tags = TagListSerializer(read_only=False)
     author = UserSerializer(read_only=True)
     # url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:questions-detail')
@@ -256,6 +287,7 @@ class QuestionBasicSerializer(serializers.ModelSerializer):
             'create_date',
             'credit_cost',
             'tags',
+            'subjects',
         )
 
 class QuestionOrderSerializer(serializers.ModelSerializer):

@@ -18,6 +18,7 @@ router.register(r'question_lists', rest_views.Question_ListViewSet, base_name='q
 router.register(r'search/question', rest_views.QuestionSearchView, base_name='questions_search')
 router.register(r'search/tag', rest_views.TagSearchView, base_name='tags_search')
 router.register(r'tags', rest_views.TagListView, base_name='tags')
+router.register(r'subjects', rest_views.SubjectListView, base_name='subjects')
 
 schema_view = get_swagger_view(title='Mupi Question API')
 

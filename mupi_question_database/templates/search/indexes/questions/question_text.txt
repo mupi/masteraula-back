@@ -5,4 +5,5 @@
 {% elif object.level == 'M' %} Medio
 {% elif object.level == 'H' %} Dificil{% endif %}
 
-{% for tag in object.tags.all %} {{ tag.name.split|join:"_" }} {% endfor %}
+{% for tag in object.tags.all %} {{ tag.slug.split|join:"-" }} {% endfor %}
+{% for subject in object.subjects.all %} {{ subject.subject_name.split|join:"-" }} {% endfor %}

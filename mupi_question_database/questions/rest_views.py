@@ -13,13 +13,16 @@ from taggit.models import Tag
 
 from mupi_question_database.users.models import User
 
-from .models import Question, Question_List, Profile, QuestionQuestion_List
+from .models import Question, Question_List, Profile, QuestionQuestion_List, Subject
 from .docx_parsers import Question_Parser
 from . import permissions as permissions
 from . import serializers as serializers
 
 import os
 import time
+
+class QuestionPagination(pagination.PageNumberPagination):
+       page_size = 12
 
 class UserViewSet(mixins.CreateModelMixin,
                     mixins.ListModelMixin,
@@ -160,9 +163,6 @@ Get the id's related user.
         else:
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
-
-class QuestionPagination(pagination.PageNumberPagination):
-       page_size = 9
 
 class QuestionViewSet(viewsets.ModelViewSet):
     """
@@ -528,6 +528,11 @@ class TagListView(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = Question.tags.most_common()
     pagination_class = None
     serializer_class = serializers.TagSerializer
+
+class SubjectListView(mixins.ListModelMixin, viewsets.GenericViewSet):
+    queryset = Subject.objects.all()
+    pagination_class = None
+    serializer_class = serializers.SubjectSerializer
 
 class QuestionSearchView(mixins.ListModelMixin, viewsets.ViewSetMixin, HaystackGenericAPIView):
     """

@@ -3,6 +3,12 @@ from django.db import models
 from mupi_question_database.users.models import User
 from taggit.managers import TaggableManager
 
+class Subject(models.Model):
+    subject_name = models.CharField(max_length=50, null=False, blank=False)
+
+    def __str__(self):
+        return u'QuestionId %s' % (self.subject_name)
+
 class Question(models.Model):
     LEVEL_CHOICES = (
         ('', 'Nenhuma opção'),
@@ -17,6 +23,7 @@ class Question(models.Model):
     author = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     create_date = models.DateTimeField(auto_now_add=True)
     credit_cost = models.PositiveIntegerField(null=False, blank=False, default=0)
+    subjects = models.ManyToManyField(Subject, blank=True)
 
     tags = TaggableManager()
     #
