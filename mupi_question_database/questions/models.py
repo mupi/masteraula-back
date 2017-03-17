@@ -7,7 +7,7 @@ class Subject(models.Model):
     subject_name = models.CharField(max_length=50, null=False, blank=False)
 
     def __str__(self):
-        return u'QuestionId %s' % (self.subject_name)
+        return u'Subject %s' % (self.subject_name)
 
 class Question(models.Model):
     LEVEL_CHOICES = (
@@ -17,6 +17,13 @@ class Question(models.Model):
         ('H', 'Difícil')
     )
 
+    EDUCATION_CHOICES = (
+        ('Ensino Médio', 'Ensino Médio'),
+        ('Fundamental II - anos finais', 'Fundamental II - anos finais'),
+        ('Fundamental II - anos iniciais', 'Fundamental II - anos iniciais'),
+        ('Ensino Superior', 'Ensino Superior')
+    )
+
     question_statement = models.TextField()
     resolution = models.TextField(null=True, blank=True)
     level = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)
@@ -24,6 +31,9 @@ class Question(models.Model):
     create_date = models.DateTimeField(auto_now_add=True)
     credit_cost = models.PositiveIntegerField(null=False, blank=False, default=0)
     subjects = models.ManyToManyField(Subject, blank=True)
+    education_level = models.CharField(max_length=30, choices = EDUCATION_CHOICES, null=True, blank=True)
+    year = models.PositiveIntegerField(null=True, blank=True)
+    source = models.CharField(max_length=50, null=True, blank=True)
 
     tags = TaggableManager()
     #

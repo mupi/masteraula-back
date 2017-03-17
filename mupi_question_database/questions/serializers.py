@@ -154,7 +154,10 @@ class QuestionSerializer(serializers.ModelSerializer):
             'credit_cost',
             'tags',
             'answers',
-            'subjects'
+            'subjects',
+            'education_level',
+            'source',
+            'year'
         )
         extra_kwargs = {'tags': {'required' : True}, 'answers' : {'required' : True} , 'subjects' : {'required' : True}}
 
@@ -288,6 +291,9 @@ class QuestionBasicSerializer(serializers.ModelSerializer):
             'credit_cost',
             'tags',
             'subjects',
+            'education_level',
+            'year',
+            'source'
         )
 
 class QuestionOrderSerializer(serializers.ModelSerializer):

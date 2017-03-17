@@ -17,6 +17,9 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     question_statement = indexes.CharField(model_attr='question_statement')
     subjects = indexes.MultiValueField()
     tags = indexes.MultiValueField()
+    education_level = indexes.CharField(model_attr='education_level', null=True)
+    year = indexes.CharField(model_attr='year', null=True)
+    source = indexes.CharField(model_attr='source', null=True)
 
     def get_model(self):
         return Question
