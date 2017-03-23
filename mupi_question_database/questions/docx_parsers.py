@@ -16,6 +16,7 @@ class Question_Parser(HTMLParser):
     docx_title = ''
     questionCounter = 0
     question_item = 'a'
+    page_width = 0
 
     # Estilo do texto (sublinhado, negrito e italico)
     underline = False
@@ -43,6 +44,8 @@ class Question_Parser(HTMLParser):
         # Faz o novo documento
         self.document = Document()
         self.docx_title = title
+        self.page_width = self.document.sections[0].page_width - (
+            self.document.sections[0].left_margin + self.document.sections[0].right_margin)
 
     def parse_heading(self, list_header):
         '''Cabecalho do gabarito gerado, colocando o nome da lista e tambem
@@ -154,11 +157,16 @@ class Question_Parser(HTMLParser):
             # Coloca a imagem de acordo com sua respectiva dimensao definida (supondo DPI = 180)
             urllib.request.urlretrieve(src, "generateimage.png")
             if width:
-                self.run.add_picture("generateimage.png", width=Inches(int(width)/180))
+                image = self.run.add_picture("generateimage.png", width=Inches(int(width)/180))
             else:
-                self.run.add_picture("generateimage.png")
-            print(src)
+                image = self.run.add_picture("generateimage.png")
             os.remove("generateimage.png")
+            if (image.width > self.page_width):
+                widthMult = self.page_width / image.width
+                print(widthMult)
+                image.width = self.page_width
+                image.height = (int)(image.height * widthMult)
+
         # Habilita variaveis que alteram os estilo do texto (sublinhado, negrito e italico)
         elif tag == 'u':
             self.underline = True
