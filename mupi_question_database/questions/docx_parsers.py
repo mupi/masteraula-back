@@ -67,6 +67,15 @@ class Question_Parser(HTMLParser):
             self.start_question()
             self.init_parser()
 
+            year_source = ""
+            if question.source != None and question.year != None:
+                year_source = "(" + str(question.year)  + " - "+ question.source + ") "
+            elif question.source != None:
+                year_source = "(" + str(question.source) + ") "
+            elif question.source != None:
+                year_source = "(" + str(question.year) + ") "
+
+            self.feed(year_source)
             # o WysWyg adiciona varios \r, o parser nao trata esse caso especial entao remove-se todas suas ocorrencias
             self.feed(question.question_statement.replace('\r\n\t', ''))
 
