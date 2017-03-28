@@ -25,7 +25,6 @@ class Question_Parser(HTMLParser):
     # Controle do paragrafo
     paragraph = None
     run = None
-    prev_run = None         # Quando se altera alguma fonte e deseja voltar para a anterior
 
     # Estilos
     underline = False
@@ -38,7 +37,9 @@ class Question_Parser(HTMLParser):
     answers = False         # resposta em uma unica linha
     is_table = False        # texto dentro da tabela
     is_list = False         # Listas de itens
+    is_poem = False
     line_columns = True
+    font_size = 11
 
     # Variaveis de controle de tabelas
     table = None
@@ -72,8 +73,8 @@ class Question_Parser(HTMLParser):
         auxiliar que faz o parser das respostas de cada questao'''
         for question in list_questions:
             # Titulo de cada questao
+            self.reset_flags()
             self.start_question()
-            self.init_parser()
 
             year_source = ""
             if question.source != None and question.year != None:
@@ -82,8 +83,13 @@ class Question_Parser(HTMLParser):
                 year_source = "(" + str(question.source) + ") "
             elif question.source != None:
                 year_source = "(" + str(question.year) + ") "
+            if year_source != "":
+                self.paragraph = self.document.add_paragraph()
+                self.run = self.paragraph.add_run()
+                self.feed(year_source)
+                self.paragraph = None
+                self.run = None
 
-            self.feed(year_source)
             # o WysWyg adiciona varios \r, o parser nao trata esse caso especial entao remove-se todas suas ocorrencias
             self.feed(question.question_statement.replace('\r\n\t', ''))
 
@@ -113,6 +119,13 @@ class Question_Parser(HTMLParser):
             self.feed(to_parse.replace('\r\n\t', ''))
             self.question_item = chr(ord(self.question_item) + 1)
 
+    def reset_flags(self):
+        self.underline = False
+        self.italic = False
+        self.bold = False
+        self.subscript = False
+        self.superscript = False
+
     def init_parser(self):
         '''Prepara o parser zerando todas as variaveis de estilo e justificando
         o texto'''
@@ -120,11 +133,7 @@ class Question_Parser(HTMLParser):
         self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         self.run = self.paragraph.add_run()
 
-        self.underline = False
-        self.italic = False
-        self.bold = False
-        self.subscript = False
-        self.superscript = False
+        self.reset_flags()
 
     def delete_paragraph(self, paragraph):
         '''Deleta o paragrafo passado como parametro'''
@@ -136,18 +145,20 @@ class Question_Parser(HTMLParser):
         '''Prepara a questao para ser tratada, zerando algumas variaveis de
         controle, colocando o cabecalho e aumentando o numero de questoes'''
         self.questionCounter = self.questionCounter + 1
-        self.question_item = 'a'
 
         self.document.add_heading('Questao ' + str(self.questionCounter), level=2)
 
         # Flag de respostas False pois comecara com o enunciado
         self.answers = False
+        self.question_item = 'a'
 
 # Parser Methods
 
     def handle_starttag(self, tag, attrs):
         # Adiciona imagem
         if tag == 'img':
+            if self.run == None:
+                self.run = self.add_or_create_run()
             # Variaveis das imagens
             height = None
             width = None
@@ -169,7 +180,8 @@ class Question_Parser(HTMLParser):
 
         # Habilita variaveis que alteram os estilo do texto (sublinhado, negrito e italico)
         elif tag == 'u' or tag == 'em' or tag == 'strong' or tag == 'sub' or tag == 'sup':
-            self.run = self.add_run_or_create()
+            self.run = self.add_or_create_run()
+            self.run.font.size = Pt(self.font_size)
             if tag == 'u':
                 self.underline = True
             elif tag == 'em':
@@ -187,9 +199,21 @@ class Question_Parser(HTMLParser):
             self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
             self.run = self.paragraph.add_run()
 
+        elif tag == 'h1':
+            self.paragraph = self.document.add_paragraph()
+            self.run = self.paragraph.add_run()
+            self.font_size = 13
+            self.run.font.size = Pt(self.font_size)
+
         # Pula linha
         if tag == 'br':
-            self.run.add_text("\n")
+            if self.run == None:
+                self.run = self.add_or_create_run()
+
+            if self.is_poem:
+                self.run.add_text("\n")
+            else:
+                self.run.add_text("\r")
 
         # Textos de tabelas
         elif tag == 'p' and self.is_table:
@@ -202,6 +226,7 @@ class Question_Parser(HTMLParser):
         elif tag == 'p' and not self.answers:
             self.paragraph = self.document.add_paragraph()
             self.run = self.paragraph.add_run()
+            self.font_size = 11
 
             # Verificacao da classe
             p_class = ""
@@ -210,8 +235,10 @@ class Question_Parser(HTMLParser):
                     p_class = attr[1]
             if p_class == "question_source":
                 self.paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-                self.run.font.size = Pt(8)
-            elif p_class == "estrofe":
+                self.font_size = 8
+                self.run.font.size = Pt(self.font_size)
+            elif p_class == "estrofe" or p_class == "poema":
+                self.is_poem = True
                 self.paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
             else:
                 self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
@@ -235,6 +262,7 @@ class Question_Parser(HTMLParser):
         # Desabilita variaveis que alteram os estilo do texto (sublinhado, negrito e italico)
         if tag == 'u' or tag == 'em' or tag == 'strong' or tag == 'sub' or tag == 'sup':
             self.run = self.paragraph.add_run()
+            self.run.font.size = Pt(self.font_size)
             if tag == 'u':
                 self.underline = False
             elif tag == 'em':
@@ -249,12 +277,16 @@ class Question_Parser(HTMLParser):
         # Desabilita os textos
         elif tag == 'p' and self.is_table:
             self.cell_run = None
+            self.cell_paragraph = None
 
         elif tag == 'p':
             self.run = None
+            self.paragraph = None
+            self.is_poem = False
 
         elif tag == 'li':
             self.run = None
+            self.paragraph = None
 
         # Desabilita as tabelas
         elif tag == 'table':
@@ -293,7 +325,13 @@ class Question_Parser(HTMLParser):
             font.subscript = self.subscript
             font.superscript = self.superscript
 
-    def add_run_or_create(self):
+        # Escreve o texto normalmente
+        elif data.replace(" ","") != "":
+            self.run = self.add_or_create_run()
+            self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            self.run.add_text(data)
+
+    def add_or_create_run(self):
         if self.paragraph == None:
             self.paragraph = self.document.add_paragraph()
         return self.paragraph.add_run()

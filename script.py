@@ -5,7 +5,6 @@ counter = 1
 with open('questions.json') as data_file:
     data = json.load(data_file)
     for question_data in data["questions"]:
-        counter = counter + 1
 
         # verify if the question has one and just one right answer
         right_answer = False
@@ -44,4 +43,7 @@ with open('questions.json') as data_file:
         for tag in question_data["tags"]:
             question.tags.add(tag)
             question.save()
+
+        print ("Saved " + str(counter) + " question")
+        counter = counter + 1
 print('Done data')
