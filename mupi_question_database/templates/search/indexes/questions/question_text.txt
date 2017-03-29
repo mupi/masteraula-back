@@ -11,4 +11,4 @@
 
 {% for tag in object.tags.all %} {{ tag.slug.split|join:"-" }} {% endfor %}
 
-{% for subject in object.subjects.all %} {{ subject.subject_name.split|join:"-" }} {% endfor %}
+{% for subject in object.subjects.all %} {{ subject.subject_name|slugify }} {% endfor %}
