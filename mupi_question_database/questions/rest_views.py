@@ -520,6 +520,7 @@ The question_list will only be deleted if the current authenticated user is the 
         response = HttpResponse(
             data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         )
+        response['Content-Disposition'] = 'attachment; filename="' + list_header + '.docx"'
         # Apaga o arquivo temporario criado
         os.remove(docx_title)
         return response
