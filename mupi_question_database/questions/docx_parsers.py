@@ -38,6 +38,7 @@ class Question_Parser(HTMLParser):
     is_table = False        # texto dentro da tabela
     is_list = False         # Listas de itens
     is_poem = False
+    is_div_poem = False
     line_columns = True
     font_size = 11
 
@@ -210,7 +211,7 @@ class Question_Parser(HTMLParser):
             if self.run == None:
                 self.run = self.add_or_create_run()
 
-            if self.is_poem:
+            if self.is_poem or self.is_div_poem:
                 self.run.add_text("\n")
             else:
                 self.run.add_text("\r")
@@ -243,6 +244,15 @@ class Question_Parser(HTMLParser):
             else:
                 self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
+        elif tag == 'div' and not self.answers:
+            # Verificacao da classe
+            p_class = ""
+            for attr in attrs:
+                if attr[0] == 'class':
+                    p_class = attr[1]
+            if p_class == "poema":
+                self.is_div_poem = True
+
         # Controle de tabelas
         elif tag == 'table':
             self.is_table = True
@@ -274,6 +284,11 @@ class Question_Parser(HTMLParser):
             elif tag == 'sup':
                 self.superscript = False
 
+
+        elif tag == 'h1':
+            self.paragraph = None
+            self.run = None
+
         # Desabilita os textos
         elif tag == 'p' and self.is_table:
             self.cell_run = None
@@ -282,7 +297,12 @@ class Question_Parser(HTMLParser):
         elif tag == 'p':
             self.run = None
             self.paragraph = None
-            self.is_poem = False
+            self.is_poem = self.is_div_poem
+
+        elif tag == 'div':
+            self.run = None
+            self.paragraph = None
+            self.is_div_poem = False
 
         elif tag == 'li':
             self.run = None
@@ -328,7 +348,10 @@ class Question_Parser(HTMLParser):
         # Escreve o texto normalmente
         elif data.replace(" ","") != "":
             self.run = self.add_or_create_run()
-            self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            if self.is_poem or self.is_div_poem:
+                self.paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            else:
+                self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
             self.run.add_text(data)
 
     def add_or_create_run(self):
