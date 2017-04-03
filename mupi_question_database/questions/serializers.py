@@ -5,6 +5,7 @@ from allauth.account.utils import setup_user_email
 
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
+from django.utils.text import slugify
 
 from drf_haystack.serializers import HaystackSerializer, HaystackSerializerMixin
 
@@ -124,11 +125,17 @@ class AnswerSerializer(serializers.ModelSerializer):
                         }
 
 class SubjectSerializer(serializers.ModelSerializer):
+    slug = serializers.SerializerMethodField('slugify_subject')
+
+    def slugify_subject(self, subject):
+        return slugify(subject.subject_name)
+
     class Meta:
         model = Subject
         fields = (
             'id',
-            'subject_name'
+            'subject_name',
+            'slug'
         )
         extra_kwargs =  {'subject_name': {'read_only': True},
                         'id': {'read_only': False, 'required' : False},

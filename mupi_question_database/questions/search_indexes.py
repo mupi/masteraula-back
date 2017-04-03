@@ -1,4 +1,5 @@
 from django.utils import timezone
+from django.utils.text import slugify
 
 from taggit.models import Tag
 
@@ -46,8 +47,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         return [tag.slug for tag in obj.tags.all()]
 
     def prepare_subjects(self, obj):
-        return [ unicodedata.normalize('NFKD', subject.subject_name).encode('ASCII', 'ignore')
-                    for subject in obj.subjects.all()]
+        return [ slugify(subject.subject_name) for subject in obj.subjects.all()]
 
 class TagIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True,use_template=True)
