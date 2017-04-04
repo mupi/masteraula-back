@@ -1,1 +1,1 @@
-{{ object.name.split|join:"_" }}
+{{ object.name.split|join:"-" }}

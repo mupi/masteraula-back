@@ -49,6 +49,9 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_subjects(self, obj):
         return [ slugify(subject.subject_name) for subject in obj.subjects.all()]
 
+    def prepare_education_level(self, obj):
+        return slugify(obj.education_level)
+
 class TagIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True,use_template=True)
     name = indexes.CharField(model_attr='name')
