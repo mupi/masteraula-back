@@ -20,6 +20,7 @@ class Question_Parser(HTMLParser):
     docx_title = ''
     questionCounter = 0
     question_item = 'a'
+    year_source = ''
     page_width = 0
 
     # Controle do paragrafo
@@ -32,6 +33,7 @@ class Question_Parser(HTMLParser):
     bold = False
     subscript = False
     superscript = False
+    font_size = 10
 
     # Flags
     answers = False         # resposta em uma unica linha
@@ -40,7 +42,10 @@ class Question_Parser(HTMLParser):
     is_poem = False
     is_div_poem = False
     line_columns = True
-    font_size = 11
+    printed_counter = False
+
+    # Constantes
+    max_image_height = 0
 
     # Variaveis de controle de tabelas
     table = None
@@ -54,8 +59,18 @@ class Question_Parser(HTMLParser):
         # Faz o novo documento
         self.document = Document()
         self.docx_title = title
-        self.page_width = self.document.sections[0].page_width - (
-            self.document.sections[0].left_margin + self.document.sections[0].right_margin)
+
+        section = self.document.sections[0]
+
+        # Tamanho
+        section.page_height = Pt(842)
+        section.page_width = Pt(595)
+
+        section.left_margin = section.right_margin = Pt(50)
+        section.top_margin = section.bottom_margin = Pt(50)
+
+        self.page_width = section.page_width - (section.left_margin + section.right_margin)
+        self.max_image_height = (int)((section.page_height-(section.top_margin + section.bottom_margin))/3)
 
     def parse_heading(self, list_header):
         '''Cabecalho do gabarito gerado, colocando o nome da lista e tambem
@@ -77,19 +92,16 @@ class Question_Parser(HTMLParser):
             self.reset_flags()
             self.start_question()
 
-            year_source = ""
+            self.year_source = str(self.questionCounter)
             if question.source != None and question.year != None:
-                year_source = "(" + str(question.year)  + " - "+ question.source + ") "
+                self.year_source = self.year_source + ' (' + str(question.year)  + ' - '+ question.source + ') '
             elif question.source != None:
-                year_source = "(" + str(question.source) + ") "
+                self.year_source = self.year_source + ' (' + str(question.source) + ') '
             elif question.source != None:
-                year_source = "(" + str(question.year) + ") "
-            if year_source != "":
-                self.paragraph = self.document.add_paragraph()
-                self.run = self.paragraph.add_run()
-                self.feed(year_source)
-                self.paragraph = None
-                self.run = None
+                self.year_source = self.year_source + ' (' + str(question.year) + ') '
+
+            self.paragraph = None
+            self.run = None
 
             # o WysWyg adiciona varios \r, o parser nao trata esse caso especial entao remove-se todas suas ocorrencias
             self.feed(question.question_statement.replace('\r\n\t', ''))
@@ -114,7 +126,7 @@ class Question_Parser(HTMLParser):
         # Seta a flag para escrever as resposas
         self.answers = True
         for answer in list_answer:
-            self.init_parser()
+            self.init_parser_answer()
 
             to_parse = self.question_item + ') ' + answer.answer_text
             self.feed(to_parse.replace('\r\n\t', ''))
@@ -127,12 +139,16 @@ class Question_Parser(HTMLParser):
         self.subscript = False
         self.superscript = False
 
-    def init_parser(self):
+    def init_parser_answer(self):
         '''Prepara o parser zerando todas as variaveis de estilo e justificando
         o texto'''
         self.paragraph = self.document.add_paragraph()
         self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        self.paragraph.paragraph_format.space_after = Pt(0)
+        self.paragraph.paragraph_format.space_before = Pt(0)
         self.run = self.paragraph.add_run()
+        self.font_size = 10
+        self.run.font.size = Pt(self.font_size)
 
         self.reset_flags()
 
@@ -147,10 +163,11 @@ class Question_Parser(HTMLParser):
         controle, colocando o cabecalho e aumentando o numero de questoes'''
         self.questionCounter = self.questionCounter + 1
 
-        self.document.add_heading('Questao ' + str(self.questionCounter), level=2)
+        self.document.add_heading(level=2)
 
         # Flag de respostas False pois comecara com o enunciado
         self.answers = False
+        self.printed_counter = False
         self.question_item = 'a'
 
 # Parser Methods
@@ -160,6 +177,16 @@ class Question_Parser(HTMLParser):
         if tag == 'img':
             if self.run == None:
                 self.run = self.add_or_create_run()
+
+            if not self.printed_counter:
+                self.paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                self.run.font.size = Pt(10)
+                self.run.add_text(self.year_source)
+                self.printed_counter = True
+                self.paragraph = self.document.add_paragraph()
+                self.paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                self.run = self.add_or_create_run()
+
             # Variaveis das imagens
             height = None
             width = None
@@ -178,6 +205,11 @@ class Question_Parser(HTMLParser):
                 widthMult = self.page_width / image.width
                 image.width = self.page_width
                 image.height = (int)(image.height * widthMult)
+
+            if (image.height > self.max_image_height):
+                heightMult = self.max_image_height / image.height
+                image.height = self.max_image_height
+                image.width = (int)(image.width * heightMult)
 
         # Habilita variaveis que alteram os estilo do texto (sublinhado, negrito e italico)
         elif tag == 'u' or tag == 'em' or tag == 'strong' or tag == 'sub' or tag == 'sup':
@@ -199,11 +231,15 @@ class Question_Parser(HTMLParser):
             self.paragraph = self.document.add_paragraph(style='ListBullet')
             self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
             self.run = self.paragraph.add_run()
+            self.font_size = 10
+            self.run.font.size = Pt(self.font_size)
 
         elif tag == 'h1':
             self.paragraph = self.document.add_paragraph()
+            self.paragraph.paragraph_format.space_after = Pt(0)
+            self.paragraph.paragraph_format.space_before = Pt(0)
             self.run = self.paragraph.add_run()
-            self.font_size = 13
+            self.font_size = 12
             self.run.font.size = Pt(self.font_size)
 
         # Pula linha
@@ -226,8 +262,11 @@ class Question_Parser(HTMLParser):
         # mesmo que contenham varias tags <p>
         elif tag == 'p' and not self.answers:
             self.paragraph = self.document.add_paragraph()
+            self.paragraph.paragraph_format.space_after = Pt(0)
+            self.paragraph.paragraph_format.space_before = Pt(0)
             self.run = self.paragraph.add_run()
-            self.font_size = 11
+            self.font_size = 10
+            self.run.font.size = Pt(self.font_size)
 
             # Verificacao da classe
             p_class = ""
@@ -337,7 +376,17 @@ class Question_Parser(HTMLParser):
 
         # Escreve o texto normalmente
         elif self.run is not None:
+            if not self.printed_counter:
+                self.run.font.size = Pt(10)
+                self.run.add_text(self.year_source + ' ')
+
+                self.printed_counter = True
+
+                self.run = self.paragraph.add_run()
+                self.run.font.size = Pt(self.font_size)
+
             self.run.add_text(data)
+
             font = self.run.font
             font.underline = self.underline
             font.italic = self.italic
@@ -348,15 +397,25 @@ class Question_Parser(HTMLParser):
         # Escreve o texto normalmente
         elif data.replace(" ","") != "":
             self.run = self.add_or_create_run()
+            self.font_size = 10
+            self.run.font.size = Pt(self.font_size)
+
             if self.is_poem or self.is_div_poem:
                 self.paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
             else:
                 self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-            self.run.add_text(data)
+
+            if self.printed_counter:
+                self.run.add_text(data)
+            else:
+                self.run.add_text(self.year_source + " " + data)
+                self.printed_counter = True
 
     def add_or_create_run(self):
         if self.paragraph == None:
             self.paragraph = self.document.add_paragraph()
+            self.paragraph.paragraph_format.space_after = Pt(0)
+            self.paragraph.paragraph_format.space_before = Pt(0)
         return self.paragraph.add_run()
 
 class Answer_Parser():
