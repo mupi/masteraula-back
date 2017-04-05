@@ -445,9 +445,9 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ['name', 'slug']
 
-class QuestionSearchSerializer(HaystackSerializerMixin, QuestionBasicSerializer):
+class QuestionSearchSerializer(HaystackSerializerMixin, QuestionSerializer):
 
-    class Meta(QuestionBasicSerializer.Meta):
+    class Meta(QuestionSerializer.Meta):
         search_fields = [
             'text',
         ]
