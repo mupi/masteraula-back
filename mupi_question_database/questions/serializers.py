@@ -332,9 +332,10 @@ class QuestionOrderDetailSerializer(serializers.ModelSerializer):
 class Question_ListDetailSerializer(serializers.ModelSerializer):
     questions = QuestionOrderDetailSerializer(many=True, source='questionquestion_list_set', read_only=False)
     owner = UserSerializer(read_only=False)
-    # cloned_from = serializers.PrimaryKeyRelatedField(view_name='mupi_question_database:question_lists-detail', read_only=True)
-    # url = serializers.PrimaryKeyRelatedField(view_name='mupi_question_database:question_lists-detail')
+    question_count = serializers.SerializerMethodField('count_questions')
 
+    def count_questions(self, subject):
+        return len(subject.questions.all())
     class Meta:
         model = Question_List
         fields = (
@@ -345,10 +346,30 @@ class Question_ListDetailSerializer(serializers.ModelSerializer):
             'private',
             'create_date',
             # 'cloned_from',
-            'questions'
+            'questions',
+            'question_count'
         )
         extra_kwargs = {'cloned_from': {'required' : False},
                         'author' : {'required' : False}}
+
+class Question_ListBasicSerializer(serializers.ModelSerializer):
+    owner = UserSerializer(read_only=False)
+    question_count = serializers.SerializerMethodField('count_questions')
+
+    def count_questions(self, subject):
+        return len(subject.questions.all())
+
+    class Meta:
+        model = Question_List
+        fields = (
+            'id',
+            'owner',
+            'question_list_header',
+            'private',
+            'create_date',
+            'question_count'
+        )
+        extra_kwargs = {'author' : {'required' : False}}
 
 class Question_ListSerializer(serializers.ModelSerializer):
     questions = QuestionOrderSerializer(many=True, source='questionquestion_list_set', read_only=False)

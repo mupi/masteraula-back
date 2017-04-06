@@ -418,8 +418,10 @@ The question_list will only be deleted if the current authenticated user is the 
     permission_classes = (permissions.Question_ListPermission,)
 
     def get_serializer_class(self):
-        if self.action == 'list' or self.action == 'retrieve':
+        if self.action == 'retrieve':
             return serializers.Question_ListDetailSerializer
+        if self.action == 'list' or self.action == 'user_list_questions':
+            return serializers.Question_ListBasicSerializer
         return serializers.Question_ListSerializer
 
     def create(self, request):
@@ -457,7 +459,7 @@ The question_list will only be deleted if the current authenticated user is the 
 
         page = self.paginate_queryset(avaiable_lists)
         if page is not None:
-            serializer = serializers.Question_ListDetailSerializer(page, many=True)
+            serializer = serializers.Question_ListBasicSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(recent_users, many=True)
