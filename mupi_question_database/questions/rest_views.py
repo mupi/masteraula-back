@@ -456,14 +456,15 @@ The question_list will only be deleted if the current authenticated user is the 
         """
         user = self.request.user
         avaiable_lists = user.question_list_set.all()
+        # self.pagination_class = None
 
-        page = self.paginate_queryset(avaiable_lists)
-        if page is not None:
-            serializer = serializers.Question_ListBasicSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(recent_users, many=True)
+        # page = self.paginate_queryset(avaiable_lists)
+        # if page is not None:
+        serializer = serializers.Question_ListBasicSerializer(avaiable_lists, many=True)
         return Response(serializer.data)
+
+        # serializer = self.get_serializer(recent_users, many=True)
+        # return Response(serializer.data)
 
     @detail_route(methods=['post'])
     def clone_list(self, request, pk=None):
