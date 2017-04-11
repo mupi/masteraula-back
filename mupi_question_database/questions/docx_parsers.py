@@ -77,12 +77,12 @@ class Question_Parser(HTMLParser):
         a data que foi criada'''
         self.document.add_heading(list_header)
 
-        self.document.add_paragraph(
-            "Lista gerada em {:s} as {:s}.".format(
-                datetime.date.today().strftime('%d/%m/%Y'),
-                datetime.datetime.today().strftime('%X')
-            )
-        )
+        # self.document.add_paragraph(
+        #     "Lista gerada em {:s} as {:s}.".format(
+        #         datetime.date.today().strftime('%d/%m/%Y'),
+        #         datetime.datetime.today().strftime('%X')
+        #     )
+        # )
 
     def parse_list_questions(self, list_questions):
         '''Faz o parser de cada questao da lista, tambem chamara a funcao
