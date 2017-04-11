@@ -19,7 +19,7 @@ class Question_ListPermission(permissions.BasePermission):
         if obj.owner == request.user:
             return True
         # Se a lista for privada, negar acesso a outras pessoas
-        if obj.private:
+        if obj.secret:
             return False
         # Habilita somente métodos seguros
         return request.method in permissions.SAFE_METHODS

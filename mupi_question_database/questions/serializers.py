@@ -343,7 +343,7 @@ class Question_ListDetailSerializer(serializers.ModelSerializer):
             'id',
             'owner',
             'question_list_header',
-            'private',
+            'secret',
             'create_date',
             # 'cloned_from',
             'questions',
@@ -365,7 +365,7 @@ class Question_ListBasicSerializer(serializers.ModelSerializer):
             'id',
             'owner',
             'question_list_header',
-            'private',
+            'secret',
             'create_date',
             'question_count'
         )
@@ -384,7 +384,7 @@ class Question_ListSerializer(serializers.ModelSerializer):
             'id',
             'owner',
             'question_list_header',
-            'private',
+            'secret',
             'create_date',
             # 'cloned_from',
             'questions'

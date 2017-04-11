@@ -62,7 +62,7 @@ class Question_List(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     questions = models.ManyToManyField(Question, through='QuestionQuestion_List', related_name='questions')
     create_date = models.DateTimeField(auto_now_add=True)
-    private = models.BooleanField('Lista privada')
+    secret = models.BooleanField('Lista privada')
     cloned_from = models.ForeignKey('self', null=True, blank=True, default=None, on_delete=models.CASCADE)
 
     class Meta:

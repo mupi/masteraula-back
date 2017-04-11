@@ -446,7 +446,7 @@ The question_list will only be deleted if the current authenticated user is the 
         if self.request.user.is_superuser:
             queryset = serializers.Question_List.objects.all()
         else:
-            queryset = serializers.Question_List.objects.filter(private=False)
+            queryset = serializers.Question_List.objects.filter(secret=False)
         return queryset
 
     @list_route(permission_classes=[IsAuthenticated])
