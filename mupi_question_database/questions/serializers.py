@@ -264,7 +264,6 @@ class QuestionSerializer(serializers.ModelSerializer):
             # Cria lista para a criacao de novas tags e exclusao de tags que nao fazem mais parte
             dbsubjects = [subject.id for subject in list(instance.subjects.all())]
 
-            print(dbsubjects)
             to_delete = list(set(dbsubjects) - set(subjects))
             to_create = list(set(subjects) - set(dbsubjects))
 
@@ -555,7 +554,6 @@ class LoginSerializer(auth_serializers.LoginSerializer):
                     raise serializers.ValidationError(_('E-mail is not verified.'))
 
         user = User.objects.get(id=user.id)
-        print(user)
         attrs['user'] = user
         return attrs
 
