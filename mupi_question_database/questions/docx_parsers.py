@@ -93,18 +93,18 @@ class Question_Parser(HTMLParser):
             self.start_question()
 
             self.year_source = str(self.questionCounter)
-            if question.source != None and question.year != None:
+            if (question.source != None and question.source != "") and question.year != None:
                 self.year_source = self.year_source + ' (' + str(question.year)  + ' - '+ question.source + ') '
-            elif question.source != None:
+            elif (question.source != None and question.source != ""):
                 self.year_source = self.year_source + ' (' + str(question.source) + ') '
-            elif question.source != None:
+            elif question.year != None:
                 self.year_source = self.year_source + ' (' + str(question.year) + ') '
 
             self.paragraph = None
             self.run = None
 
             # o WysWyg adiciona varios \r, o parser nao trata esse caso especial entao remove-se todas suas ocorrencias
-            self.feed(question.question_statement.replace('\r\n\t', ''))
+            self.feed(question.question_statement.replace('\n', ' ').replace('\r', ''))
 
             # Respotas enumeradas de a a quantidade de respostas
             self.parse_list_answers(question.answers.all())
@@ -411,6 +411,42 @@ class Question_Parser(HTMLParser):
                 self.run.add_text(self.year_source + " " + data)
                 self.printed_counter = True
 
+    def parse_answers_list_questions(self, list_questions):
+        '''Faz o parser do gabarito, em formato de tabela'''
+
+        question_counter = 0
+
+        # Adiciona a tabela e seus cabecalhos
+        self.document.add_page_break()
+        self.document.add_heading("Gabarito")
+
+        table = self.document.add_table(rows=1, cols=2)
+        table.style = 'TableGrid'
+        hdr_cells = table.rows[0].cells
+        hdr_cells[0].text = 'Questão'
+        hdr_cells[1].text = 'Reposta'
+
+        # Faz o parser de cada questao
+        for question in list_questions:
+            question_counter = question_counter + 1
+            table.add_row()
+            table.cell(question_counter, 0).text = str(question_counter)
+
+            question_item = 'a'
+            answered = False
+            # Procura pela questao correta
+            for answer in question.answers.all():
+                if answer.is_correct:
+                    table.cell(question_counter, 1).text = question_item
+                    answered = True
+                question_item = chr(ord(question_item) + 1)
+
+            # Se nao houve questao correta, fala sem
+            # resposta
+            if not answered:
+                table.cell(question_counter, 1).text = 'Sem resposta'
+
+
     def add_or_create_run(self):
         if self.paragraph == None:
             self.paragraph = self.document.add_paragraph()
@@ -419,24 +455,13 @@ class Question_Parser(HTMLParser):
         return self.paragraph.add_run()
 
 class Answer_Parser():
-    # Controle do documetno
+    # Controle do documento
     document = None
     docx_title = None
 
     def __init__(self, title):
         self.document = Document()
         self.docx_title = title
-
-    def parse_heading(self, list_header):
-        '''Cabecalho do gabarito gerado'''
-        self.document.add_heading('Gabarito da lista' + list_header)
-
-        self.document.add_paragraph(
-            "Lista gerada em {:s} as {:s}.".format(
-                datetime.date.today().strftime('%d/%m/%Y'),
-                datetime.datetime.today().strftime('%X')
-            )
-        )
 
     def parse_answers_list_questions(self, list_questions):
         '''Faz o parser do gabarito, em formato de tabela'''
@@ -465,7 +490,7 @@ class Answer_Parser():
                     answered = True
                 question_item = chr(ord(question_item) + 1)
 
-            # Se nao houve questao correta (NAO ERA PARA CAIR AQUI), fala sem
+            # Se nao houve questao correta, fala sem
             # resposta
             if not answered:
                 table.cell(question_counter, 1).text = 'Sem resposta'

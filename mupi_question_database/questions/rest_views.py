@@ -493,6 +493,7 @@ The question_list will only be deleted if the current authenticated user is the 
         """
         question_list = self.get_object()
         questions = [q.question for q in QuestionQuestion_List.objects.filter(question_list=question_list)]
+        flags = request.query_params
 
         if not questions:
             raise exceptions.ValidationError('Can not generate an empty list')
@@ -502,8 +503,9 @@ The question_list will only be deleted if the current authenticated user is the 
         docx_title = pk + list_header + '.docx'
         parser = Question_Parser(docx_title)
 
-        parser.parse_heading(list_header)
         parser.parse_list_questions(questions)
+        if flags['answers'] == 'True':
+            parser.parse_answers_list_questions(questions)
 
         parser.end_parser()
 
