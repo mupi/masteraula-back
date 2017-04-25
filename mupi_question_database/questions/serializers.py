@@ -146,7 +146,11 @@ class QuestionSerializer(serializers.ModelSerializer):
     subjects = SubjectSerializer(many=True, read_only=False)
     tags = TagListSerializer(read_only=False)
     author = UserSerializer(read_only=True)
-    # url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:questions-detail')
+    question_lists = serializers.SerializerMethodField('question_list_queryset')
+
+    def question_list_queryset(self, question):
+       question_list_ids = [qql.question_list_id for qql in QuestionQuestion_List.objects.filter(question=question).order_by('question_list_id')]
+       return Question_ListBasicSerializer(Question_List.objects.filter(id__in=question_list_ids), many=True).data
 
     class Meta:
         model = Question
@@ -164,9 +168,13 @@ class QuestionSerializer(serializers.ModelSerializer):
             'subjects',
             'education_level',
             'source',
-            'year'
+            'year',
+            'question_lists'
         )
-        extra_kwargs = {'tags': {'required' : True}, 'answers' : {'required' : True} , 'subjects' : {'required' : True}}
+        extra_kwargs = {'tags': {'required' : True},
+                        'answers' : {'required' : True},
+                        'subjects' : {'required' : True}
+                        }
 
     def validate_answers(self, value):
         has_correct = False
@@ -333,8 +341,9 @@ class Question_ListDetailSerializer(serializers.ModelSerializer):
     owner = UserSerializer(read_only=False)
     question_count = serializers.SerializerMethodField('count_questions')
 
-    def count_questions(self, subject):
-        return len(subject.questions.all())
+    def count_questions(self, question_list):
+        return len(question_list.questions.all())
+
     class Meta:
         model = Question_List
         fields = (
@@ -373,8 +382,6 @@ class Question_ListBasicSerializer(serializers.ModelSerializer):
 class Question_ListSerializer(serializers.ModelSerializer):
     questions = QuestionOrderSerializer(many=True, source='questionquestion_list_set', read_only=False)
     owner = serializers.PrimaryKeyRelatedField(read_only=False, queryset=User.objects.all())
-    # cloned_from = serializers.PrimaryKeyRelatedField(view_name='mupi_question_database:question_lists-detail', read_only=True)
-    # url = serializers.PrimaryKeyRelatedField(view_name='mupi_question_database:question_lists-detail')
 
     class Meta:
         model = Question_List
