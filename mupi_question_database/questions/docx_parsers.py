@@ -84,7 +84,7 @@ class Question_Parser(HTMLParser):
         #     )
         # )
 
-    def parse_list_questions(self, list_questions):
+    def parse_list_questions(self, list_questions, resolution):
         '''Faz o parser de cada questao da lista, tambem chamara a funcao
         auxiliar que faz o parser das respostas de cada questao'''
         for question in list_questions:
@@ -109,6 +109,9 @@ class Question_Parser(HTMLParser):
             # Respotas enumeradas de a a quantidade de respostas
             self.parse_list_answers(question.answers.all())
 
+            if resolution:
+                self.parse_resolution(question)
+
     def end_parser(self):
         '''Finaliza o parser excluindo todos os paragrafos que eventualmente
         ficaram em branco'''
@@ -121,6 +124,29 @@ class Question_Parser(HTMLParser):
 
 # Auxiliar functions
 
+    def parse_resolution(self, question):
+        '''Faz o parser das resolucoes de cada questao'''
+        resolution = question.resolution
+        question_item = 'a'
+        answered = False
+        # Procura pela questao correta
+        for answer in question.answers.all():
+            if answer.is_correct:
+                answered = True
+            elif not answered:
+                question_item = chr(ord(question_item) + 1)
+
+        if answered:
+            self.init_parser_answer()
+            self.bold = True
+            self.feed('Resposta: ' + question_item)
+
+        if resolution is not None and resolution != '':
+            self.init_parser_answer()
+            self.bold = True
+            self.feed(resolution.replace('\n', '').replace('\r', ''))
+
+
     def parse_list_answers(self, list_answer):
         '''Faz o parser das respostas de cada questao'''
         # Seta a flag para escrever as resposas
@@ -129,7 +155,7 @@ class Question_Parser(HTMLParser):
             self.init_parser_answer()
 
             to_parse = self.question_item + ') ' + answer.answer_text
-            self.feed(to_parse.replace('\r\n\t', ''))
+            self.feed(to_parse.replace('\t', '').replace('\r', '').replace('\n',''))
             self.question_item = chr(ord(self.question_item) + 1)
 
     def reset_flags(self):
@@ -250,7 +276,12 @@ class Question_Parser(HTMLParser):
             if self.is_poem or self.is_div_poem:
                 self.run.add_text("\n")
             else:
-                self.run.add_text("\r")
+                self.paragraph = self.document.add_paragraph()
+                self.paragraph.paragraph_format.space_after = Pt(0)
+                self.paragraph.paragraph_format.space_before = Pt(0)
+                self.run = self.paragraph.add_run()
+                self.run.font.size = Pt(self.font_size)
+                self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
         # Textos de tabelas
         elif tag == 'p' and self.is_table:
