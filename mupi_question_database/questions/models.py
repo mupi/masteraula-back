@@ -24,6 +24,7 @@ class Question(models.Model):
         ('Ensino Superior', 'Ensino Superior')
     )
 
+    question_parent = models.ForeignKey('self', null=True, blank=True, default=None, on_delete=models.CASCADE)
     question_statement = models.TextField()
     resolution = models.TextField(null=True, blank=True)
     level = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)
@@ -41,7 +42,7 @@ class Question(models.Model):
     #     ordering = ['pk']
 
     def __str__(self):
-        return u'QuestionId %d %s' % (self.pk, self.question_statement)
+        return u'QuestionId %d %s' % (self.pk, self.question_statement[:50])
 
 
 class Answer(models.Model):
