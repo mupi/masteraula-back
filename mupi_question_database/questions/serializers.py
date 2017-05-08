@@ -141,22 +141,55 @@ class SubjectSerializer(serializers.ModelSerializer):
                         'id': {'read_only': False, 'required' : False},
                         }
 
-class QuestionSerializer(serializers.ModelSerializer):
-    answers = AnswerSerializer(many=True, read_only=False)
+class QuestionBasicSerializer(serializers.ModelSerializer):
     subjects = SubjectSerializer(many=True, read_only=False)
     tags = TagListSerializer(read_only=False)
     author = UserSerializer(read_only=True)
-    question_lists = serializers.SerializerMethodField('question_list_queryset')
-
-    def question_list_queryset(self, question):
-       question_list_ids = [qql.question_list_id for qql in QuestionQuestion_List.objects.filter(question=question).order_by('question_list_id')]
-       return Question_ListBasicSerializer(Question_List.objects.filter(id__in=question_list_ids), many=True).data
+    # url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:questions-detail')
 
     class Meta:
         model = Question
         fields = (
             # 'url',
             'id',
+            'question_statement',
+            'level',
+            'author',
+            'create_date',
+            'credit_cost',
+            'tags',
+            'subjects',
+            'education_level',
+            'year',
+            'source'
+        )
+
+class QuestionSerializer(serializers.ModelSerializer):
+    question_parent = QuestionBasicSerializer(read_only=True)
+    answers = AnswerSerializer(many=True, read_only=False)
+    subjects = SubjectSerializer(many=True, read_only=False)
+    tags = TagListSerializer(read_only=False)
+    author = UserSerializer(read_only=True)
+    question_lists = serializers.SerializerMethodField('question_lists_serializer')
+    related_questions = serializers.SerializerMethodField('related_question_serializer')
+
+    def question_lists_serializer(self, question):
+       question_list_ids = [qql.question_list_id for qql in QuestionQuestion_List.objects.filter(question=question).order_by('question_list_id')]
+       return Question_ListBasicSerializer(Question_List.objects.filter(id__in=question_list_ids), many=True).data
+
+    def related_question_serializer(self, question):
+       question_children_ids = [q.id for q in Question.objects.filter(question_parent=question)]
+       question_siblings_ids = [q.id for q in Question.objects.filter(question_parent=question.question_parent)] if question.question_parent != None else []
+       if len(question_siblings_ids) > 0:
+           question_siblings_ids.remove(question.id)
+       return QuestionBasicSerializer(Question.objects.filter(id__in=question_siblings_ids+question_children_ids), many=True).data
+
+    class Meta:
+        model = Question
+        fields = (
+            # 'url',
+            'id',
+            'question_parent',
             'question_statement',
             'resolution',
             'level',
@@ -169,7 +202,8 @@ class QuestionSerializer(serializers.ModelSerializer):
             'education_level',
             'source',
             'year',
-            'question_lists'
+            'question_lists',
+            'related_questions'
         )
         extra_kwargs = {'tags': {'required' : True},
                         'answers' : {'required' : True},
@@ -286,29 +320,6 @@ class QuestionSerializer(serializers.ModelSerializer):
         QuestionIndex().update_object(instance)
 
         return super().update(instance, validated_data)
-
-class QuestionBasicSerializer(serializers.ModelSerializer):
-    subjects = SubjectSerializer(many=True, read_only=False)
-    tags = TagListSerializer(read_only=False)
-    author = UserSerializer(read_only=True)
-    # url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:questions-detail')
-
-    class Meta:
-        model = Question
-        fields = (
-            # 'url',
-            'id',
-            'question_statement',
-            'level',
-            'author',
-            'create_date',
-            'credit_cost',
-            'tags',
-            'subjects',
-            'education_level',
-            'year',
-            'source'
-        )
 
 class QuestionOrderSerializer(serializers.ModelSerializer):
     question = serializers.PrimaryKeyRelatedField(read_only=False, queryset=Question.objects.all())
