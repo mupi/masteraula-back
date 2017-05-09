@@ -1,5 +1,5 @@
 {{ object.author }}
-{{ object.question_statement|striptags }}
+{{ object.question_statement|striptags|slugify }}
 
 {% if object.level == 'E' %} Facil
 {% elif object.level == 'M' %} Medio
