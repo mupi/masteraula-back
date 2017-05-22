@@ -42,7 +42,12 @@ class Question(models.Model):
     #     ordering = ['pk']
 
     def __str__(self):
-        return u'QuestionId %d %s' % (self.pk, self.question_statement[:50])
+        year_source = ''
+        if self.year != None:
+            year_source = str(self.year)
+        if self.source != None:
+            year_source = year_source + self.source
+        return u'QuestionId %d %s %s' % (self.pk, year_source, self.question_statement[:75])
 
 
 class Answer(models.Model):
