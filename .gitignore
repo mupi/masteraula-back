@@ -66,3 +66,8 @@ mupi_question_database/media/
 
 # index of Haystack
 whoosh_index
+
+# Backup and question json
+backup.sql
+corrects
+errors

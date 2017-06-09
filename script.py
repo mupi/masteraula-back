@@ -3,8 +3,6 @@ from mupi_question_database.questions.search_indexes import QuestionIndex, TagIn
 import json
 import os
 
-questoes_erradas = dict()
-
 for filename in os.listdir('json-questions/'):
     if not filename.endswith('.json'):
         continue
@@ -15,6 +13,7 @@ for filename in os.listdir('json-questions/'):
         data = json.load(data_file)
 
         erradas = []
+        certas = []
         counter = 0
         # for question_data in data["questions"]:
         for question_data in data:
@@ -36,6 +35,9 @@ for filename in os.listdir('json-questions/'):
                         print(message)
                         continue
 
+                subject_id = question_data["discipline"]
+                subject = Subject.objects.get(subject_name=subject_id)
+
                 # question = Question.objects.create(question_statement=question_data["statement"],
                 #                                     level=question_data["level"],
                 #                                     resolution=question_data["resolution"],
@@ -43,9 +45,12 @@ for filename in os.listdir('json-questions/'):
                 #                                     source=question_data["source"],
                 #                                     education_level=question_data["education_level"],
                 #                                     author_id=1)
-                question = Question.objects.create(question_statement=question_data["statement"],
+
+                resolution = question_data["resolution"] if "resolution" in question_data else ''
+
+                question = Question.objects.create(question_statement=question_data["question_statement"],
                                                     level='',
-                                                    resolution='',
+                                                    resolution=resolution,
                                                     year=question_data["year"],
                                                     source=question_data["source"],
                                                     education_level=question_data["education_level"],
@@ -60,8 +65,6 @@ for filename in os.listdir('json-questions/'):
                 # for subject_id in question_data["subjects"]:
                 #     subject = Subject.objects.get(pk=subject_id)
                 #     question.subjects.add(subject)
-                subject_id = question_data["discipline"]
-                subject = Subject.objects.get(subject_name=subject_id)
                 question.subjects.add(subject)
 
                 for tag in question_data["tags"]:
@@ -72,14 +75,17 @@ for filename in os.listdir('json-questions/'):
                     TagIndex().update_object(tag)
 
                 QuestionIndex().update_object(question)
-
+                certas.append(question_data)
                 print ("Questao " + str(counter) + " Salva")
             except:
                 print ("Erro na questao " + str(counter))
-                erradas.append(counter)
-    if len(erradas) > 0:
-        questoes_erradas[filename] = erradas
+                erradas.append(question_data)
+    # if len(erradas) > 0:
+    #     with open('json-questions/errors/' + filename, 'w+') as outfile:
+    #         json.dump(erradas, outfile)
+    # if len(certas) > 0:
+    #     with open('json-questions/corrects/' + filename, 'w+') as outfile:
+    #         json.dump(certas, outfile)
+
     print('Questoes salvas do arquivo ' + filename)
-for filename in questoes_erradas:
-    print('Questoes erradas em ' + filename + ': ' + (', '.join(questoes_erradas[filename])))
 print('Feito')
