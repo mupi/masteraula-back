@@ -57,6 +57,7 @@ node_modules/
 
 # virtual environments
 .env
+env
 
 # User-uploaded media
 mupi_question_database/media/

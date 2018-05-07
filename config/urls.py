@@ -23,7 +23,7 @@ urlpatterns = [
 
     # User management
     url(r'^users/', include('mupi_question_database.users.urls', namespace='users')),
-    url(r'^accounts/', include('allauth.urls')),
+    # url(r'^accounts/', include('allauth.urls')),
 
     # Your stuff: custom urls includes go here
     url(r'^rest/', include('mupi_question_database.questions.urls', namespace='mupi_question_database')),
