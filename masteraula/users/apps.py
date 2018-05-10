@@ -2,7 +2,7 @@ from django.apps import AppConfig
 
 
 class UsersConfig(AppConfig):
-    name = 'mupi_question_database.users'
+    name = 'masteraula.users'
     verbose_name = "Users"
 
     def ready(self):

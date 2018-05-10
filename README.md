@@ -24,10 +24,10 @@ Before installing, you need some softwares:
 
 ### Database
 
-You will need a Postgres database called **mupi_question_database**, or other in your preference. If you are going to use another name, you need to remember to change it in settings file.
+You will need a Postgres database called **masteraula**, or other in your preference. If you are going to use another name, you need to remember to change it in settings file.
 
 ```bash
-$ createdb --encoding "UTF-8" mupi_question_database
+$ createdb --encoding "UTF-8" masteraula
 ```
 
 ### Virtual Environment
@@ -59,7 +59,7 @@ But before, there is a **bug**, in the project (still figuring out) with the tag
 
 The bug occurs in `rest_views.py` at **TagListView** class in the `queryset = Question.tags.most_common()` line.
 
-The workaround is going to `config/urls.py` and comment this line `url(r'^rest/', include('mupi_question_database.questions.urls', namespace='rest')),`
+The workaround is going to `config/urls.py` and comment this line `url(r'^rest/', include('masteraula.questions.urls', namespace='rest')),`
 
 Then it is now possible to run
 

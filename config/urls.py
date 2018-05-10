@@ -22,11 +22,11 @@ urlpatterns = [
     url(settings.ADMIN_URL, admin.site.urls),
 
     # User management
-    url(r'^users/', include('mupi_question_database.users.urls', namespace='users')),
+    # url(r'^users/', include('masteraula.users.urls', namespace='users')),
     # url(r'^accounts/', include('allauth.urls')),
 
     # Your stuff: custom urls includes go here
-    url(r'^rest/', include('mupi_question_database.questions.urls', namespace='mupi_question_database')),
+    url(r'^rest/', include('masteraula.questions.urls', namespace='masteraula')),
     # url(r'^search/', include('haystack.urls')),
 
     # url(

@@ -15,8 +15,8 @@ import os
 
 import datetime
 
-ROOT_DIR = environ.Path(__file__) - 3  # (mupi_question_database/config/settings/common.py - 3 = mupi_question_database/)
-APPS_DIR = ROOT_DIR.path('mupi_question_database')
+ROOT_DIR = environ.Path(__file__) - 3  # (masteraula/config/settings/common.py - 3 = masteraula/)
+APPS_DIR = ROOT_DIR.path('masteraula')
 
 env = environ.Env()
 
@@ -55,8 +55,8 @@ THIRD_PARTY_APPS = (
 # Apps specific for this project go here.
 LOCAL_APPS = (
     # custom users app
-    'mupi_question_database.users.apps.UsersConfig',
-    'mupi_question_database.questions',
+    'masteraula.users.apps.UsersConfig',
+    'masteraula.questions',
     # Your stuff: custom apps go here
 )
 
@@ -79,7 +79,7 @@ MIDDLEWARE = (
 # MIGRATIONS CONFIGURATION
 # ------------------------------------------------------------------------------
 MIGRATION_MODULES = {
-    'sites': 'mupi_question_database.contrib.sites.migrations'
+    'sites': 'masteraula.contrib.sites.migrations'
 }
 
 # DEBUG
@@ -112,7 +112,7 @@ MANAGERS = ADMINS
 # ------------------------------------------------------------------------------
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='postgres:///mupi_question_database'),
+    'default': env.db('DATABASE_URL', default='postgres:///masteraula'),
 }
 DATABASES['default']['ATOMIC_REQUESTS'] = True
 
@@ -236,21 +236,21 @@ AUTH_PASSWORD_VALIDATORS = [
 # AUTHENTICATION CONFIGURATION
 # ------------------------------------------------------------------------------
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 )
 
 # Some really nice defaults
-ACCOUNT_AUTHENTICATION_METHOD = 'username'
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 ACCOUNT_ALLOW_REGISTRATION = env.bool('DJANGO_ACCOUNT_ALLOW_REGISTRATION', True)
-ACCOUNT_ADAPTER = 'mupi_question_database.users.adapters.AccountAdapter'
-SOCIALACCOUNT_ADAPTER = 'mupi_question_database.users.adapters.SocialAccountAdapter'
+ACCOUNT_ADAPTER = 'masteraula.users.adapters.AccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'masteraula.users.adapters.SocialAccountAdapter'
 
 
 # Change the verifyemail url
-ACCOUNT_ADAPTER = 'mupi_question_database.users.adapters.CustomDefaultAccountAdapter'
+ACCOUNT_ADAPTER = 'masteraula.users.adapters.CustomDefaultAccountAdapter'
 URL_FRONT = 'http://localhost:8080/'
 
 # Custom user app defaults
@@ -289,7 +289,7 @@ REST_FRAMEWORK = {
 
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
 
-ACCOUNT_SIGNUP_FORM_CLASS = 'mupi_question_database.users.forms.SignupForm'
+ACCOUNT_SIGNUP_FORM_CLASS = 'masteraula.users.forms.SignupForm'
 
 JWT_AUTH = {
     'JWT_VERIFY_EXPIRATION': False,
@@ -311,11 +311,11 @@ ACCOUNT_LOGOUT_ON_GET = False
 OLD_PASSWORD_FIELD_ENABLED = True
 
 REST_AUTH_SERIALIZERS = {
-    'USER_DETAILS_SERIALIZER' : 'mupi_question_database.questions.serializers.UserDetailsSerializer',
-    'JWT_SERIALIZER' : 'mupi_question_database.questions.serializers.JWTSerializer',
-    'LOGIN_SERIALIZER': 'mupi_question_database.questions.serializers.LoginSerializer',
+    'USER_DETAILS_SERIALIZER' : 'masteraula.questions.serializers.UserDetailsSerializer',
+    'JWT_SERIALIZER' : 'masteraula.questions.serializers.JWTSerializer',
+    'LOGIN_SERIALIZER': 'masteraula.questions.serializers.LoginSerializer',
 }
 
 REST_AUTH_REGISTER_SERIALIZERS = {
-    'REGISTER_SERIALIZER': 'mupi_question_database.questions.serializers.RegisterSerializer'
+    'REGISTER_SERIALIZER': 'masteraula.questions.serializers.RegisterSerializer'
 }

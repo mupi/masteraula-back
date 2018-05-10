@@ -1,6 +1,6 @@
 import datetime
 from django.db import models
-from mupi_question_database.users.models import User
+from masteraula.users.models import User
 from taggit.managers import TaggableManager
 
 class Subject(models.Model):
