@@ -1,5 +1,5 @@
-from mupi_question_database.questions.models import Question, Answer, Subject
-from mupi_question_database.questions.search_indexes import QuestionIndex, TagIndex
+from masteraula.questions.models import Question, Answer, Subject
+from masteraula.questions.search_indexes import QuestionIndex, TagIndex
 import json
 import os
 

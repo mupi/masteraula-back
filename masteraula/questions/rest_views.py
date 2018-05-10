@@ -11,7 +11,7 @@ from rest_framework import viewsets, exceptions, pagination
 
 from taggit.models import Tag
 
-from mupi_question_database.users.models import User
+from masteraula.users.models import User
 
 from .models import Question, Question_List, Profile, QuestionQuestion_List, Subject
 from .docx_parsers import Question_Parser
@@ -70,7 +70,7 @@ Get the id's related user.
         user = self.request.user
         if not user.is_superuser:
             self.serializer_class = serializers.UserBasicSerializer
-        return super().retrieve(request)
+        return super().list(request)
 
     def retrieve(self, request, pk=None):
         user = self.request.user

@@ -167,7 +167,7 @@ html_static_path = ['_static']
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'mupi_question_databasedoc'
+htmlhelp_basename = 'masterauladoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -187,7 +187,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
     ('index',
-     'mupi_question_database.tex',
+     'masteraula.tex',
      'Mupi Question Database Documentation',
      """Mupi""", 'manual'),
 ]
@@ -218,7 +218,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'mupi_question_database', 'Mupi Question Database Documentation',
+    ('index', 'masteraula', 'Mupi Question Database Documentation',
      ["""Mupi"""], 1)
 ]
 
@@ -232,7 +232,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'mupi_question_database', 'Mupi Question Database Documentation',
+    ('index', 'masteraula', 'Mupi Question Database Documentation',
      """Mupi""", 'Mupi Question Database',
      """A database with questions and answers.""", 'Miscellaneous'),
 ]

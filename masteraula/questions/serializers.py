@@ -16,7 +16,7 @@ from rest_framework import serializers, exceptions
 
 from taggit.models import Tag
 
-from mupi_question_database.users.models import User
+from masteraula.users.models import User
 
 from .models import Question, Answer, Question_List, QuestionQuestion_List, Profile, Subject
 from .search_indexes import QuestionIndex, TagIndex
@@ -59,7 +59,7 @@ class UserBasicSerializer(serializers.ModelSerializer):
         )
 
 class UserSerializer(serializers.ModelSerializer):
-    # url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:users-detail')
+    # url = serializers.HyperlinkedIdentityField(view_name='masteraula:users-detail')
 
     class Meta:
         model = User
@@ -86,7 +86,7 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    # url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:users-detail')
+    # url = serializers.HyperlinkedIdentityField(view_name='masteraula:users-detail')
     profile = ProfileSerializer(read_only=True)
 
     class Meta:
@@ -145,7 +145,7 @@ class QuestionBasicSerializer(serializers.ModelSerializer):
     subjects = SubjectSerializer(many=True, read_only=False)
     tags = TagListSerializer(read_only=False)
     author = UserSerializer(read_only=True)
-    # url = serializers.HyperlinkedIdentityField(view_name='mupi_question_database:questions-detail')
+    # url = serializers.HyperlinkedIdentityField(view_name='masteraula:questions-detail')
 
     class Meta:
         model = Question
@@ -564,7 +564,7 @@ class LoginSerializer(auth_serializers.LoginSerializer):
             raise exceptions.ValidationError(msg)
 
         # If required, is the email verified?
-        if 'rest_auth.registration' in settings.INSTALLED_APPS:
+        if not user.is_superuser and 'rest_auth.registration' in settings.INSTALLED_APPS:
             from allauth.account import app_settings
             if app_settings.EMAIL_VERIFICATION == app_settings.EmailVerificationMethod.MANDATORY:
                 email_address = user.emailaddress_set.get(email=user.email)

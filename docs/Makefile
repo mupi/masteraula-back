@@ -77,17 +77,17 @@ qthelp:
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/mupi_question_database.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/masteraula.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/mupi_question_database.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/masteraula.qhc"
 
 devhelp:
 	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
 	@echo
 	@echo "Build finished."
 	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/mupi_question_database"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/mupi_question_database"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/masteraula"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/masteraula"
 	@echo "# devhelp"
 
 epub:
