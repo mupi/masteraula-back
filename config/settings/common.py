@@ -49,15 +49,15 @@ THIRD_PARTY_APPS = (
     'rest_framework_swagger',
     'rest_auth',
     'rest_auth.registration',
-    'corsheaders'
+    'corsheaders',
 )
 
 # Apps specific for this project go here.
 LOCAL_APPS = (
     # custom users app
     'masteraula.users.apps.UsersConfig',
-    'masteraula.questions',
     # Your stuff: custom apps go here
+    'masteraula.questions',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -283,6 +283,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     )
 }
@@ -292,8 +293,9 @@ HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
 ACCOUNT_SIGNUP_FORM_CLASS = 'masteraula.users.forms.SignupForm'
 
 JWT_AUTH = {
-    'JWT_VERIFY_EXPIRATION': False,
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=86400),
+    'JWT_ALLOW_REFRESH': True,
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=120),
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=1),
 }
 
 SWAGGER_SETTINGS = {
@@ -311,11 +313,11 @@ ACCOUNT_LOGOUT_ON_GET = False
 OLD_PASSWORD_FIELD_ENABLED = True
 
 REST_AUTH_SERIALIZERS = {
-    'USER_DETAILS_SERIALIZER' : 'masteraula.questions.serializers.UserDetailsSerializer',
-    'JWT_SERIALIZER' : 'masteraula.questions.serializers.JWTSerializer',
-    'LOGIN_SERIALIZER': 'masteraula.questions.serializers.LoginSerializer',
+    'USER_DETAILS_SERIALIZER' : 'masteraula.users.serializers.UserDetailsSerializer',
+    'JWT_SERIALIZER' : 'masteraula.users.serializers.JWTSerializer',
+    'LOGIN_SERIALIZER': 'masteraula.users.serializers.LoginSerializer',
 }
 
 REST_AUTH_REGISTER_SERIALIZERS = {
-    'REGISTER_SERIALIZER': 'masteraula.questions.serializers.RegisterSerializer'
+    'REGISTER_SERIALIZER': 'masteraula.users.serializers.RegisterSerializer'
 }
