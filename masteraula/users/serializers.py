@@ -30,6 +30,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 # django-rest-auth custom serializers
 class RegisterSerializer(auth_register_serializers.RegisterSerializer):
+    name = serializers.CharField(required=False)
 
     def save(self, request):
         user = super().save(request)
