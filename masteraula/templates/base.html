@@ -1,5 +1,4 @@
 {% load staticfiles i18n %}<!DOCTYPE html>
-{% load permission_tags %}
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -55,50 +54,6 @@
         <button type="button" class="navbar-toggler hidden-sm-up pull-xs-right" data-toggle="collapse" data-target="#bs-navbar-collapse-1">
           &#9776;
         </button>
-
-        <!-- Collect the nav links, forms, and other content for toggling -->
-        <div class="collapse navbar-toggleable-xs" id="bs-navbar-collapse-1">
-          <ul class="nav navbar-nav">
-            {% if request.user.is_authenticated %}
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'questions:question_search' %}">Questões</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'questions:question_list_list' %}">Listas</a>
-                </li>
-                {% if user|has_role:'teacher' %}
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'questions:question_list_own_list' %}">Minhas Listas</a>
-                </li>
-                {% endif %}
-            {% else %}
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'home' %}">Home</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'about' %}">About</a>
-                </li>
-            {% endif %}
-          </ul>
-
-          <ul class="nav navbar-nav pull-xs-right">
-            {% if request.user.is_authenticated %}
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'users:detail' request.user.username  %}">{% trans "My Profile" %}</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'account_logout' %}">{% trans "Sign Out" %}</a>
-              </li>
-            {% else %}
-              <li class="nav-item">
-                <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}">{% trans "Sign Up" %}</a>
-              </li>
-              <li class="nav-item">
-                <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% trans "Sign In" %}</a>
-              </li>
-            {% endif %}
-          </ul>
-        </div>
       </div>
     </nav>
 
