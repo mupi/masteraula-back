@@ -43,7 +43,7 @@ THIRD_PARTY_APPS = (
     'allauth.account',  # registration
     'allauth.socialaccount',  # registration
     'taggit',
-    'haystack',
+    # 'haystack',
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_swagger',
@@ -279,22 +279,23 @@ HAYSTACK_CONNECTIONS = {
     # },
 }
 
+HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
+
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     )
 }
 
-HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
-
 ACCOUNT_SIGNUP_FORM_CLASS = 'masteraula.users.forms.SignupForm'
 
 JWT_AUTH = {
+    'JWT_AUTH_HEADER_PREFIX': 'Bearer',
     'JWT_ALLOW_REFRESH': True,
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=120),
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3600),
     'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=1),
 }
 
