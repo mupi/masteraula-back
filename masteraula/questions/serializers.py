@@ -16,11 +16,11 @@ from rest_framework import serializers, exceptions
 
 from taggit.models import Tag
 
-from masteraula.users.models import User
+from masteraula.users.models import User, Profile
+from masteraula.users.serializers import UserSerializer
 
-from masteraula.users.models import Profile
 from .models import Question, Document
-from .search_indexes import QuestionIndex, TagIndex
+# from .search_indexes import QuestionIndex, TagIndex
 
 class TagListSerializer(serializers.Field):
     '''
@@ -41,6 +41,32 @@ class TagListSerializer(serializers.Field):
         if type(obj) is not list:
             return [tag.name for tag in obj.all()]
         return obj
+
+class QuestionSerializer(serializers.ModelSerializer):
+    tags = TagListSerializer(read_only=False)
+    author = UserSerializer(read_only=False)
+
+    class Meta:
+        model = Question
+        fields = (
+            'id',
+            'author',
+            'create_date',
+
+            'statement',
+            'learning_object',
+            'resolution',
+            'level',
+
+            'subjects',
+            'education_level',
+            'year',
+            'source',
+
+            'credit_cost',
+
+            'tags',
+        )
 
 # class ProfileSerializer(serializers.ModelSerializer):
 #     class Meta:

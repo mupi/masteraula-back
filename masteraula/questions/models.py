@@ -67,7 +67,7 @@ class Question(models.Model):
     tags = TaggableManager()
 
     def __str__(self):
-        return self.question_statement[:75]
+        return self.statement[:75]
 
 
 class Alternative(models.Model):
