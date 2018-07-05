@@ -27,7 +27,7 @@ class LearningObject(models.Model):
     image = models.ImageField(null=True, blank=True)
     text = models.TextField(null=True, blank=True)
 
-    tags = TaggableManager()
+    tags = TaggableManager(blank=True)
 
     def __str__(self):
         return self.name
@@ -50,7 +50,7 @@ class Question(models.Model):
     )
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    create_date = models.DateTimeField(auto_now_add=True)
+    create_date = models.DateField(auto_now_add=True)
 
     statement = models.TextField()
     learning_object = models.ForeignKey(LearningObject, null=True, blank=True)
@@ -64,7 +64,7 @@ class Question(models.Model):
 
     credit_cost = models.PositiveIntegerField(null=False, blank=True, default=0)
 
-    tags = TaggableManager()
+    tags = TaggableManager(blank=True)
 
     def __str__(self):
         return self.statement[:75]
@@ -85,7 +85,7 @@ class Document(models.Model):
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     questions = models.ManyToManyField(Question, through='DocumentQuestion', related_name='questions')
-    create_date = models.DateTimeField(auto_now_add=True)
+    create_date = models.DateField(auto_now_add=True)
     secret = models.BooleanField()
 
     def __str__(self):
