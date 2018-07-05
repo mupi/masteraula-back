@@ -251,7 +251,7 @@ SOCIALACCOUNT_ADAPTER = 'masteraula.users.adapters.SocialAccountAdapter'
 
 # Change the verifyemail url
 ACCOUNT_ADAPTER = 'masteraula.users.adapters.CustomDefaultAccountAdapter'
-URL_FRONT = 'http://localhost:8080/'
+URL_FRONT = 'http://localhost:3000/'
 
 # Custom user app defaults
 # Select the correct user model

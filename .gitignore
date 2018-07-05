@@ -72,3 +72,4 @@ whoosh_index
 backup.sql
 corrects
 errors
+.vscode
