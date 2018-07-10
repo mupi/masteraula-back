@@ -81,12 +81,30 @@ class Alternative(models.Model):
     def __str__(self):
         return self.answer_text[:50]
 
+class DocumentHeader(models.Model):
+    owner = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
+
+    institution_name = models.CharField(max_length=200)
+    subject_name = models.CharField(max_length=50)
+    professor_name = models.CharField(max_length=200)
+    student_indicator = models.BooleanField()
+    class_indicator = models.BooleanField()
+    score_indicator = models.BooleanField()
+    date_indicator = models.BooleanField()
+
+    def __str__(self):
+        if self.owner != None:
+            return self.owner.name + " " + self.institution_name + " " + self.subject_name
+        return self.institution_name + " " + self.subject_name
+
+
 class Document(models.Model):
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     questions = models.ManyToManyField(Question, through='DocumentQuestion', related_name='questions')
     create_date = models.DateField(auto_now_add=True)
     secret = models.BooleanField()
+    document_header = models.ForeignKey(DocumentHeader, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name[:50]
@@ -99,17 +117,3 @@ class DocumentQuestion(models.Model):
 
     class Meta:
         ordering = ['document', 'order']
-
-    def __str__(self):
-        return self.question_list_header[:50]
-
-
-class DocumentHeader(models.Model):
-    document = models.ForeignKey(Document, on_delete=models.CASCADE)
-    institution_name = models.CharField(max_length=200)
-    subject_name = models.CharField(max_length=50)
-    professor_name = models.CharField(max_length=200)
-    student_indicator = models.BooleanField()
-    class_indicator = models.BooleanField()
-    score_indicator = models.BooleanField()
-    date_indicator = models.BooleanField()
