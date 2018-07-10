@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from .models import Subject, Question, EducationLevel, LearningObject, Alternative, Document, DocumentQuestion, DocumentHeader
-
+from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
+                     Alternative, DocumentHeader, Document, DocumentQuestion)
 
 class QuestionsInline(admin.TabularInline):
     model = Document.questions.through
@@ -11,12 +11,19 @@ class QuestionsInline(admin.TabularInline):
 class AlternativesInline(admin.TabularInline):
     model = Alternative
 
-class SubjectModelAdmin(admin.ModelAdmin):
+
+
+class DisciplineModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'name',)
     search_fields = ['id', 'name',]
     list_per_page = 100
 
-class EducationLevel(admin.ModelAdmin):
+class DescriptorModelAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'description')
+    search_fields = ['id', 'name',]
+    list_per_page = 100
+
+class TeachingLeveltModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'name',)
     search_fields = ['id', 'name']
     list_per_page = 100
@@ -34,7 +41,7 @@ class LearningObjectModelAdmin(admin.ModelAdmin):
         return u", ".join(o.name for o in obj.tags.all())
 
 class QuestionModelAdmin(admin.ModelAdmin):
-    raw_id_fields = ('author', 'learning_object', 'subjects')
+    raw_id_fields = ('author', 'learning_object', 'disciplines')
     list_display = ('id', 'statement', 'year', 'source', 'tag_list')
     search_fields = ['id', 'year', 'source', 'statement']
 
@@ -50,14 +57,14 @@ class QuestionModelAdmin(admin.ModelAdmin):
     
 class AlternativeModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('question', )
-    list_display = ('id', 'question', 'answer_text', 'is_correct',)
-    search_fields = ['id', 'answer_text', 'question__statement', 'question__id']
+    list_display = ('id', 'question', 'text', 'is_correct',)
+    search_fields = ['id', 'text', 'question__statement', 'question__id']
 
     list_per_page = 100
 
 class DocumentHeaderModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', )
-    list_display = ('id', 'institution_name', 'subject_name', 'professor_name',)
+    list_display = ('id', 'institution_name', 'discipline_name', 'professor_name',)
     search_fields = ['id', 'institution_name', 'owner__name']
 
     list_per_page = 100
@@ -72,8 +79,9 @@ class DocumentModelAdmin(admin.ModelAdmin):
     list_per_page = 100
 
 
-admin.site.register(Subject, SubjectModelAdmin)
-admin.site.register(EducationLevel, EducationLevel)
+admin.site.register(Discipline, DisciplineModelAdmin)
+admin.site.register(Descriptor, DescriptorModelAdmin)
+admin.site.register(TeachingLevel, TeachingLeveltModelAdmin)
 admin.site.register(LearningObject, LearningObjectModelAdmin)
 admin.site.register(Alternative, AlternativeModelAdmin)
 admin.site.register(Question, QuestionModelAdmin)

@@ -19,7 +19,9 @@ from taggit.models import Tag
 from masteraula.users.models import User, Profile
 from masteraula.users.serializers import UserSerializer
 
-from .models import Question, Document, Subject
+from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
+                     Alternative, DocumentHeader, Document, DocumentQuestion)
+
 # from .search_indexes import QuestionIndex, TagIndex
 
 class TagListSerializer(serializers.Field):
@@ -42,9 +44,9 @@ class TagListSerializer(serializers.Field):
             return [tag.name for tag in obj.all()]
         return obj
 
-class SubjectSerializer(serializers.ModelSerializer):
+class DisciplineSerialzier(serializers.ModelSerializer):
     class Meta:
-        model = Subject
+        model = Discipline
         fields = (
             'id',
             'name'
@@ -53,7 +55,7 @@ class SubjectSerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.ModelSerializer):
     tags = TagListSerializer(read_only=False)
     author = UserSerializer(read_only=False)
-    subjects = SubjectSerializer(read_only=False, many=True)
+    disciplines = DisciplineSerialzier(read_only=False, many=True)
     create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
 
     class Meta:
@@ -66,10 +68,11 @@ class QuestionSerializer(serializers.ModelSerializer):
             'statement',
             'learning_object',
             'resolution',
-            'level',
+            'difficulty',
 
-            'subjects',
-            'education_level',
+            'disciplines',
+            'desciptors',
+            'teaching_level',
             'year',
             'source',
 
