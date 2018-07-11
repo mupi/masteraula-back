@@ -52,10 +52,20 @@ class DisciplineSerialzier(serializers.ModelSerializer):
             'name'
         )
 
+class DescriptorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Descriptor
+        fields = (
+            'id',
+            'name',
+            'description'
+        )
+
 class QuestionSerializer(serializers.ModelSerializer):
     tags = TagListSerializer(read_only=False)
     author = UserSerializer(read_only=False)
     disciplines = DisciplineSerialzier(read_only=False, many=True)
+    desciptors = DescriptorSerializer(read_only=False, many=True)
     create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
 
     class Meta:
