@@ -61,12 +61,25 @@ class DescriptorSerializer(serializers.ModelSerializer):
             'description'
         )
 
+class AlternativeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Alternative
+        fields = (
+            'id',
+            'text',
+            'is_correct'
+        )
+
 class QuestionSerializer(serializers.ModelSerializer):
-    tags = TagListSerializer(read_only=False)
     author = UserSerializer(read_only=False)
+    create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
+    
+    alternatives = AlternativeSerializer(many=True, read_only=False)
+    
     disciplines = DisciplineSerialzier(read_only=False, many=True)
     desciptors = DescriptorSerializer(read_only=False, many=True)
-    create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
+    
+    tags = TagListSerializer(read_only=False)
 
     class Meta:
         model = Question
@@ -79,6 +92,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             'learning_object',
             'resolution',
             'difficulty',
+            'alternatives',
 
             'disciplines',
             'desciptors',
