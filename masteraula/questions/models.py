@@ -58,8 +58,8 @@ class Question(models.Model):
     difficulty = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)
 
     disciplines = models.ManyToManyField(Discipline, blank=True)
-    desciptors = models.ManyToManyField(Descriptor, blank=True)
-    teaching_level = models.ForeignKey(TeachingLevel, blank=True, null=True)
+    descriptors = models.ManyToManyField(Descriptor, blank=True)
+    teaching_levels = models.ManyToManyField(TeachingLevel, blank=True, null=True)
     year = models.PositiveIntegerField(null=True, blank=True)
     source = models.CharField(max_length=50, null=True, blank=True)
 

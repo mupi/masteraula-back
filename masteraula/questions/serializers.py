@@ -41,12 +41,20 @@ class TagListSerializer(serializers.Field):
 
     def to_representation(self, obj):
         if type(obj) is not list:
-            return [tag.name for tag in obj.all()]
+            return [{'name' : tag.name} for tag in obj.all()]
         return obj
 
 class DisciplineSerialzier(serializers.ModelSerializer):
     class Meta:
         model = Discipline
+        fields = (
+            'id',
+            'name'
+        )
+
+class TeachingLevelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeachingLevel
         fields = (
             'id',
             'name'
@@ -77,7 +85,8 @@ class QuestionSerializer(serializers.ModelSerializer):
     alternatives = AlternativeSerializer(many=True, read_only=False)
     
     disciplines = DisciplineSerialzier(read_only=False, many=True)
-    desciptors = DescriptorSerializer(read_only=False, many=True)
+    descriptors = DescriptorSerializer(read_only=False, many=True)
+    teaching_levels = TeachingLevelSerializer(read_only=False, many=True)
     
     tags = TagListSerializer(read_only=False)
 
@@ -95,8 +104,8 @@ class QuestionSerializer(serializers.ModelSerializer):
             'alternatives',
 
             'disciplines',
-            'desciptors',
-            'teaching_level',
+            'descriptors',
+            'teaching_levels',
             'year',
             'source',
 
