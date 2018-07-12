@@ -1,61 +1,89 @@
 from django.contrib import admin
 
-from .models import Subject
+from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
+                     Alternative, DocumentHeader, Document, DocumentQuestion)
+
+class QuestionsInline(admin.TabularInline):
+    model = Document.questions.through
+    raw_id_fields = ('question',)
 
 
-# class SubjectModelAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'name',)
+class AlternativesInline(admin.TabularInline):
+    model = Alternative
 
-#     search_fields = ['name',]
 
-#     list_per_page = 50
 
-# class AlternativeModelAdmin(admin.ModelAdmin):
-#     raw_id_fields = ('question', )
+class DisciplineModelAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name',)
+    search_fields = ['id', 'name',]
+    list_per_page = 100
 
-#     list_display = ('id', 'question', 'answer_text', 'is_correct')
+class DescriptorModelAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'description')
+    search_fields = ['id', 'name',]
+    list_per_page = 100
 
-#     search_fields = ['id', 'answer_text', 'question__statement', 'question__id' ]
+class TeachingLeveltModelAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name',)
+    search_fields = ['id', 'name']
+    list_per_page = 100
 
-#     list_per_page = 100
+class LearningObjectModelAdmin(admin.ModelAdmin):
+    raw_id_fields = ('owner', )
+    list_display = ('id', 'name', 'image', 'text', 'tag_list')
+    search_fields = ['id', 'name',]
+    list_per_page = 100
 
-# class Question_ListModelAdmin(admin.ModelAdmin):
-#     raw_id_fields = ('owner', )
+    def get_queryset(self, request):
+        return super(LearningObjectModelAdmin, self).get_queryset(request).prefetch_related('tags')
 
-#     list_display = ('id', 'header', 'owner',)
+    def tag_list(self, obj):
+        return u", ".join(o.name for o in obj.tags.all())
 
-#     search_fields = ['id', 'header', 'owner__name' ]
+class QuestionModelAdmin(admin.ModelAdmin):
+    raw_id_fields = ('author', 'learning_object', 'disciplines')
+    list_display = ('id', 'statement', 'year', 'source', 'tag_list')
+    search_fields = ['id', 'year', 'source', 'statement']
 
-#     list_per_page = 100
+    inlines = [AlternativesInline,]
 
-# class QuestionQuestion_ListModelAdmin(admin.ModelAdmin):
-#     raw_id_fields = ('question', 'question_list' )
+    list_per_page = 100
 
-#     list_display = ('id', 'question_list', 'question', 'order')
+    def get_queryset(self, request):
+        return super(QuestionModelAdmin, self).get_queryset(request).prefetch_related('tags')
 
-#     search_fields = ['id', 'question_list__id', 'question_list__name', 'question_list__owner' ]
+    def tag_list(self, obj):
+        return u", ".join(o.name for o in obj.tags.all())
+    
+class AlternativeModelAdmin(admin.ModelAdmin):
+    raw_id_fields = ('question', )
+    list_display = ('id', 'question', 'text', 'is_correct',)
+    search_fields = ['id', 'text', 'question__statement', 'question__id']
 
-#     list_per_page = 100
+    list_per_page = 100
 
-# class QuestionsInline(admin.TabularInline):
-#     model = Profile.avaiable_questions.through
-#     raw_id_fields = ('question',)
+class DocumentHeaderModelAdmin(admin.ModelAdmin):
+    raw_id_fields = ('owner', )
+    list_display = ('id', 'institution_name', 'discipline_name', 'professor_name',)
+    search_fields = ['id', 'institution_name', 'owner__name']
 
-# class ProfileModelAdmin(admin.ModelAdmin):
-#     raw_id_fields = ('user',)
+    list_per_page = 100
 
-#     list_display = ('id', 'user', 'credit_balance',)
+class DocumentModelAdmin(admin.ModelAdmin):
+    raw_id_fields = ('owner', 'document_header')
+    list_display = ('id', 'name', 'create_date', 'secret',)
+    search_fields = ['id', 'name']
 
-#     search_fields = ['id', 'user__name', ]
+    inlines = [QuestionsInline, ]
 
-#     inlines = [QuestionsInline,]
-#     exclude = ('avaiable_questions',)
+    list_per_page = 100
 
-#     list_per_page = 100
 
-# admin.site.register(Subject, SubjectModelAdmin)
-# admin.site.register(Question,QuestionModelAdmin)
-# admin.site.register(Document, Question_ListModelAdmin)
-# admin.site.register(DocumentQuestion, QuestionQuestion_ListModelAdmin)
-# admin.site.register(Alternative, AlternativeModelAdmin)
-# admin.site.register(Profile, ProfileModelAdmin)
+admin.site.register(Discipline, DisciplineModelAdmin)
+admin.site.register(Descriptor, DescriptorModelAdmin)
+admin.site.register(TeachingLevel, TeachingLeveltModelAdmin)
+admin.site.register(LearningObject, LearningObjectModelAdmin)
+admin.site.register(Alternative, AlternativeModelAdmin)
+admin.site.register(Question, QuestionModelAdmin)
+admin.site.register(Document, DocumentModelAdmin)
+admin.site.register(DocumentHeader, DocumentHeaderModelAdmin)

@@ -16,11 +16,13 @@ from rest_framework import serializers, exceptions
 
 from taggit.models import Tag
 
-from masteraula.users.models import User
+from masteraula.users.models import User, Profile
+from masteraula.users.serializers import UserSerializer
 
-from masteraula.users.models import Profile
-from .models import Question, Document
-from .search_indexes import QuestionIndex, TagIndex
+from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
+                     Alternative, DocumentHeader, Document, DocumentQuestion)
+
+# from .search_indexes import QuestionIndex, TagIndex
 
 class TagListSerializer(serializers.Field):
     '''
@@ -41,6 +43,67 @@ class TagListSerializer(serializers.Field):
         if type(obj) is not list:
             return [tag.name for tag in obj.all()]
         return obj
+
+class DisciplineSerialzier(serializers.ModelSerializer):
+    class Meta:
+        model = Discipline
+        fields = (
+            'id',
+            'name'
+        )
+
+class DescriptorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Descriptor
+        fields = (
+            'id',
+            'name',
+            'description'
+        )
+
+class AlternativeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Alternative
+        fields = (
+            'id',
+            'text',
+            'is_correct'
+        )
+
+class QuestionSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=False)
+    create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
+    
+    alternatives = AlternativeSerializer(many=True, read_only=False)
+    
+    disciplines = DisciplineSerialzier(read_only=False, many=True)
+    desciptors = DescriptorSerializer(read_only=False, many=True)
+    
+    tags = TagListSerializer(read_only=False)
+
+    class Meta:
+        model = Question
+        fields = (
+            'id',
+            'author',
+            'create_date',
+
+            'statement',
+            'learning_object',
+            'resolution',
+            'difficulty',
+            'alternatives',
+
+            'disciplines',
+            'desciptors',
+            'teaching_level',
+            'year',
+            'source',
+
+            'credit_cost',
+
+            'tags',
+        )
 
 # class ProfileSerializer(serializers.ModelSerializer):
 #     class Meta:
