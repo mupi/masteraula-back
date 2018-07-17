@@ -24,9 +24,10 @@ class UserSerializer(serializers.ModelSerializer):
             'id',
             'username',
             'name',
-            'email'
+            'email',
+            'about'
         )
-        extra_kwargs = {'username': {'required' : True}}
+        read_only_fields = ('username', 'email')
 
 # django-rest-auth custom serializers
 class RegisterSerializer(auth_register_serializers.RegisterSerializer):
@@ -101,9 +102,8 @@ class UserDetailsSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = User
-        fields = ('pk', 'username', 'email', 'name')
+        fields = ('pk', 'username', 'email', 'name',)
         read_only_fields = ('username', 'email')
-
 
 class JWTSerializer(serializers.Serializer):
     """
