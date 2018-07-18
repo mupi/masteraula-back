@@ -31,14 +31,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 # django-rest-auth custom serializers
 class RegisterSerializer(auth_register_serializers.RegisterSerializer):
-    name = serializers.CharField(required=False)
+    name = serializers.CharField(required=True)
 
-    def save(self, request):
-        user = super().save(request)
-
-        # Adiciona um profile para o respectivo usuario
-        Profile.objects.create(user=user)
-        return user
+    def custom_signup(self, request, user):
+        user.name = self.validated_data.get('name', '')
+        user.save(update_fields=['name'])
 
 class LoginSerializer(auth_serializers.LoginSerializer):
 
