@@ -59,7 +59,7 @@ class Question(models.Model):
 
     disciplines = models.ManyToManyField(Discipline, blank=True)
     descriptors = models.ManyToManyField(Descriptor, blank=True)
-    teaching_levels = models.ManyToManyField(TeachingLevel, blank=True, null=True)
+    teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)
     year = models.PositiveIntegerField(null=True, blank=True)
     source = models.CharField(max_length=50, null=True, blank=True)
 
