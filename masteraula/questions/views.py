@@ -23,11 +23,14 @@ import os
 import time
 
 class QuestionPagination(pagination.PageNumberPagination):
-       page_size = 12
+    page_size_query_param = 'limit'
+    page_size = 8
+    max_page_size = 64
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
+    pagination_class = QuestionPagination
 
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,

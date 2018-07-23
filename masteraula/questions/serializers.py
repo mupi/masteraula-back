@@ -17,7 +17,7 @@ from rest_framework import serializers, exceptions
 from taggit.models import Tag
 
 from masteraula.users.models import User, Profile
-from masteraula.users.serializers import UserSerializer
+from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
                      Alternative, DocumentHeader, Document, DocumentQuestion)
@@ -41,12 +41,20 @@ class TagListSerializer(serializers.Field):
 
     def to_representation(self, obj):
         if type(obj) is not list:
-            return [tag.name for tag in obj.all()]
+            return [{'name' : tag.name} for tag in obj.all()]
         return obj
 
 class DisciplineSerialzier(serializers.ModelSerializer):
     class Meta:
         model = Discipline
+        fields = (
+            'id',
+            'name'
+        )
+
+class TeachingLevelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeachingLevel
         fields = (
             'id',
             'name'
@@ -71,13 +79,14 @@ class AlternativeSerializer(serializers.ModelSerializer):
         )
 
 class QuestionSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=False)
+    author = UserDetailsSerializer(read_only=False)
     create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
     
     alternatives = AlternativeSerializer(many=True, read_only=False)
     
     disciplines = DisciplineSerialzier(read_only=False, many=True)
-    desciptors = DescriptorSerializer(read_only=False, many=True)
+    descriptors = DescriptorSerializer(read_only=False, many=True)
+    teaching_levels = TeachingLevelSerializer(read_only=False, many=True)
     
     tags = TagListSerializer(read_only=False)
 
@@ -95,8 +104,8 @@ class QuestionSerializer(serializers.ModelSerializer):
             'alternatives',
 
             'disciplines',
-            'desciptors',
-            'teaching_level',
+            'descriptors',
+            'teaching_levels',
             'year',
             'source',
 

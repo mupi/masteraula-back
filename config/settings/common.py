@@ -314,7 +314,7 @@ ACCOUNT_LOGOUT_ON_GET = False
 OLD_PASSWORD_FIELD_ENABLED = True
 
 REST_AUTH_SERIALIZERS = {
-    'USER_DETAILS_SERIALIZER' : 'masteraula.users.serializers.UserDetailsSerializer',
+    'USER_DETAILS_SERIALIZER' : 'masteraula.users.serializers.UserSerializer',
     'JWT_SERIALIZER' : 'masteraula.users.serializers.JWTSerializer',
     'LOGIN_SERIALIZER': 'masteraula.users.serializers.LoginSerializer',
 }
