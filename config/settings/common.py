@@ -295,8 +295,9 @@ ACCOUNT_SIGNUP_FORM_CLASS = 'masteraula.users.forms.SignupForm'
 JWT_AUTH = {
     'JWT_AUTH_HEADER_PREFIX': 'Bearer',
     'JWT_ALLOW_REFRESH': True,
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3600),
-    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=1),
+    'JWT_VERIFY_EXPIRATION': False,
+    # 'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3600),
+    # 'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=1),
 }
 
 SWAGGER_SETTINGS = {
