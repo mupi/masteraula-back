@@ -14,7 +14,7 @@ from taggit.models import Tag
 
 from masteraula.users.models import User
 
-from .models import Question, Document
+from .models import Question, Document, Discipline
 # from .docx_parsers import Question_Parser
 from . import permissions as permissions
 from . import serializers as serializers
@@ -28,9 +28,22 @@ class QuestionPagination(pagination.PageNumberPagination):
     max_page_size = 64
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Question.objects.all()
+    # queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
     pagination_class = QuestionPagination
+
+    def get_queryset(self):
+        queryset = Question.objects.all()
+        print(self.request.query_params)
+        disciplines = self.request.query_params.getlist('disciplines', None)
+        if disciplines is not None:
+            queryset = queryset.filter(disciplines__in=disciplines).distinct()
+        return queryset
+
+class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Discipline.objects.all()
+    serializer_class = serializers.DisciplineSerialzier
+    pagination_class = None
 
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,
