@@ -36,13 +36,13 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = Question.objects.all()
         disciplines = self.request.query_params.getlist('disciplines', None)
         teaching_levels = self.request.query_params.getlist('teaching_levels', None)
-        print(disciplines)
+        difficulties = self.request.query_params.getlist('difficulties', None)
         if disciplines is not None and disciplines:
             queryset = queryset.filter(disciplines__in=disciplines).distinct()
-            print(queryset)
         if teaching_levels is not None and teaching_levels:
             queryset = queryset.filter(teaching_levels__in=teaching_levels).distinct()
-        print(queryset)
+        if difficulties is not None and difficulties:
+            queryset = queryset.filter(difficulty__in=difficulties).distinct()
         return queryset
 
 class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
