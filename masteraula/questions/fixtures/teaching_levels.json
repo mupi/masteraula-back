@@ -1,0 +1,44 @@
+[
+    {
+        "id" : 1,
+        "model": "questions.TeachingLevel",
+        "fields" : {
+            "name" : "Ensino Infantil"
+        }
+    },
+    {
+        "id" : 2,
+        "model": "questions.TeachingLevel",
+        "fields" : {
+        "name" : "Ensino Fundamental I"
+    }
+    },
+    {
+        "id" : 3,
+        "model": "questions.TeachingLevel",
+        "fields" : {
+        "name" : "Ensino Fundamental II"
+    }
+    },
+    {
+        "id" : 4,
+        "model": "questions.TeachingLevel",
+        "fields" : {
+        "name" : "Ensino Médio"
+    }
+    },
+    {
+        "id" : 5,
+        "model": "questions.TeachingLevel",
+        "fields" : {
+        "name" : "Ensino Superior"
+    }
+    },
+    {
+        "id" : 6,
+        "model": "questions.TeachingLevel",
+        "fields" : {
+        "name" : "Ensino para Jovens e Adultos (EJA)"
+    }
+    }
+]
