@@ -14,7 +14,7 @@ from taggit.models import Tag
 
 from masteraula.users.models import User
 
-from .models import Question, Document, Discipline
+from .models import Question, Document, Discipline, TeachingLevel
 # from .docx_parsers import Question_Parser
 from . import permissions as permissions
 from . import serializers as serializers
@@ -36,13 +36,21 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = Question.objects.all()
         print(self.request.query_params)
         disciplines = self.request.query_params.getlist('disciplines', None)
+        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
         if disciplines is not None:
             queryset = queryset.filter(disciplines__in=disciplines).distinct()
+        if teaching_levels is not None:
+            queryset = queryset.filter(teaching_levels__in=teaching_levels).distinct()
         return queryset
 
 class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Discipline.objects.all()
     serializer_class = serializers.DisciplineSerialzier
+    pagination_class = None
+    
+class TeachingLevelViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = TeachingLevel.objects.all()
+    serializer_class = serializers.TeachingLevelSerializer
     pagination_class = None
 
 # class UserViewSet(mixins.CreateModelMixin,
