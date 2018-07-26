@@ -55,6 +55,20 @@ class TeachingLevelViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.TeachingLevelSerializer
     pagination_class = None
 
+class DocumentViewSet(viewsets.ModelViewSet):
+    queryset = Document.objects.all()
+    serializer_class = serializers.DocumentSerializer
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return serializers.DocumentListSerializer
+        if self.action == 'create':
+            return serializers.DocumentCreateSerializer
+        return self.serializer_class
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,
 #                     mixins.RetrieveModelMixin,
