@@ -98,7 +98,6 @@ class DocumentHeader(models.Model):
             return self.owner.name + " " + self.institution_name + " " + self.discipline_name
         return self.institution_name + " " + self.discipline_name
 
-
 class Document(models.Model):
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -110,6 +109,13 @@ class Document(models.Model):
     def __str__(self):
         return self.name[:50]
 
+    def set_owner(self, owner):
+        self.owner = owner
+        self.save()
+
+    def add_question(self, question):
+        self.questions.objects.add(question)
+        self.save()
 
 class DocumentQuestion(models.Model):
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
