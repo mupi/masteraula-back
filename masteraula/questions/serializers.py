@@ -120,6 +120,7 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentQuestion
         fields = (
+            'id',
             'question',
             'document',
             'order'
@@ -128,27 +129,13 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
             'document' : { 'read_only' : True }
         }
 
-
-class DocumentSerializer(serializers.ModelSerializer):
-    questions = DocumentQuestionSerializer(many=True)
-
-    class Meta:
-        model = Document
-        fields = (
-            'name',
-            'owner',
-            'questions',
-            'create_date',
-            'secret',
-            'document_header'
-        )
-
 class DocumentListSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionSerializer(many=True, source='documentquestion_set')
 
     class Meta:
         model = Document
         fields = (
+            'id',
             'name',
             'owner',
             'questions',
@@ -165,7 +152,6 @@ class DocumentCreateSerializer(serializers.ModelSerializer):
         fields = (
             'name',
             'questions',
-            'create_date',
             'secret',
             'document_header'
         )
@@ -176,13 +162,23 @@ class DocumentCreateSerializer(serializers.ModelSerializer):
         return documentQuestions
 
     def create(self, validated_data):
-        documentQuestions = validated_data.pop('documentquestion_set')
+        documentQuestions = validated_data.pop('questions')
         document = Document.objects.create(**validated_data)
 
-        for documentQuestion in documentQuestions:
-            document.documentquestion_set.create(**documentQuestion)
+        document.set_questions(documentQuestions)
 
         return document
+
+    def update(self, instance, validated_data):
+        if 'documentquestion_set' in validated_data:
+            documentquestion_set = validated_data.pop('documentquestion_set')
+            instance.set_questions(documentquestion_set)
+
+        instance.update(**validated_data)
+        
+        return instance
+
+
 
 # class ProfileSerializer(serializers.ModelSerializer):
 #     class Meta:
