@@ -126,7 +126,8 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
             'order'
         )
         extra_kwargs = {
-            'document' : { 'read_only' : True }
+            'document' : { 'read_only' : True },
+            'order' : { 'required' : False }
         }
 
 class DocumentListSerializer(serializers.ModelSerializer):
@@ -177,7 +178,6 @@ class DocumentCreateSerializer(serializers.ModelSerializer):
         instance.update(**validated_data)
         
         return instance
-
 
 
 # class ProfileSerializer(serializers.ModelSerializer):

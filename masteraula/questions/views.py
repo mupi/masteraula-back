@@ -69,6 +69,18 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    @detail_route(methods=['post'])
+    def addQuestion(self, request, pk=None):
+        document = self.get_object()
+        serializer = serializers.DocumentQuestionSerializer(data=request.data)
+        if serializer.is_valid():
+            question = serializer.validated_data['question']
+            document.add_question(question)
+            return Response({'status': 'question ' + str(question.id) + ' added'})
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,
 #                     mixins.RetrieveModelMixin,
