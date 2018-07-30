@@ -5,7 +5,7 @@ from drf_haystack.filters import HaystackAutocompleteFilter
 from drf_haystack.generics import HaystackGenericAPIView
 
 from rest_framework import generics, response, viewsets, status, mixins, viewsets
-from rest_framework.decorators import detail_route, list_route
+# from rest_framework.decorators import detail_route, list_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import viewsets, exceptions, pagination
@@ -13,7 +13,6 @@ from rest_framework import viewsets, exceptions, pagination
 from taggit.models import Tag
 
 from masteraula.users.models import User
-
 from .models import Question, Document, Discipline, TeachingLevel
 # from .docx_parsers import Question_Parser
 from . import permissions as permissions
@@ -45,19 +44,24 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(difficulty__in=difficulties).distinct()
         return queryset
 
+    permission_classes = (IsAuthenticated, )
+
 class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Discipline.objects.all()
     serializer_class = serializers.DisciplineSerialzier
     pagination_class = None
+    permission_classes = (IsAuthenticated, )
     
 class TeachingLevelViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TeachingLevel.objects.all()
     serializer_class = serializers.TeachingLevelSerializer
     pagination_class = None
+    permission_classes = (IsAuthenticated, )
 
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
     serializer_class = serializers.DocumentListSerializer
+    permission_classes = (IsAuthenticated, )
 
     def get_serializer_class(self):
         if self.action == 'list':
