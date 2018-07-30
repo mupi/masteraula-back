@@ -57,12 +57,12 @@ class TeachingLevelViewSet(viewsets.ReadOnlyModelViewSet):
 
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
-    serializer_class = serializers.DocumentSerializer
+    serializer_class = serializers.DocumentListSerializer
 
     def get_serializer_class(self):
         if self.action == 'list':
             return serializers.DocumentListSerializer
-        if self.action == 'create':
+        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
             return serializers.DocumentCreateSerializer
         return self.serializer_class
 
