@@ -128,9 +128,10 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'document' : { 'read_only' : True }
         }
-
-class DocumentListSerializer(serializers.ModelSerializer):
+        
+class DocumentSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionSerializer(many=True, source='documentquestion_set')
+    create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
 
     class Meta:
         model = Document
@@ -143,18 +144,10 @@ class DocumentListSerializer(serializers.ModelSerializer):
             'secret',
             'document_header'
         )
-
-class DocumentCreateSerializer(serializers.ModelSerializer):
-    questions = DocumentQuestionSerializer(many=True, source='documentquestion_set')
-
-    class Meta:
-        model = Document
-        fields = (
-            'name',
-            'questions',
-            'secret',
-            'document_header'
-        )
+        extra_kwargs = {
+            'owner' : { 'read_only' : True },
+            'create_date' : { 'read_only' : True }
+        }
 
     def validate_questions(self, value):
         documentQuestions = sorted(value, key=lambda k: k['order'])
@@ -162,7 +155,7 @@ class DocumentCreateSerializer(serializers.ModelSerializer):
         return documentQuestions
 
     def create(self, validated_data):
-        documentQuestions = validated_data.pop('questions')
+        documentQuestions = validated_data.pop('documentquestion_set')
         document = Document.objects.create(**validated_data)
 
         document.set_questions(documentQuestions)
