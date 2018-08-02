@@ -73,13 +73,10 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def addQuestion(self, request, pk=None):
         document = self.get_object()
         serializer = serializers.DocumentQuestionSerializer(data=request.data)
-        if serializer.is_valid():
-            question = serializer.validated_data['question']
-            document.add_question(question)
-            return Response({'status': 'question ' + str(question.id) + ' added'})
-        else:
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(document=document)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,
