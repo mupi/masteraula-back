@@ -42,7 +42,7 @@ urlpatterns = [
     # url(r'^question_lists/$',views.Question_ListListView.as_view(), name='question_list_list'),
     # url(r'^question_lists/own$',views.Question_ListOwnListView.as_view(), name='question_list_own_list'),
     # url(r'^question_lists/(?P<pk>[\d]+)/$',views.Question_ListDetailView.as_view(), name='question_list_detail'),
-    # url(r'^question_lists/(?P<pk>[\d]+)/delete$',views.Question_ListDeleteView.as_view(), name='question_list_delete'),
+    url(r'^question_lists/(?P<pk>[\d]+)/delete$',views.Question_ListDeleteView.as_view(), name='question_list_delete'),
     # url(r'^question_lists/(?P<pk>[\d]+)/clone$',views.Question_ListCloneView.as_view(), name='question_list_clone'),
     # url(r'^question_lists/(?P<pk>[\d]+)/edit$',views.Question_ListEditView.as_view(), name='question_list_edit'),
     # url(r'^question_lists/(?P<pk>[\d]+)/edit/questions$',views.QuestionEditSearchView.as_view(), name='question_list_edit_list'),
@@ -54,6 +54,7 @@ urlpatterns = [
     # url(r'^check_question_edit_list/$',views.check_question_edit_list, name='check_question_edit_list'),
     #
     # url(r'^get_tags/$', views.autocomplete, name='get_tags'),
+     url(r'^delete/<product_id>$', 'delete_product', name='delete_product'),
 
     # Rest Urls
 

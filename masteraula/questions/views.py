@@ -69,6 +69,23 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+class DocumentRemoveQuestionViewSet(viewsets.ModelViewSet):
+#class ModelView(View):                                                                                             
+    model = Document.objects.all()                                                                                                                                                                                                                                                    
+
+    def DeleteQuestion(request, object_id):
+        question = model.objects.get(pk = object_id)
+        question.delete()
+        return self.model.objects
+        
+
+
+
+
+
+
+
+
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,
 #                     mixins.RetrieveModelMixin,
