@@ -58,6 +58,7 @@ urlpatterns = [
     # Rest Urls
 
     url(r'^', include(router.urls)),
+    url(r'^docs/$', schema_view),
     # url(r'^api-token-auth/', obtain_jwt_token),
     # url(r'^api-token-verify/', verify_jwt_token),
     # url(r'^auth/', include('rest_auth.urls')),
