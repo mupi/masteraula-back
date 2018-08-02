@@ -129,6 +129,14 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
             'document' : { 'read_only' : True },
             'order' : { 'required' : False }
         }
+    
+    def create(self, validated_data):
+        document = validated_data['document']
+        if 'order' not in  validated_data:
+            validated_data['order'] = document.documentquestion_set.count()
+        documentQuestion = DocumentQuestion.objects.create(**validated_data)
+
+        return documentQuestion
 
 class DocumentListSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionSerializer(many=True, source='documentquestion_set')
