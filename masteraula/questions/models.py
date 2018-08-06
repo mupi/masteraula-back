@@ -9,11 +9,8 @@ from masteraula.users.models import User
 
 class DocumentQuestionManager(models.Manager):
     def create(self, *args, **kwargs):
-        print("asdfasdfsdad")
-
         documentQuestion = super().create(*args, **kwargs)
         documentQuestions = super().filter(document=documentQuestion.document).filter(order__gte=documentQuestion.order)
-        
         for dq in documentQuestions:
             if dq != documentQuestion:
                 dq.order = dq.order + 1
@@ -114,16 +111,12 @@ class Document(models.Model):
 
     def __str__(self):
         return self.name[:50]
-
-    def set_owner(self, owner):
-        self.owner = owner
-        self.save()
-
+        
     def set_questions(self, document_questions):
         self.documentquestion_set.all().delete()
         for document_question in document_questions:
             self.documentquestion_set.create(**document_question)
-            self.update_orders()
+        self.update_orders()
         self.save()
 
     def add_question(self, question):
@@ -133,7 +126,8 @@ class Document(models.Model):
         self.save()
 
     def remove_question(self, question):
-        self.documentquestion_set.filter(question=question).delete()
+        self.documentquestion_set.get(question=question).delete()
+        self.update_orders()
         self.save()
 
     def update_orders(self):
@@ -156,7 +150,7 @@ class DocumentQuestion(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     order = models.PositiveIntegerField(null=False, blank=False)
 
-    objects = DocumentQuestionManager
+    objects = DocumentQuestionManager()
 
     class Meta:
         ordering = ['document', 'order']
