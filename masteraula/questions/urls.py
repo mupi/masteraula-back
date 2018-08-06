@@ -13,7 +13,7 @@ router = DefaultRouter()
 router.register(r'questions', views.QuestionViewSet, base_name='questions')
 router.register(r'disciplines', views.DisciplineViewSet, base_name='disciplines')
 router.register(r'teaching_levels', views.TeachingLevelViewSet, base_name='teaching_levels')
-router.register(r'documents', views.DocumentViewSet, base_name='teaching_levels')
+router.register(r'documents', views.DocumentViewSet, base_name='documents')
 
 # router.register(r'users', rest_views.UserViewSet, base_name='users')
 # router.register(r'question_lists', rest_views.Question_ListViewSet, base_name='question_lists')
@@ -58,6 +58,7 @@ urlpatterns = [
     # Rest Urls
 
     url(r'^', include(router.urls)),
+    url(r'^docs/$', schema_view),
     # url(r'^api-token-auth/', obtain_jwt_token),
     # url(r'^api-token-verify/', verify_jwt_token),
     # url(r'^auth/', include('rest_auth.urls')),
