@@ -20,7 +20,7 @@ from masteraula.users.models import User, Profile
 from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
-                     Alternative, DocumentHeader, Document, DocumentQuestion)
+                     Alternative, Document, DocumentQuestion)
 
 # from .search_indexes import QuestionIndex, TagIndex
 
@@ -142,7 +142,13 @@ class DocumentSerializer(serializers.ModelSerializer):
             'questions',
             'create_date',
             'secret',
-            'document_header'
+            'institution_name',
+            'discipline_name',
+            'professor_name',
+            'student_indicator',
+            'class_indicator',
+            'score_indicator',
+            'date_indicator',
         )
         extra_kwargs = {
             'owner' : { 'read_only' : True },
