@@ -7,6 +7,20 @@ from taggit.managers import TaggableManager
 
 from masteraula.users.models import User
 
+class DocumentQuestionManager(models.Manager):
+    def create(self, *args, **kwargs):
+        print("asdfasdfsdad")
+
+        documentQuestion = super().create(*args, **kwargs)
+        documentQuestions = super().filter(document=documentQuestion.document).filter(order__gte=documentQuestion.order)
+        
+        for dq in documentQuestions:
+            if dq != documentQuestion:
+                dq.order = dq.order + 1
+                dq.save()
+
+        return documentQuestion
+
 class Discipline(models.Model):
     name = models.CharField(max_length=50, null=False, blank=False)
 
@@ -117,6 +131,7 @@ class Document(models.Model):
         self.documentquestion_set.all().delete()
         for document_question in document_questions:
             self.documentquestion_set.create(**document_question)
+            self.update_orders()
         self.save()
 
     def add_question(self, question):
@@ -146,6 +161,8 @@ class DocumentQuestion(models.Model):
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     order = models.PositiveIntegerField(null=False, blank=False)
+
+    objects = DocumentQuestionManager
 
     class Meta:
         ordering = ['document', 'order']
