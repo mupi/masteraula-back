@@ -128,6 +128,7 @@ class Document(models.Model):
     def remove_question(self, question):
         self.documentquestion_set.filter(question=question).delete()
         self.save()
+        self.update_orders()
 
     def update_orders(self):
         documentQuestions = self.documentquestion_set.all().order_by('order')
@@ -147,6 +148,7 @@ class DocumentQuestion(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     order = models.PositiveIntegerField(null=False, blank=False)
 
+        
     class Meta:
         ordering = ['document', 'order']
 

@@ -14,7 +14,7 @@ from taggit.models import Tag
 
 from masteraula.users.models import User
 
-from .models import Question, Document, Discipline, TeachingLevel
+from .models import Question, Document, Discipline, TeachingLevel, DocumentQuestion
 # from .docx_parsers import Question_Parser
 from . import permissions as permissions
 from . import serializers as serializers
@@ -28,7 +28,7 @@ class QuestionPagination(pagination.PageNumberPagination):
     max_page_size = 64
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
-    # queryset = Question.objects.all()
+    queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
     pagination_class = QuestionPagination
 
@@ -69,23 +69,20 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-class DocumentRemoveQuestionViewSet(viewsets.ModelViewSet):
-#class ModelView(View):                                                                                             
-    model = Document.objects.all()                                                                                                                                                                                                                                                    
+    @detail_route(methods=['delete'])
+    def removeQuestion(self, request, pk=None):
+        document = self.get_object()
+        serializer = serializers.DocumentQuestionSerializer(data=request.data)
+        if serializer.is_valid():
+            question = serializer.validated_data['question']
+            document.remove_question(question)
 
-    def DeleteQuestion(request, object_id):
-        question = model.objects.get(pk = object_id)
-        question.delete()
-        return self.model.objects
+            return Response(status = status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         
-
-
-
-
-
-
-
-
+       
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,
 #                     mixins.RetrieveModelMixin,
