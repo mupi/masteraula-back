@@ -237,7 +237,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # ------------------------------------------------------------------------------
 AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',
-)
+    )
 
 # Some really nice defaults
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
@@ -257,7 +257,7 @@ URL_FRONT = 'http://localhost:3000/'
 # Select the correct user model
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = 'users:redirect'
-LOGIN_URL = 'account_login'
+# LOGIN_URL = 'account_login'
 
 # SLUGLIFIER
 AUTOSLUG_SLUGIFY_FUNCTION = 'slugify.slugify'

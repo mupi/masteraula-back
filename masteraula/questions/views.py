@@ -14,7 +14,7 @@ from taggit.models import Tag
 
 from masteraula.users.models import User
 
-from .models import Question, Document, Discipline, TeachingLevel
+from .models import Question, Document, Discipline, TeachingLevel, DocumentQuestion
 # from .docx_parsers import Question_Parser
 from . import permissions as permissions
 from . import serializers as serializers
@@ -28,7 +28,7 @@ class QuestionPagination(pagination.PageNumberPagination):
     max_page_size = 64
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
-    # queryset = Question.objects.all()
+    queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
     pagination_class = QuestionPagination
 
@@ -55,6 +55,35 @@ class TeachingLevelViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.TeachingLevelSerializer
     pagination_class = None
 
+class DocumentViewSet(viewsets.ModelViewSet):
+    queryset = Document.objects.all()
+    serializer_class = serializers.DocumentListSerializer
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return serializers.DocumentListSerializer
+        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+            return serializers.DocumentCreateSerializer
+        return self.serializer_class
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    @detail_route(methods=['post'])
+    def removeQuestion(self, request, pk=None):
+        document = self.get_object()
+        request.data['order'] = 0
+        serializer = serializers.DocumentQuestionSerializer(data=request.data)
+        if serializer.is_valid():
+            question = serializer.validated_data['question']
+            document.remove_question(question)
+
+            return Response(status = status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        
+       
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,
 #                     mixins.RetrieveModelMixin,
