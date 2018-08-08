@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
-                     Alternative, DocumentHeader, Document, DocumentQuestion)
+                     Alternative, Document, DocumentQuestion)
 
 class QuestionsInline(admin.TabularInline):
     model = Document.questions.through
@@ -62,15 +62,8 @@ class AlternativeModelAdmin(admin.ModelAdmin):
 
     list_per_page = 100
 
-class DocumentHeaderModelAdmin(admin.ModelAdmin):
-    raw_id_fields = ('owner', )
-    list_display = ('id', 'institution_name', 'discipline_name', 'professor_name',)
-    search_fields = ['id', 'institution_name', 'owner__name']
-
-    list_per_page = 100
-
 class DocumentModelAdmin(admin.ModelAdmin):
-    raw_id_fields = ('owner', 'document_header')
+    raw_id_fields = ('owner',)
     list_display = ('id', 'name', 'create_date', 'secret',)
     search_fields = ['id', 'name']
 
@@ -86,4 +79,3 @@ admin.site.register(LearningObject, LearningObjectModelAdmin)
 admin.site.register(Alternative, AlternativeModelAdmin)
 admin.site.register(Question, QuestionModelAdmin)
 admin.site.register(Document, DocumentModelAdmin)
-admin.site.register(DocumentHeader, DocumentHeaderModelAdmin)

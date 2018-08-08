@@ -59,31 +59,37 @@ class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
     serializer_class = serializers.DocumentListSerializer
 
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return serializers.DocumentListSerializer
-        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
-            return serializers.DocumentCreateSerializer
-        return self.serializer_class
+    # def get_serializer_class(self):
+    #     if self.action == 'list':
+    #         return serializers.DocumentListSerializer
+    #     if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+    #         return serializers.DocumentCreateSerializer
+    #     return self.serializer_class
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    @detail_route(methods=['post'])
+    def addQuestion(self, request, pk=None):
+        document = self.get_object()
+        serializer = serializers.DocumentQuestionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(document=document)
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @detail_route(methods=['post'])
     def removeQuestion(self, request, pk=None):
         document = self.get_object()
         request.data['order'] = 0
         serializer = serializers.DocumentQuestionSerializer(data=request.data)
-        if serializer.is_valid():
-            question = serializer.validated_data['question']
-            document.remove_question(question)
+        serializer.is_valid(raise_exception=True)
+        question = serializer.validated_data['question']
+        document.remove_question(question)
 
-            return Response(status = status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status = status.HTTP_204_NO_CONTENT)
 
-        
-       
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,
 #                     mixins.RetrieveModelMixin,
