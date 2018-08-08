@@ -69,15 +69,16 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    @detail_route(methods=['delete'])
+    @detail_route(methods=['post'])
     def removeQuestion(self, request, pk=None):
         document = self.get_object()
+        request.data['order'] = 0
         serializer = serializers.DocumentQuestionSerializer(data=request.data)
         if serializer.is_valid():
             question = serializer.validated_data['question']
             document.remove_question(question)
 
-            return Response(status = status.HTTP_200_OK)
+            return Response(status = status.HTTP_204_NO_CONTENT)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
