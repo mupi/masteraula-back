@@ -30,7 +30,7 @@ urlpatterns = [
     # url(r'^search/$', views.QuestionSearchView.as_view() ,name='question_search'),
     #
     # url(r'^search_tag_ajax/$', views.QuestionTagSearchView.as_view()  ,name='question_search_tag_ajax'),
-    #
+    # 
     # url(r'^(?P<pk>[\d]+)/$',views.QuestionDetailView.as_view(), name='question_detail'),
     # url(r'^generate_list$',views.list_generator, name='list_generator'),
     # url(r'^generate_answer_list$',views.answer_list_generator, name='answer_list_generator'),
@@ -54,6 +54,7 @@ urlpatterns = [
     # url(r'^check_question_edit_list/$',views.check_question_edit_list, name='check_question_edit_list'),
     #
     # url(r'^get_tags/$', views.autocomplete, name='get_tags'),
+    
 
     # Rest Urls
 

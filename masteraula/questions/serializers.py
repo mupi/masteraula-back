@@ -186,7 +186,6 @@ class DocumentListSerializer(serializers.ModelSerializer):
         
         return instance
 
-
 # class ProfileSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = Profile

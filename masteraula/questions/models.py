@@ -126,9 +126,9 @@ class Document(models.Model):
         self.save()
 
     def remove_question(self, question):
-        self.documentquestion_set.get(question=question).delete()
-        self.update_orders()
+        self.documentquestion_set.filter(question=question).delete()
         self.save()
+        self.update_orders()
 
     def update_orders(self):
         documentQuestions = self.documentquestion_set.all().order_by('order')
