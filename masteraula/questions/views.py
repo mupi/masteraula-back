@@ -31,7 +31,7 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
     pagination_class = QuestionPagination
-    permission_classes = (IsAuthenticatedOrReadOnly, )
+    permission_classes = (IsAuthenticated, )
 
     def get_queryset(self):
         queryset = Question.objects.all()
