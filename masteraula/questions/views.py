@@ -22,6 +22,11 @@ from . import serializers as serializers
 import os
 import time
 
+class DocumentPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 10
+    max_page_size = 80
+
 class QuestionPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 8
@@ -72,7 +77,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     @detail_route(methods=['post'])
-    def addQuestion(self, request, pk=None):
+    def add_question(self, request, pk=None):
         document = self.get_object()
         serializer = serializers.DocumentQuestionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -82,16 +87,31 @@ class DocumentViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @detail_route(methods=['post'])
-    def removeQuestion(self, request, pk=None):
+    def remove_question(self, request, pk=None):
         document = self.get_object()
         request.data['order'] = 0
         serializer = serializers.DocumentQuestionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         question = serializer.validated_data['question']
         document.remove_question(question)
+        headers = self.get_success_headers(serializer.data)
 
         return Response(status = status.HTTP_204_NO_CONTENT)
 
+    @list_route(methods=['get'])
+    def my_documents(self, request):
+        queryset = Document.objects.filter(owner=self.request.user).order_by('create_date')
+
+        self.pagination_class = DocumentPagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,
 #                     mixins.RetrieveModelMixin,
