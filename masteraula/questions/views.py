@@ -66,12 +66,12 @@ class DocumentViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.DocumentListSerializer
     permission_classes = (IsAuthenticated, )
 
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return serializers.DocumentListSerializer
-        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
-            return serializers.DocumentCreateSerializer
-        return self.serializer_class
+    #def get_serializer_class(self):
+    #    if self.action == 'list':
+    #        return serializers.DocumentListSerializer
+    #    if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+    #        return serializers.DocumentCreateSerializer
+    #    return self.serializer_class
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -94,7 +94,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         question = serializer.validated_data['question']
         document.remove_question(question)
-        headers = self.get_success_headers(serializer.data)
 
         return Response(status = status.HTTP_204_NO_CONTENT)
 
