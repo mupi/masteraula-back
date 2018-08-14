@@ -132,11 +132,16 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         document = validated_data['document']
-        if 'order' not in  validated_data:
-            validated_data['order'] = document.documentquestion_set.count()
-        documentQuestion = DocumentQuestion.objects.create(**validated_data)
+        try:
+            return document.documentquestion_set.get(question=validated_data['question'])
+        except:
+            questions_count = document.documentquestion_set.count()
+            if 'order' not in validated_data or validated_data['order'] > questions_count:
+                validated_data['order'] = questions_count
 
-        return documentQuestion
+            documentQuestion = DocumentQuestion.objects.create(**validated_data)
+
+            return documentQuestion
 
 class DocumentListSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionSerializer(many=True, source='documentquestion_set')
