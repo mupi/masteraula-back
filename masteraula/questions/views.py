@@ -66,12 +66,12 @@ class DocumentViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.DocumentListSerializer
     permission_classes = (permissions.DocumentsPermission, )
 
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return serializers.DocumentListSerializer
-        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
-            return serializers.DocumentCreateSerializer
-        return self.serializer_class
+    #def get_serializer_class(self):
+    #   if self.action == 'list':
+    #        return serializers.DocumentListSerializer
+    #    if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+    #        return serializers.DocumentCreateSerializer()
+    #    return self.serializer_class
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
