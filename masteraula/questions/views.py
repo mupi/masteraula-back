@@ -9,6 +9,7 @@ from rest_framework.decorators import detail_route, list_route
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework import viewsets, exceptions, pagination
+from django.db.models import Count
 
 from taggit.models import Tag
 
@@ -97,9 +98,28 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
         return Response(status = status.HTTP_204_NO_CONTENT)
 
-    @list_route(methods=['get'])
+    @list_route(methods=['post'])
     def my_documents(self, request):
-        queryset = Document.objects.filter(owner=self.request.user).order_by('create_date')
+       
+        
+        if request.data['order_field']== 'date':
+            if request.data['order'] == 'asc':
+                queryset = Document.objects.filter(owner=self.request.user).order_by('create_date')
+            if request.data['order'] == 'desc':
+                queryset = Document.objects.filter(owner=self.request.user).order_by('-create_date')
+
+        if request.data['order_field']== 'name':
+            if request.data['order']=='asc':
+                queryset = Document.objects.filter(owner=self.request.user).order_by('name')
+            if request.data['order'] == 'desc':
+                queryset = Document.objects.filter(owner=self.request.user).order_by('-name')     
+
+        if request.data['order_field']=='question_number':
+            if request.data['order']=='asc':
+                queryset = Document.objects.filter(owner=self.request.user).annotate(num_questions = Count('questions')).order_by('num_questions')
+            if request.data['order'] == 'desc':
+                queryset = Document.objects.filter(owner=self.request.user).annotate(num_questions = Count('questions')).order_by('-num_questions')    
+   
 
         self.pagination_class = DocumentPagination
         page = self.paginate_queryset(queryset)
