@@ -166,7 +166,8 @@ class DocumentListSerializer(serializers.ModelSerializer):
         )
         extra_kwargs = {
             'owner' : { 'read_only' : True },
-            'create_date' : { 'read_only' : True }
+            'create_date' : { 'read_only' : True },
+            'secret' : { 'required' : True }
         }
 
     def validate_questions(self, value):
