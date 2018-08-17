@@ -52,19 +52,15 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(difficulty__in=difficulties).distinct()
         return queryset
 
-    permission_classes = (IsAuthenticated, )
-
 class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Discipline.objects.all()
     serializer_class = serializers.DisciplineSerialzier
     pagination_class = None
-    permission_classes = (IsAuthenticated, )
     
 class TeachingLevelViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TeachingLevel.objects.all()
     serializer_class = serializers.TeachingLevelSerializer
     pagination_class = None
-    permission_classes = (IsAuthenticated, )
 
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
