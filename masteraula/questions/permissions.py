@@ -24,6 +24,7 @@ class Question_ListPermission(permissions.BasePermission):
         # Habilita somente métodos seguros
         return request.method in permissions.SAFE_METHODS
 
+    
 class QuestionPermission(permissions.BasePermission):
 
     def has_permission(self, request, view):

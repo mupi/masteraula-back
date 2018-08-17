@@ -5,15 +5,17 @@ from drf_haystack.filters import HaystackAutocompleteFilter
 from drf_haystack.generics import HaystackGenericAPIView
 
 from rest_framework import generics, response, viewsets, status, mixins, viewsets
-# from rest_framework.decorators import detail_route, list_route
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import detail_route, list_route
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework import viewsets, exceptions, pagination
+from django.db.models import Count
 
 from taggit.models import Tag
 
 from masteraula.users.models import User
-from .models import Question, Document, Discipline, TeachingLevel
+
+from .models import Question, Document, Discipline, TeachingLevel, DocumentQuestion
 # from .docx_parsers import Question_Parser
 from . import permissions as permissions
 from . import serializers as serializers
@@ -21,15 +23,21 @@ from . import serializers as serializers
 import os
 import time
 
+class DocumentPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 10
+    max_page_size = 80
+
 class QuestionPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 8
     max_page_size = 64
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
-    # queryset = Question.objects.all()
+    queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
     pagination_class = QuestionPagination
+    permission_classes = (IsAuthenticated, )
 
     def get_queryset(self):
         queryset = Question.objects.all()
@@ -63,16 +71,73 @@ class DocumentViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.DocumentListSerializer
     permission_classes = (IsAuthenticated, )
 
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return serializers.DocumentListSerializer
-        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
-            return serializers.DocumentCreateSerializer
-        return self.serializer_class
+    #def get_serializer_class(self):
+    #    if self.action == 'list':
+    #        return serializers.DocumentListSerializer
+    #    if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+    #        return serializers.DocumentCreateSerializer
+    #    return self.serializer_class
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    @detail_route(methods=['post'])
+    def add_question(self, request, pk=None):
+        document = self.get_object()
+        serializer = serializers.DocumentQuestionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(document=document)
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @detail_route(methods=['post'])
+    def remove_question(self, request, pk=None):
+        document = self.get_object()
+        request.data['order'] = 0
+        serializer = serializers.DocumentQuestionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        question = serializer.validated_data['question']
+        document.remove_question(question)
+
+        return Response(status = status.HTTP_204_NO_CONTENT)
+
+    @list_route(methods=['get'])
+    def my_documents(self, request):
+        order_field = request.query_params.get('order_field', None)
+        order_type = request.query_params.get('order', None)
+        
+        if order_field == 'date':
+            if order_type == 'desc':
+                queryset = Document.objects.filter(owner=self.request.user).order_by('-create_date')
+            else:
+                queryset = Document.objects.filter(owner=self.request.user).order_by('create_date')
+
+        elif order_field == 'name':
+            if order_type =='desc':
+                queryset = Document.objects.filter(owner=self.request.user).order_by('-name')
+            else:
+                queryset = Document.objects.filter(owner=self.request.user).order_by('name')
+
+        elif order_field =='question_number':
+            if order_type =='desc':
+                queryset = Document.objects.filter(owner=self.request.user).annotate(num_questions = Count('questions')).order_by('-num_questions')
+            else:
+                queryset = Document.objects.filter(owner=self.request.user).annotate(num_questions = Count('questions')).order_by('num_questions')
+
+        else:
+            queryset = Document.objects.filter(owner=self.request.user).order_by('-create_date')
+
+        self.pagination_class = DocumentPagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,
 #                     mixins.RetrieveModelMixin,

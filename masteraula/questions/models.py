@@ -7,6 +7,17 @@ from taggit.managers import TaggableManager
 
 from masteraula.users.models import User
 
+class DocumentQuestionManager(models.Manager):
+    def create(self, *args, **kwargs):
+        documentQuestion = super().create(*args, **kwargs)
+        documentQuestions = super().filter(document=documentQuestion.document).filter(order__gte=documentQuestion.order)
+        for dq in documentQuestions:
+            if dq != documentQuestion:
+                dq.order = dq.order + 1
+                dq.save()
+
+        return documentQuestion
+
 class Discipline(models.Model):
     name = models.CharField(max_length=50, null=False, blank=False)
 
@@ -82,41 +93,30 @@ class Alternative(models.Model):
     def __str__(self):
         return self.text[:50]
 
-class DocumentHeader(models.Model):
-    owner = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
-
-    institution_name = models.CharField(max_length=200)
-    discipline_name = models.CharField(max_length=50)
-    professor_name = models.CharField(max_length=200)
-    student_indicator = models.BooleanField()
-    class_indicator = models.BooleanField()
-    score_indicator = models.BooleanField()
-    date_indicator = models.BooleanField()
-
-    def __str__(self):
-        if self.owner != None:
-            return self.owner.name + " " + self.institution_name + " " + self.discipline_name
-        return self.institution_name + " " + self.discipline_name
-
 class Document(models.Model):
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     questions = models.ManyToManyField(Question, through='DocumentQuestion', related_name='questions')
     create_date = models.DateField(auto_now_add=True)
     secret = models.BooleanField()
-    document_header = models.ForeignKey(DocumentHeader, null=True, on_delete=models.CASCADE)
+    
+    # Document Header details
+    institution_name = models.CharField(max_length=200, blank=True, null=True)
+    discipline_name = models.CharField(max_length=50, blank=True, null=True)
+    professor_name = models.CharField(max_length=200, blank=True, null=True)
+    student_indicator = models.BooleanField(default=False, blank=True)
+    class_indicator = models.BooleanField(default=False, blank=True)
+    score_indicator = models.BooleanField(default=False, blank=True)
+    date_indicator = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.name[:50]
-
-    def set_owner(self, owner):
-        self.owner = owner
-        self.save()
-
+        
     def set_questions(self, document_questions):
         self.documentquestion_set.all().delete()
         for document_question in document_questions:
             self.documentquestion_set.create(**document_question)
+        self.update_orders()
         self.save()
 
     def add_question(self, question):
@@ -128,6 +128,7 @@ class Document(models.Model):
     def remove_question(self, question):
         self.documentquestion_set.filter(question=question).delete()
         self.save()
+        self.update_orders()
 
     def update_orders(self):
         documentQuestions = self.documentquestion_set.all().order_by('order')
@@ -136,7 +137,9 @@ class Document(models.Model):
 
     def update(self, **kwargs):
         # https://www.dabapps.com/blog/django-models-and-encapsulation/
-        allowed_attributes = {'name', 'secret', 'document_header'}
+        allowed_attributes = {'name', 'secret', 'document_header', 'institution_name',
+        'discipline_name', 'professor_name', 'student_indicator', 'class_indicator',
+        'score_indicator', 'date_indicator'}
         for name, value in kwargs.items():
             assert name in allowed_attributes
             setattr(self, name, value)
@@ -146,6 +149,8 @@ class DocumentQuestion(models.Model):
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     order = models.PositiveIntegerField(null=False, blank=False)
+
+    objects = DocumentQuestionManager()
 
     class Meta:
         ordering = ['document', 'order']

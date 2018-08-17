@@ -13,7 +13,8 @@ router = DefaultRouter()
 router.register(r'questions', views.QuestionViewSet, base_name='questions')
 router.register(r'disciplines', views.DisciplineViewSet, base_name='disciplines')
 router.register(r'teaching_levels', views.TeachingLevelViewSet, base_name='teaching_levels')
-router.register(r'documents', views.DocumentViewSet, base_name='teaching_levels')
+router.register(r'documents', views.DocumentViewSet, base_name='documents')
+
 
 # router.register(r'users', rest_views.UserViewSet, base_name='users')
 # router.register(r'question_lists', rest_views.Question_ListViewSet, base_name='question_lists')
@@ -30,7 +31,7 @@ urlpatterns = [
     # url(r'^search/$', views.QuestionSearchView.as_view() ,name='question_search'),
     #
     # url(r'^search_tag_ajax/$', views.QuestionTagSearchView.as_view()  ,name='question_search_tag_ajax'),
-    #
+    # 
     # url(r'^(?P<pk>[\d]+)/$',views.QuestionDetailView.as_view(), name='question_detail'),
     # url(r'^generate_list$',views.list_generator, name='list_generator'),
     # url(r'^generate_answer_list$',views.answer_list_generator, name='answer_list_generator'),
@@ -54,10 +55,12 @@ urlpatterns = [
     # url(r'^check_question_edit_list/$',views.check_question_edit_list, name='check_question_edit_list'),
     #
     # url(r'^get_tags/$', views.autocomplete, name='get_tags'),
+    
 
     # Rest Urls
 
     url(r'^', include(router.urls)),
+    url(r'^docs/$', schema_view),
     # url(r'^api-token-auth/', obtain_jwt_token),
     # url(r'^api-token-verify/', verify_jwt_token),
     # url(r'^auth/', include('rest_auth.urls')),
