@@ -6,7 +6,7 @@ from drf_haystack.generics import HaystackGenericAPIView
 
 from rest_framework import generics, response, viewsets, status, mixins, viewsets
 from rest_framework.decorators import detail_route, list_route
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+#from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework import viewsets, exceptions, pagination
 from django.db.models import Count
@@ -37,7 +37,7 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
     pagination_class = QuestionPagination
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (permissions.QuestionPermission, )
 
     def get_queryset(self):
         queryset = Question.objects.all()
@@ -69,13 +69,13 @@ class TeachingLevelViewSet(viewsets.ReadOnlyModelViewSet):
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
     serializer_class = serializers.DocumentListSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (permissions.DocumentsPermission, )
 
     #def get_serializer_class(self):
-    #    if self.action == 'list':
+    #   if self.action == 'list':
     #        return serializers.DocumentListSerializer
     #    if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
-    #        return serializers.DocumentCreateSerializer
+    #        return serializers.DocumentCreateSerializer()
     #    return self.serializer_class
 
     def perform_create(self, serializer):
