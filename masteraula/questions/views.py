@@ -98,28 +98,31 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
         return Response(status = status.HTTP_204_NO_CONTENT)
 
-    @list_route(methods=['post'])
+    @list_route(methods=['get'])
     def my_documents(self, request):
-       
+        order_field = request.query_params.get('order_field', None)
+        order_type = request.query_params.get('order', None)
         
-        if request.data['order_field']== 'date':
-            if request.data['order'] == 'asc':
-                queryset = Document.objects.filter(owner=self.request.user).order_by('create_date')
-            if request.data['order'] == 'desc':
+        if order_field == 'date':
+            if order_type == 'desc':
                 queryset = Document.objects.filter(owner=self.request.user).order_by('-create_date')
+            else:
+                queryset = Document.objects.filter(owner=self.request.user).order_by('create_date')
 
-        if request.data['order_field']== 'name':
-            if request.data['order']=='asc':
+        elif order_field == 'name':
+            if order_type =='desc':
+                queryset = Document.objects.filter(owner=self.request.user).order_by('-name')
+            else:
                 queryset = Document.objects.filter(owner=self.request.user).order_by('name')
-            if request.data['order'] == 'desc':
-                queryset = Document.objects.filter(owner=self.request.user).order_by('-name')     
 
-        if request.data['order_field']=='question_number':
-            if request.data['order']=='asc':
+        elif order_field =='question_number':
+            if order_type =='desc':
+                queryset = Document.objects.filter(owner=self.request.user).annotate(num_questions = Count('questions')).order_by('-num_questions')
+            else:
                 queryset = Document.objects.filter(owner=self.request.user).annotate(num_questions = Count('questions')).order_by('num_questions')
-            if request.data['order'] == 'desc':
-                queryset = Document.objects.filter(owner=self.request.user).annotate(num_questions = Count('questions')).order_by('-num_questions')    
-   
+
+        else:
+            queryset = Document.objects.filter(owner=self.request.user).order_by('-create_date')
 
         self.pagination_class = DocumentPagination
         page = self.paginate_queryset(queryset)
