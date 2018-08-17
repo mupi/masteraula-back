@@ -144,7 +144,7 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
             return documentQuestion
 
 class DocumentListSerializer(serializers.ModelSerializer):
-    questions = DocumentQuestionSerializer(many=True, source='documentquestion_set')
+    questions = DocumentQuestionSerializer(many=True, source='documentquestion_set', default=[])
     create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
 
     class Meta:
