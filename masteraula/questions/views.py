@@ -85,8 +85,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         dq = serializer.save(document=document)
         list_document = serializers.DocumentQuestionListSerializer(dq)
         headers = self.get_success_headers(list_document.data)
-        print(list_document.data)
-        print(serializer.data)
+        
         return Response(list_document.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @detail_route(methods=['post'])
