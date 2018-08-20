@@ -82,10 +82,11 @@ class DocumentViewSet(viewsets.ModelViewSet):
         document = self.get_object()
         serializer = serializers.DocumentQuestionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(document=document)
-        headers = self.get_success_headers(serializer.data)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        dq = serializer.save(document=document)
+        list_document = serializers.DocumentQuestionListSerializer(dq)
+        headers = self.get_success_headers(list_document.data)
+        
+        return Response(list_document.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @detail_route(methods=['post'])
     def remove_question(self, request, pk=None):

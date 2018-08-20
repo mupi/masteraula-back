@@ -123,7 +123,7 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
             'id',
             'question',
             'document',
-            'order'
+            'order',
         )
         extra_kwargs = {
             'document' : { 'read_only' : True },
@@ -141,7 +141,27 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
 
             documentQuestion = DocumentQuestion.objects.create(**validated_data)
 
-            return documentQuestion
+            return documentQuestion 
+
+class DocumentQuestionListSerializer(serializers.ModelSerializer):
+    
+    question = QuestionSerializer(read_only=True)
+
+    class Meta:
+        model = DocumentQuestion
+       
+        fields = (
+            'id',
+            'question',
+            'document',
+            'order',
+        )
+        extra_kwargs = {
+            'document' : { 'read_only' : True },
+            'order' : { 'required' : False }
+        }
+
+        
 
 class DocumentListSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionSerializer(many=True, source='documentquestion_set', default=[])
