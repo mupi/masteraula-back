@@ -144,7 +144,7 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
             return documentQuestion
 
 class DocumentListSerializer(serializers.ModelSerializer):
-    questions = DocumentQuestionSerializer(many=True, source='documentquestion_set')
+    questions = DocumentQuestionSerializer(many=True, source='documentquestion_set', default=[])
     create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
 
     class Meta:
@@ -166,7 +166,8 @@ class DocumentListSerializer(serializers.ModelSerializer):
         )
         extra_kwargs = {
             'owner' : { 'read_only' : True },
-            'create_date' : { 'read_only' : True }
+            'create_date' : { 'read_only' : True },
+            'secret' : { 'required' : True }
         }
 
     def validate_questions(self, value):
