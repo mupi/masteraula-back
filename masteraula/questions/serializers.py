@@ -163,8 +163,8 @@ class DocumentQuestionListDetailSerializer(serializers.ModelSerializer):
 
  
         
-class DocumentCreateListSerializer(serializers.ModelSerializer):
-    questions = DocumentQuestionSerializer(many=True, source='documentquestion_set', default=[])
+class DocumentListSerializer(serializers.ModelSerializer):
+    questions = DocumentQuestionSerializer(many=True, source='documentquestion_set', read_only=True)
     create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
 
     class Meta:
@@ -190,33 +190,11 @@ class DocumentCreateListSerializer(serializers.ModelSerializer):
             'secret' : { 'required' : True }
         }
 
-    def validate_questions(self, value):
-        documentQuestions = sorted(value, key=lambda k: k['order'])
-        documentQuestions = [{'question' : dc['question'], 'order' : order} for order, dc in enumerate(documentQuestions)]
-        return documentQuestions
-
-    def create(self, validated_data):
-        documentQuestions = validated_data.pop('documentquestion_set')
-        document = Document.objects.create(**validated_data)
-
-        document.set_questions(documentQuestions)
-
-        return document
-
-    def update(self, instance, validated_data):
-        if 'documentquestion_set' in validated_data:
-            documentquestion_set = validated_data.pop('documentquestion_set')
-            instance.set_questions(documentquestion_set)
-
-        instance.update(**validated_data)
-        
-        return instance
-
-class DocumentDetailListSerializer(serializers.ModelSerializer):
-    questions = DocumentQuestionListDetailSerializer(many=True, source='documentquestion_set', default=[])
+class DocumentDetailSerializer(serializers.ModelSerializer):
+    questions = DocumentQuestionListDetailSerializer(many=True, source='documentquestion_set', read_only=True)
     create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
   
-    
+
     class Meta:
         model = Document
         fields = (
@@ -237,8 +215,31 @@ class DocumentDetailListSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'owner' : { 'read_only' : True },
             'create_date' : { 'read_only' : True },
-            'secret' : { 'required' : True }
+            'secret' : { 'required' : True },
+            'documentquestion_set' : { 'read_only' : True}
               }
+
+    # def validate_questions(self, value):
+    #     documentQuestions = sorted(value, key=lambda k: k['order'])
+    #     documentQuestions = [{'question' : dc['question'], 'order' : order} for order, dc in enumerate(documentQuestions)]
+    #     return documentQuestions
+
+    def create(self, validated_data):
+        # documentQuestions = validated_data.pop('documentquestion_set')
+        document = Document.objects.create(**validated_data)
+
+        # document.set_questions(documentQuestions)
+
+        return document
+
+    def update(self, instance, validated_data):
+        # if 'documentquestion_set' in validated_data:
+        #     documentquestion_set = validated_data.pop('documentquestion_set')
+            # instance.set_questions(documentquestion_set)
+
+        instance.update(**validated_data)
+        
+        return instance
 
     
    

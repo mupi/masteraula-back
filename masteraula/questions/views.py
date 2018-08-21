@@ -67,9 +67,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.DocumentsPermission, )
 
     def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return serializers.DocumentDetailListSerializer
-        return serializers.DocumentCreateListSerializer
+        if self.action == 'list':
+            return serializers.DocumentListSerializer
+        return serializers.DocumentDetailSerializer
        
 
     def perform_create(self, serializer):
@@ -126,10 +126,10 @@ class DocumentViewSet(viewsets.ModelViewSet):
         self.pagination_class = DocumentPagination
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = self.get_serializer(page, many=True)
+            serializer = serializers.DocumentCreateSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        serializer = self.get_serializer(queryset, many=True)
+        serializer = serializers.DocumentCreateSerializer(queryset, many=True)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         
