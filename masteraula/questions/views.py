@@ -126,10 +126,10 @@ class DocumentViewSet(viewsets.ModelViewSet):
         self.pagination_class = DocumentPagination
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = serializers.DocumentCreateSerializer(page, many=True)
+            serializer = serializers.DocumentListSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        serializer = serializers.DocumentCreateSerializer(queryset, many=True)
+        serializer = serializers.DocumentListSerializer(queryset, many=True)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         
