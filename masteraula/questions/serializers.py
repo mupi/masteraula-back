@@ -143,7 +143,7 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
 
             return documentQuestion 
 
-class DocumentQuestionListSerializer(serializers.ModelSerializer):
+class DocumentQuestionListDetailSerializer(serializers.ModelSerializer):
     
     question = QuestionSerializer(read_only=True)
 
@@ -161,10 +161,10 @@ class DocumentQuestionListSerializer(serializers.ModelSerializer):
             'order' : { 'required' : False }
         }
 
+ 
         
-
 class DocumentListSerializer(serializers.ModelSerializer):
-    questions = DocumentQuestionSerializer(many=True, source='documentquestion_set', default=[])
+    questions = DocumentQuestionSerializer(many=True, source='documentquestion_set', read_only=True)
     create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
 
     class Meta:
@@ -190,28 +190,59 @@ class DocumentListSerializer(serializers.ModelSerializer):
             'secret' : { 'required' : True }
         }
 
-    def validate_questions(self, value):
-        documentQuestions = sorted(value, key=lambda k: k['order'])
-        documentQuestions = [{'question' : dc['question'], 'order' : order} for order, dc in enumerate(documentQuestions)]
-        return documentQuestions
+class DocumentDetailSerializer(serializers.ModelSerializer):
+    questions = DocumentQuestionListDetailSerializer(many=True, source='documentquestion_set', read_only=True)
+    create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
+  
+
+    class Meta:
+        model = Document
+        fields = (
+            'id',
+            'name',
+            'owner',
+            'questions',
+            'create_date',
+            'secret',
+            'institution_name',
+            'discipline_name',
+            'professor_name',
+            'student_indicator',
+            'class_indicator',
+            'score_indicator',
+            'date_indicator',
+        )
+        extra_kwargs = {
+            'owner' : { 'read_only' : True },
+            'create_date' : { 'read_only' : True },
+            'secret' : { 'required' : True },
+            'documentquestion_set' : { 'read_only' : True}
+              }
+
+    # def validate_questions(self, value):
+    #     documentQuestions = sorted(value, key=lambda k: k['order'])
+    #     documentQuestions = [{'question' : dc['question'], 'order' : order} for order, dc in enumerate(documentQuestions)]
+    #     return documentQuestions
 
     def create(self, validated_data):
-        documentQuestions = validated_data.pop('documentquestion_set')
+        # documentQuestions = validated_data.pop('documentquestion_set')
         document = Document.objects.create(**validated_data)
 
-        document.set_questions(documentQuestions)
+        # document.set_questions(documentQuestions)
 
         return document
 
     def update(self, instance, validated_data):
-        if 'documentquestion_set' in validated_data:
-            documentquestion_set = validated_data.pop('documentquestion_set')
-            instance.set_questions(documentquestion_set)
+        # if 'documentquestion_set' in validated_data:
+        #     documentquestion_set = validated_data.pop('documentquestion_set')
+            # instance.set_questions(documentquestion_set)
 
         instance.update(**validated_data)
         
         return instance
 
+    
+   
 # class ProfileSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = Profile
