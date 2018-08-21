@@ -64,15 +64,13 @@ class TeachingLevelViewSet(viewsets.ReadOnlyModelViewSet):
 
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
-    serializer_class = serializers.DocumentListSerializer
     permission_classes = (permissions.DocumentsPermission, )
 
-    #def get_serializer_class(self):
-    #   if self.action == 'list':
-    #        return serializers.DocumentListSerializer
-    #    if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
-    #        return serializers.DocumentCreateSerializer()
-    #    return self.serializer_class
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return serializers.DocumentDetailListSerializer
+        return serializers.DocumentCreateListSerializer
+       
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -82,8 +80,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
         document = self.get_object()
         serializer = serializers.DocumentQuestionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        dq = serializer.save(document=document)
-        list_document = serializers.DocumentQuestionListSerializer(dq)
+        document_question = serializer.save(document=document)
+        list_document = serializers.DocumentQuestionListDetailSerializer(document_question)
         headers = self.get_success_headers(list_document.data)
         
         return Response(list_document.data, status=status.HTTP_201_CREATED, headers=headers)

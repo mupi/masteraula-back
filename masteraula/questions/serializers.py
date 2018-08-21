@@ -143,7 +143,7 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
 
             return documentQuestion 
 
-class DocumentQuestionListSerializer(serializers.ModelSerializer):
+class DocumentQuestionListDetailSerializer(serializers.ModelSerializer):
     
     question = QuestionSerializer(read_only=True)
 
@@ -161,9 +161,9 @@ class DocumentQuestionListSerializer(serializers.ModelSerializer):
             'order' : { 'required' : False }
         }
 
+ 
         
-
-class DocumentListSerializer(serializers.ModelSerializer):
+class DocumentCreateListSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionSerializer(many=True, source='documentquestion_set', default=[])
     create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
 
@@ -212,6 +212,36 @@ class DocumentListSerializer(serializers.ModelSerializer):
         
         return instance
 
+class DocumentDetailListSerializer(serializers.ModelSerializer):
+    questions = DocumentQuestionListDetailSerializer(many=True, source='documentquestion_set', default=[])
+    create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
+  
+    
+    class Meta:
+        model = Document
+        fields = (
+            'id',
+            'name',
+            'owner',
+            'questions',
+            'create_date',
+            'secret',
+            'institution_name',
+            'discipline_name',
+            'professor_name',
+            'student_indicator',
+            'class_indicator',
+            'score_indicator',
+            'date_indicator',
+        )
+        extra_kwargs = {
+            'owner' : { 'read_only' : True },
+            'create_date' : { 'read_only' : True },
+            'secret' : { 'required' : True }
+              }
+
+    
+   
 # class ProfileSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = Profile
