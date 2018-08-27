@@ -53,7 +53,7 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
 
 class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Discipline.objects.all()
+    queryset = Discipline.objects.all().order_by('name')
     serializer_class = serializers.DisciplineSerialzier
     pagination_class = None
     
