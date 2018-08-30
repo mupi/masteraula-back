@@ -1,0 +1,1325 @@
+{
+	"info": {
+		"_postman_id": "9be0cbb5-1ec4-455c-a23f-d941e32b1d14",
+		"name": "Masteraula",
+		"description": "Documentação Masteraula",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"_postman_id": "4f5b68c2-59e5-4809-b0a5-d0e4ec2700f5",
+			"name": "Documents",
+			"item": [
+				{
+					"_postman_id": "e141e6b0-4d32-42f9-8d3e-c55fb497908b",
+					"name": "/documents/",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"email\": \"glauciaschnoellers@gmail.com\",\n    \"password\": \"teste123\"\n}"
+						},
+						"url": {
+							"raw": "https://api.masteraula.com.br/documents/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"documents",
+								""
+							]
+						},
+						"description": "Lista os documentos de todos os autores. "
+					},
+					"response": []
+				},
+				{
+					"_postman_id": "43a0815a-46f0-4423-8c89-d986571c4955",
+					"name": "/documents/{id}/",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"url": {
+							"raw": "https://api.masteraula.com.br/documents/{id}/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"documents",
+								"{id}",
+								""
+							]
+						},
+						"description": "Recupera um documento. \n\nPara isso, o parâmetro {id} deve ser passado na URL. \n\nUm exemplo de uma requisição é mostrado neste arquivo."
+					},
+					"response": [
+						{
+							"id": "e0915db7-1884-4aba-adeb-37977348d6e8",
+							"name": "/documents/{id}/",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"body": {},
+								"url": {
+									"raw": "https://api.masteraula.com.br/documents/1/",
+									"protocol": "https",
+									"host": [
+										"api",
+										"masteraula",
+										"com",
+										"br"
+									],
+									"path": [
+										"documents",
+										"1",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				},
+				{
+					"_postman_id": "43f6eab8-66b9-4f2b-b4c7-182a1d199ae1",
+					"name": "/documents/",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"\",\n    \"secret\": false,\n    \"institution_name\": \"\",\n    \"discipline_name\": \"\",\n    \"professor_name\": \"\",\n    \"student_indicator\": false,\n    \"class_indicator\": false,\n    \"score_indicator\": false,\n    \"date_indicator\": false\n}"
+						},
+						"url": {
+							"raw": "https://api.masteraula.com.br/documents/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"documents",
+								""
+							]
+						},
+						"description": "Cria um novo documento.Exige passar alguns parâmetros em Body.\n\nUm exemplo de uma requisição é mostrado neste arquivo.\n"
+					},
+					"response": [
+						{
+							"id": "10a0083c-1bd9-4b0c-acc0-475efd60a4d2",
+							"name": "documents/",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Teste de Português\",\n    \"secret\": false,\n    \"institution_name\": \"Unicamp\",\n    \"discipline_name\": \"Português\",\n    \"professor_name\": \"Miguel\",\n    \"student_indicator\": false,\n    \"class_indicator\": false,\n    \"score_indicator\": false,\n    \"date_indicator\": false\n}"
+								},
+								"url": {
+									"raw": "https://api.masteraula.com.br/documents/",
+									"protocol": "https",
+									"host": [
+										"api",
+										"masteraula",
+										"com",
+										"br"
+									],
+									"path": [
+										"documents",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				},
+				{
+					"_postman_id": "47a8495f-dda6-4776-9c00-808876149980",
+					"name": "/documents/{id}/remove_question/",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"question\": id\n}"
+						},
+						"url": {
+							"raw": "https://api.masteraula.com.br/documents/{id}/remove_question/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"documents",
+								"{id}",
+								"remove_question",
+								""
+							]
+						},
+						"description": "Permite remover uma determinada questão do documento. Para isso, o parâmetro {id} deve ser passado na URL. Exige passar um parâmeto em Body.\n\nUm exemplo de uma requisição é mostrado neste arquivo.\n\n\n\n"
+					},
+					"response": [
+						{
+							"id": "b7130e78-f033-44b7-b324-f222dccf6faf",
+							"name": "/documents/{id}/remove_question/",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"question\": 6\n}"
+								},
+								"url": {
+									"raw": "https://api.masteraula.com.br/documents/343/remove_question/",
+									"protocol": "https",
+									"host": [
+										"api",
+										"masteraula",
+										"com",
+										"br"
+									],
+									"path": [
+										"documents",
+										"343",
+										"remove_question",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				},
+				{
+					"_postman_id": "caae100c-0476-44f6-bad4-42af996b1eff",
+					"name": "/documents/{id}/add_question/ ",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"question\": id\n}"
+						},
+						"url": {
+							"raw": "https://api.masteraula.com.br/documents/{id}/add_question/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"documents",
+								"{id}",
+								"add_question",
+								""
+							]
+						},
+						"description": "Permite remover uma determinada questão do documento. Para isso, o parâmetro {id} deve ser passado na URL. Exige passar um parâmeto em Body.\n\nUm exemplo de uma requisição é mostrado neste arquivo.\n"
+					},
+					"response": [
+						{
+							"id": "9366663b-6681-4473-94e6-bd96c188a50e",
+							"name": "/documents/{id}/add_question/ Copy",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"question\": 6\n}"
+								},
+								"url": {
+									"raw": "https://api.masteraula.com.br/documents/343/add_question/",
+									"protocol": "https",
+									"host": [
+										"api",
+										"masteraula",
+										"com",
+										"br"
+									],
+									"path": [
+										"documents",
+										"343",
+										"add_question",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				},
+				{
+					"_postman_id": "d9726201-5fd8-483b-a9e4-482470beab7f",
+					"name": "/documents/my_documents/",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"url": {
+							"raw": "https://api.masteraula.com.br/documents/my_documents/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"documents",
+								"my_documents",
+								""
+							]
+						},
+						"description": "Lista os documentos de um autor."
+					},
+					"response": []
+				}
+			],
+			"description": "#Instruções para testes com os documentos\n\nRealiza as seguintes funcionalidades:\n\n- Listar todos os documentos;\n- Recuperar um documento;\n- Cria um documento;\n- Adicionar questão ao documento;\n- Remover questão do documento;\n- Lista todos os documentos do autor. ",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "11861f44-3bf6-4c38-975e-ece39dcd8cd5",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "8ef14ddc-eb3a-40fa-8561-dd9581e25183",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"_postman_id": "71aa6f9f-404c-471f-814a-02bf8386d639",
+			"name": "Questions",
+			"item": [
+				{
+					"_postman_id": "50e77e45-45a3-4785-998f-d6415ee0b531",
+					"name": "/questions/",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"url": {
+							"raw": "https://api.masteraula.com.br/questions/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"questions",
+								""
+							]
+						},
+						"description": "Lista todas as questões."
+					},
+					"response": []
+				},
+				{
+					"_postman_id": "2b8cce68-a55f-4acb-9c86-364db8d29e13",
+					"name": "/questions/{id}/",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"url": {
+							"raw": "https://api.masteraula.com.br/questions/{id}/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"questions",
+								"{id}",
+								""
+							]
+						},
+						"description": "Recupera uma questão. Para isso, o parâmetro {id} deve ser passado na URL. \n\nUm exemplo de uma requisição é mostrado neste arquivo.\n"
+					},
+					"response": [
+						{
+							"id": "af5eb968-05e9-4c64-87a2-0e75b51f974d",
+							"name": "/questions/{id}/",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"body": {},
+								"url": {
+									"raw": "https://api.masteraula.com.br/questions/8/",
+									"protocol": "https",
+									"host": [
+										"api",
+										"masteraula",
+										"com",
+										"br"
+									],
+									"path": [
+										"questions",
+										"8",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				}
+			],
+			"description": "#Instruções para testes com as questões\n\nRealiza as seguintes funcionalidades:\n- Listar todas as questões;\n- Recurpar uma questão especifica. \n \n",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "c80a45b6-25fd-4881-98fe-f07c007b75ee",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "89f78765-9963-4cd2-8d4b-400109528f53",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"_postman_id": "a46971b7-faea-49a2-b7c6-d05a35e1e551",
+			"name": "Disciplines",
+			"item": [
+				{
+					"_postman_id": "466ef743-b7cf-44fb-a388-b233e098b320",
+					"name": "/disciplines/",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"url": {
+							"raw": "https://api.masteraula.com.br/disciplines/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"disciplines",
+								""
+							]
+						},
+						"description": "Lista todas as disciplinas. "
+					},
+					"response": []
+				},
+				{
+					"_postman_id": "666e5b61-4cc0-412b-99d1-b7cbcbe105a9",
+					"name": "/disciplines/{id}",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"url": {
+							"raw": "https://api.masteraula.com.br/disciplines/{id}/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"disciplines",
+								"{id}",
+								""
+							]
+						},
+						"description": "Recupera um disciplina.Para isso, o parâmetro {id} deve ser passado na URL. \n\nUm exemplo de uma requisição é mostrado neste arquivo.\n"
+					},
+					"response": [
+						{
+							"id": "fbf55c9a-dad5-450d-975f-2a30805ab920",
+							"name": "/disciplines/{id}",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"body": {},
+								"url": {
+									"raw": "https://api.masteraula.com.br/disciplines/1/",
+									"protocol": "https",
+									"host": [
+										"api",
+										"masteraula",
+										"com",
+										"br"
+									],
+									"path": [
+										"disciplines",
+										"1",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				}
+			]
+		},
+		{
+			"_postman_id": "c087af4d-5e54-4914-b70e-341fa6a2f573",
+			"name": "Teaching levels",
+			"item": [
+				{
+					"_postman_id": "6a876119-79c0-4820-820f-f0d9421a1164",
+					"name": "/teaching_levels/",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"url": {
+							"raw": "https://api.masteraula.com.br/teaching_levels/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"teaching_levels",
+								""
+							]
+						},
+						"description": "Lista todos os níveis de ensino. "
+					},
+					"response": []
+				},
+				{
+					"_postman_id": "20fa3970-17c2-4f95-8c16-d2ffd8c90e5f",
+					"name": "/teaching_levels/{id}/",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"url": {
+							"raw": "https://api.masteraula.com.br/teaching_levels/{id}/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"teaching_levels",
+								"{id}",
+								""
+							]
+						},
+						"description": "Lista um níveil de ensino. Para isso, o parâmetro {id} deve ser passado na URL. \n\nUm exemplo de uma requisição é mostrado neste arquivo.\n"
+					},
+					"response": [
+						{
+							"id": "698c78c0-e1d7-41ce-b1ab-80f8107eb38f",
+							"name": "/teaching_levels/{id}/",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"body": {},
+								"url": {
+									"raw": "https://api.masteraula.com.br/teaching_levels/11/",
+									"protocol": "https",
+									"host": [
+										"api",
+										"masteraula",
+										"com",
+										"br"
+									],
+									"path": [
+										"teaching_levels",
+										"11",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				}
+			]
+		},
+		{
+			"_postman_id": "ac09a4f5-ef61-4f89-b911-fa31d4bcd473",
+			"name": "Auth ",
+			"item": [
+				{
+					"_postman_id": "e390c61c-4772-44bc-baa9-9f0ef0e429b4",
+					"name": "/auth/login/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"\",\n  \"email\": \"\",\n  \"username\": \"\"\n}"
+						},
+						"url": {
+							"raw": "https://api.masteraula.com.br/auth/login/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"auth",
+								"login",
+								""
+							]
+						},
+						"description": "Verifica as credenciais e returna as informações do usuário. \n\nUm exemplo de uma requisição é mostrado neste arquivo."
+					},
+					"response": [
+						{
+							"id": "66838677-e277-41bf-84e2-6ceca17407b0",
+							"name": "/auth/login/",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"password\": \"123\",\n  \"email\": \"teste@gmail.com\",\n  \"username\": \"Teste\"\n}"
+								},
+								"url": {
+									"raw": "https://api.masteraula.com.br/auth/login/",
+									"protocol": "https",
+									"host": [
+										"api",
+										"masteraula",
+										"com",
+										"br"
+									],
+									"path": [
+										"auth",
+										"login",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				},
+				{
+					"_postman_id": "4983ffa1-454b-4150-84a4-695dc8b86410",
+					"name": "/auth/logout/",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {},
+						"url": {
+							"raw": "https://api.masteraula.com.br/auth/logout/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"auth",
+								"logout",
+								""
+							]
+						},
+						"description": "Chama o método logout do Django e exclui o objeto Token atribuído ao objeto User atual. \n\nNão exige enviar nenhum parâmetro. "
+					},
+					"response": []
+				},
+				{
+					"_postman_id": "8f7b4b51-ecba-4f12-b2be-a55acbd9f457",
+					"name": "/auth/password/reset/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"\"\n}"
+						},
+						"url": {
+							"raw": "https://api.masteraula.com.br/auth/password/reset/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"auth",
+								"password",
+								"reset",
+								""
+							]
+						},
+						"description": "Chama o Django Auth PasswordResetForm para salvar o método. \n\nUm exemplo de uma requisição é mostrado neste arquivo."
+					},
+					"response": [
+						{
+							"id": "2ec3299b-1ff3-4ba4-9e00-1648c7de865b",
+							"name": "/auth/password/reset/",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"teste@gmail.com\"\n}"
+								},
+								"url": {
+									"raw": "https://api.masteraula.com.br/auth/password/reset/",
+									"protocol": "https",
+									"host": [
+										"api",
+										"masteraula",
+										"com",
+										"br"
+									],
+									"path": [
+										"auth",
+										"password",
+										"reset",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				},
+				{
+					"_postman_id": "5acfa517-d9fc-4761-9835-1ce69450b6b7",
+					"name": "/auth/password/reset/confirm/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"uid\": \"\",\n  \"new_password2\": \"\",\n  \"token\": \"\",\n  \"new_password1\": \"\"\n}"
+						},
+						"url": {
+							"raw": "https://api.masteraula.com.br/auth/password/reset/confirm/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"auth",
+								"password",
+								"reset",
+								"confirm",
+								""
+							]
+						},
+						"description": "O link de e-mail de redefinição de senha é confirmado, portanto, isso redefine a senha do usuário.\n\nUm exemplo de uma requisição é mostrado neste arquivo."
+					},
+					"response": [
+						{
+							"id": "292b9baa-42ed-413a-a622-424bcda88b93",
+							"name": "/auth/password/reset/confirm/",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"uid\": \"123\",\n  \"new_password2\": \"teste123\",\n  \"token\": \"adfafashfasfh\",\n  \"new_password1\": \"admin 123\"\n}"
+								},
+								"url": {
+									"raw": "https://api.masteraula.com.br/auth/password/reset/confirm/",
+									"protocol": "https",
+									"host": [
+										"api",
+										"masteraula",
+										"com",
+										"br"
+									],
+									"path": [
+										"auth",
+										"password",
+										"reset",
+										"confirm",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				},
+				{
+					"_postman_id": "ad678e72-ff18-4768-bfcb-4c6a7bf51abd",
+					"name": "/auth/refresh-login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"\"\n}"
+						},
+						"url": {
+							"raw": "https://api.masteraula.com.br/auth/password/reset/confirm/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"auth",
+								"password",
+								"reset",
+								"confirm",
+								""
+							]
+						},
+						"description": "Exibição de API que retorna um token atualizado (com nova expiração) com base no token existente.\n\nUm exemplo de uma requisição é mostrado neste arquivo.\n\n"
+					},
+					"response": [
+						{
+							"id": "07f5f311-6b35-4161-9188-4d87cb9732fe",
+							"name": "/auth/refresh-login",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"token\": \"hfaodhfaoishfdoiasdfa\"\n}"
+								},
+								"url": {
+									"raw": "https://api.masteraula.com.br/auth/password/reset/confirm/",
+									"protocol": "https",
+									"host": [
+										"api",
+										"masteraula",
+										"com",
+										"br"
+									],
+									"path": [
+										"auth",
+										"password",
+										"reset",
+										"confirm",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				},
+				{
+					"_postman_id": "a2968608-5040-4e78-acb0-baaed051928e",
+					"name": "/auth/registration/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password2\": \"\",\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password1\": \"\",\n  \"username\": \"\"\n}"
+						},
+						"url": {
+							"raw": "https://api.masteraula.com.br/auth/registration/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"auth",
+								"registration",
+								""
+							]
+						},
+						"description": "Registra um usuário. \n\nUm exemplo de uma requisição é mostrado neste arquivo."
+					},
+					"response": [
+						{
+							"id": "ada04ace-2be8-49a8-8e50-b1c499c0f70b",
+							"name": "/auth/registration/",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"password2\": \"teste123\",\n  \"name\": \"Glaucia\",\n  \"email\": \"teste@gmail.com\",\n  \"password1\": \"admin123\",\n  \"username\": \"Glaucia Santos\"\n}"
+								},
+								"url": {
+									"raw": "https://api.masteraula.com.br/auth/registration/",
+									"protocol": "https",
+									"host": [
+										"api",
+										"masteraula",
+										"com",
+										"br"
+									],
+									"path": [
+										"auth",
+										"registration",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				},
+				{
+					"_postman_id": "3be2bda4-d024-4d9b-9355-d88cee7a42ca",
+					"name": "/auth/registration/account-confirm-email/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password2\": \"string\",\n  \"name\": \"string\",\n  \"email\": \"string\",\n  \"password1\": \"string\",\n  \"username\": \"string\"\n}"
+						},
+						"url": {
+							"raw": "https://api.masteraula.com.br/auth/registration/account-confirm-email/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"auth",
+								"registration",
+								"account-confirm-email",
+								""
+							]
+						},
+						"description": "Verifica o email do usuário. "
+					},
+					"response": []
+				},
+				{
+					"_postman_id": "4101e8e3-8c5b-40b0-8e97-0ba75ccc3fd0",
+					"name": "/auth/registration/account-email-verification-sent/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password2\": \"string\",\n  \"name\": \"string\",\n  \"email\": \"string\",\n  \"password1\": \"string\",\n  \"username\": \"string\"\n}"
+						},
+						"url": {
+							"raw": "https://api.masteraula.com.br/auth/registration/account-email-verification-sent/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"auth",
+								"registration",
+								"account-email-verification-sent",
+								""
+							]
+						},
+						"description": "Verifica o email do usuário. "
+					},
+					"response": []
+				},
+				{
+					"_postman_id": "2ea7aebd-b102-48e9-a7f5-7cd66f19ae97",
+					"name": "/auth/registration/verify-email/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"key\": \"\"\n}"
+						},
+						"url": {
+							"raw": "https://api.masteraula.com.br/auth/registration/verify-email/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"auth",
+								"registration",
+								"verify-email",
+								""
+							]
+						},
+						"description": "Verifica o email de cadastro. \n\nUm exemplo de uma requisição é mostrado neste arquivo."
+					},
+					"response": [
+						{
+							"id": "4cdf9a9b-ebf4-4a38-b5fa-b2739cf3a254",
+							"name": "/auth/registration/verify-email/",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"key\": \"7\"\n}"
+								},
+								"url": {
+									"raw": "https://api.masteraula.com.br/auth/registration/verify-email/",
+									"protocol": "https",
+									"host": [
+										"api",
+										"masteraula",
+										"com",
+										"br"
+									],
+									"path": [
+										"auth",
+										"registration",
+										"verify-email",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [],
+							"cookie": [],
+							"body": ""
+						}
+					]
+				},
+				{
+					"_postman_id": "95bcadcd-3919-4b57-8318-e4fe534aee7c",
+					"name": "/auth/registration/password-reset/confirm/{uidb64}/{token}/",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"url": {
+							"raw": "https://api.masteraula.com.br/auth/registration/password-reset/confirm/{uidb64}/{token}/",
+							"protocol": "https",
+							"host": [
+								"api",
+								"masteraula",
+								"com",
+								"br"
+							],
+							"path": [
+								"auth",
+								"registration",
+								"password-reset",
+								"confirm",
+								"{uidb64}",
+								"{token}",
+								""
+							]
+						},
+						"description": "Confirmação de Resetar a senha. "
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
