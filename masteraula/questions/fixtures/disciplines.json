@@ -1,142 +1,149 @@
 [
     {
-        "pk" : 1,
-        "model": "questions.Discipline",
-        "fields" : {
-            "name" : "Polivalente"
-        }
+       "pk":1,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Polivalente"
+       }
     },
     {
-        "pk" : 2,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Português / Língua Portuguesa"
+       "pk":2,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Português"
+       }
+    },
+    {
+       "pk":3,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Literatura"
+       }
+    },
+    {
+       "pk":4,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Matemática"
+       }
+    },
+    {
+       "pk":5,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"História"
+       }
+    },
+    {
+       "pk":6,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Geografia"
+       }
+    },
+    {
+       "pk":7,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Ciências"
+       }
+    },
+    {
+       "pk":8,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Biologia"
+       }
+    },
+    {
+       "pk":9,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Física"
+       }
+    },
+    {
+       "pk":10,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Química"
+       }
+    },
+    {
+       "pk":11,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Sociologia"
+       }
+    },
+    {
+       "pk":12,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Filosofia"
+       }
+    },
+    {
+       "pk":13,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Inglês"
+       }
+    },
+    {
+       "pk":14,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Espanhol"
+       }
+    },
+    {
+       "pk":15,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Língua Estrangeira - Outras"
+       }
+    },
+    {
+       "pk":16,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Artes"
+       }
+    },
+    {
+       "pk":17,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Ensino Religioso"
+       }
+    },
+    {
+       "pk":18,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Educação Física"
+       }
+    },
+    {
+       "pk":19,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Informática"
+       }
+    },
+    {
+       "pk":20,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Estudos Sociais"
+       }
+    },
+    {
+       "pk":21,
+       "model":"questions.Discipline",
+       "fields":{
+          "name":"Outros"
+       }
     }
-    },
-    {
-        "pk" : 3,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Redação e LiteraturaMatemática"
-    }
-    },
-    {
-        "pk" : 4,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Estudos Sociais"
-    }
-    },
-    {
-        "pk" : 5,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "História"
-    }
-    },
-    {
-        "pk" : 6,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Geografia"
-    }
-    },
-    {
-        "pk" : 7,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Ciências"
-    }
-    },
-    {
-        "pk" : 8,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Biologia"
-    }
-    },
-    {
-        "pk" : 9,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Física"
-    }
-    },
-    {
-        "pk" : 10,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Química"
-    }
-    },
-    {
-        "pk" : 11,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Sociologia"
-    }
-    },
-    {
-        "pk" : 12,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Filosofia"
-    }
-    },
-    {
-        "pk" : 13,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Língua Estrangeira - Inglês"
-    }
-    },
-    {
-        "pk" : 14,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Língua Estrangeira - Espanhol"
-    }
-    },
-    {
-        "pk" : 15,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Língua Estrangeira - Outras"
-    }
-    },
-    {
-        "pk" : 16,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Artes"
-    }
-    },
-    {
-        "pk" : 17,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Ensino Religioso"
-    }
-    },
-    {
-        "pk" : 18,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Educação Física"
-    }
-    },
-    {
-        "pk" : 19,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Informática"
-        }
-    },
-    {
-        "pk" : 20,
-        "model": "questions.Discipline",
-        "fields" : {
-        "name" : "Outros"
-        }
-    }
-]
+ ]
