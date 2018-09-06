@@ -241,6 +241,51 @@ class DocumentDetailSerializer(serializers.ModelSerializer):
         
         return instance
 
+class DocumentCreatesSerializer(serializers.ModelSerializer):
+    idQuestion = serializers.IntegerField(required=False) 
+  
+    class Meta:
+        model = Document
+        fields = (
+            'id',
+            'idQuestion',
+            'name',
+            'owner',
+            'questions',
+            'create_date',
+            'secret',
+            'institution_name',
+            'discipline_name',
+            'professor_name',
+            'student_indicator',
+            'class_indicator',
+            'score_indicator',
+            'date_indicator',
+        )
+        extra_kwargs = {
+            'owner' : { 'read_only' : True },
+            'create_date' : { 'read_only' : True },
+            'secret' : { 'required' : True },
+            'documentquestion_set' : { 'read_only' : True}
+              }
+
+    def validate_questions(self, value):
+        documentQuestions = sorted(value, key=lambda k: k['order'])
+        documentQuestions = [{'question' : dc['question'], 'order' : order} for order, dc in enumerate(documentQuestions)]
+        return documentQuestions
+
+    def create(self, validated_data):
+        idQuestion = validated_data.pop('idQuestion') if 'idQuestion' in validated_data else None
+        document = Document.objects.create(**validated_data)
+
+        if idQuestion:
+            try:
+                question = Question.objects.get(id=idQuestion)
+                document.add_question(question)
+            except:
+                pass
+
+        return document
     
    
 # class ProfileSerializer(serializers.ModelSerializer):
