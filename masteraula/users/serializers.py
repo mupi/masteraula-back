@@ -6,6 +6,7 @@ from allauth.account.utils import setup_user_email
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import slugify
+from django.core import validators
 
 from drf_haystack.serializers import HaystackSerializer, HaystackSerializerMixin
 
@@ -27,11 +28,26 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'about'
         )
-        read_only_fields = ('username', 'email')
+        read_only_fields = ('username', 'email'),
+        extra_kwargs = {
+        "name": {
+            "validators":  [
+                validators.RegexValidator(
+                    regex='^[A-Za-zÀ-ÿ ]+$',
+                    message='Name should contain only valid characters',
+                ),
+            ],
+        },
+    }
 
 # django-rest-auth custom serializers
 class RegisterSerializer(auth_register_serializers.RegisterSerializer):
-    name = serializers.CharField(required=True)
+    name = serializers.CharField(required=True, validators=[
+                validators.RegexValidator(
+                    regex='^[A-Za-zÀ-ÿ ]+$',
+                    message='Name should contain only valid characters',
+                ),
+            ])
 
     def custom_signup(self, request, user):
         user.name = self.validated_data.get('name', '')
