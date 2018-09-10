@@ -2,11 +2,18 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
+from django.core import validators
 
 @python_2_unicode_compatible
 class User(AbstractUser):
 
-    name = models.CharField(blank=False, max_length=255)
+    name = models.CharField(blank=False, max_length=255,
+            validators=[
+                validators.RegexValidator(
+                    regex='^[A-Za-zÀ-ÿ ]+$',
+                    message='Name should contain only valid characters',
+                ),
+            ],)
     email = models.EmailField(blank=False, null=False)
     about = models.TextField(blank=True)
 
