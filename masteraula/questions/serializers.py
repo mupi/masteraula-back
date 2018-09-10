@@ -242,6 +242,7 @@ class DocumentDetailSerializer(serializers.ModelSerializer):
         return instance
 
 class DocumentCreatesSerializer(serializers.ModelSerializer):
+    questions = DocumentQuestionListDetailSerializer(many=True, source='documentquestion_set', read_only=True)
     idQuestion = serializers.IntegerField(required=False) 
   
     class Meta:
