@@ -1,0 +1,18 @@
+{{ object.author }}
+{{ object.create_date }}
+{{ object.statement }}
+{{ object.resolution }}
+{% for discipline in object.disciplines.all %}
+    {{ discipline.name }}
+{% endfor %}]
+{% for descriptor in object.descriptors.all %}
+    {{ descriptor.name }}
+{% endfor %}
+{% for teaching_level in object.teaching_levels.all %}
+    {{ teaching_level.name }}
+{% endfor %}
+{% for tag in object.tags.all %}
+    {{ tag.name }}
+{% endfor %}
+{{ object.year }}
+{{ object.source }}
