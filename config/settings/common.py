@@ -43,7 +43,7 @@ THIRD_PARTY_APPS = (
     'allauth.account',  # registration
     'allauth.socialaccount',  # registration
     'taggit',
-    # 'haystack',
+    'haystack',
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_swagger',
@@ -269,14 +269,22 @@ ADMIN_URL = r'^admin/'
 # Your common stuff: Below this line define 3rd party library settings
 # ------------------------------------------------------------------------------
 HAYSTACK_CONNECTIONS = {
-    'default': {
-        'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
-        'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
-    },
+    # 'default': {
+    #     'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+    #     'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
+    # },
     # 'default': {
     #     'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
     #     'URL': 'http://localhost:8983/solr',
     # },
+    # 'default': {
+    #     'ENGINE': 'haystack.backends.simple_backend.SimpleEngine',
+    # },
+    'default': {
+        'ENGINE': 'haystack.backends.elasticsearch2_backend.Elasticsearch2SearchEngine',
+        'URL': 'https://search-masteraula-zsjaatfm6dfnb4lnrwid6uhhgy.us-east-2.es.amazonaws.com',
+        'INDEX_NAME': 'haystack',
+    },
 }
 
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
