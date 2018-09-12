@@ -10,6 +10,7 @@ from . import views
 
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
+router.register(r'questions/search', views.QuestionSearchView, base_name='questions-search')
 router.register(r'questions', views.QuestionViewSet, base_name='questions')
 router.register(r'disciplines', views.DisciplineViewSet, base_name='disciplines')
 router.register(r'teaching_levels', views.TeachingLevelViewSet, base_name='teaching_levels')

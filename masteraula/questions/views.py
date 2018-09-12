@@ -2,7 +2,7 @@
 from django.http import HttpResponse
 
 from drf_haystack.filters import HaystackAutocompleteFilter
-from drf_haystack.generics import HaystackGenericAPIView
+from drf_haystack.viewsets import HaystackViewSet
 
 from rest_framework import generics, response, viewsets, status, mixins, viewsets
 from rest_framework.decorators import detail_route, list_route
@@ -32,6 +32,13 @@ class QuestionPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 8
     max_page_size = 64
+
+class QuestionSearchView(HaystackViewSet):
+    index_models = [Question]
+    pagination_class = QuestionPagination
+
+    serializer_class = serializers.QuestionSearchSerializer
+
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Question.objects.all()
