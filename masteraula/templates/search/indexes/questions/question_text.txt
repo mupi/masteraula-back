@@ -1,18 +1,20 @@
-{{ object.author }}
+{% load search_helpers %}
+
+{{ object.author.name|stripaccents }}
 {{ object.create_date }}
-{{ object.statement }}
-{{ object.resolution }}
+{{ object.statement|stripaccents }}
+{{ object.resolution|stripaccents }}
 {% for discipline in object.disciplines.all %}
-    {{ discipline.name }}
+    {{ discipline.name|stripaccents }}
 {% endfor %}]
 {% for descriptor in object.descriptors.all %}
-    {{ descriptor.name }}
+    {{ descriptor.name|stripaccents }}
 {% endfor %}
 {% for teaching_level in object.teaching_levels.all %}
-    {{ teaching_level.name }}
+    {{ teaching_level.name|stripaccents }}
 {% endfor %}
 {% for tag in object.tags.all %}
-    {{ tag.name }}
+    {{ tag.name|stripaccents }}
 {% endfor %}
 {{ object.year }}
-{{ object.source }}
+{{ object.source|stripaccents }}

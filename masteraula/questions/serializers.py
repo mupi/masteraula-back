@@ -22,6 +22,8 @@ from masteraula.users.serializers import UserDetailsSerializer
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
                      Alternative, Document, DocumentQuestion)
 
+import unicodedata
+
 # from .search_indexes import QuestionIndex, TagIndex
 
 class TagListSerializer(serializers.Field):
@@ -123,7 +125,10 @@ class QuestionSearchSerializer(HaystackSerializerMixin, QuestionSerializer):
         ]
         field_aliases = []
         exclude = []
-        ignore_fields = ['text']
+        ignore_fields = ['text'] 
+
+    def clean_text(self, data):
+        return ''.join((c for c in unicodedata.normalize('NFD', data) if unicodedata.category(c) != 'Mn'))
 
 class DocumentQuestionSerializer(serializers.ModelSerializer):
 
