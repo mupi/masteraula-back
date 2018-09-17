@@ -2,7 +2,7 @@
 from django.http import HttpResponse
 
 from drf_haystack.filters import HaystackAutocompleteFilter
-from drf_haystack.generics import HaystackGenericAPIView
+from drf_haystack.viewsets import HaystackViewSet
 
 from rest_framework import generics, response, viewsets, status, mixins, viewsets
 from rest_framework.decorators import detail_route, list_route
@@ -14,6 +14,7 @@ from django.db.models import Count
 from taggit.models import Tag
 
 from masteraula.users.models import User
+from masteraula.questions.templatetags.search_helpers import stripaccents
 
 from .models import Question, Document, Discipline, TeachingLevel, DocumentQuestion
 # from .docx_parsers import Question_Parser
@@ -32,6 +33,22 @@ class QuestionPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 16
     max_page_size = 64
+
+class QuestionSearchView(HaystackViewSet):
+    index_models = [Question]
+    pagination_class = QuestionPagination
+
+    serializer_class = serializers.QuestionSearchSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        print(self.request.query_params)
+        self.request.query_params._mutable = True
+        for key in self.request.query_params:
+            self.request.query_params.setlist(key, [stripaccents(qp_value) for qp_value in self.request.query_params.getlist(key)])
+        self.request.query_params._mutable = False
+        print(self.request.query_params)
+        return super().get_queryset()
+
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Question.objects.all()
