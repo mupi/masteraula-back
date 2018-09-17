@@ -30,7 +30,7 @@ class DocumentPagination(pagination.PageNumberPagination):
 
 class QuestionPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
-    page_size = 8
+    page_size = 16
     max_page_size = 64
 
 class QuestionSearchView(HaystackViewSet):
