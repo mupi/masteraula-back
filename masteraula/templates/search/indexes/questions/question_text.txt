@@ -4,15 +4,11 @@
 {{ object.create_date }}
 {{ object.statement|stripaccents }}
 {{ object.resolution|stripaccents }}
-{% for discipline in object.disciplines.all %}
-    {{ discipline.name|stripaccents }}
-{% endfor %}]
+
 {% for descriptor in object.descriptors.all %}
     {{ descriptor.name|stripaccents }}
 {% endfor %}
-{% for teaching_level in object.teaching_levels.all %}
-    {{ teaching_level.name|stripaccents }}
-{% endfor %}
+
 {% for tag in object.tags.all %}
     {{ tag.name|stripaccents }}
 {% endfor %}
