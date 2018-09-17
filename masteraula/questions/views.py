@@ -14,6 +14,7 @@ from django.db.models import Count
 from taggit.models import Tag
 
 from masteraula.users.models import User
+from masteraula.questions.templatetags.search_helpers import stripaccents
 
 from .models import Question, Document, Discipline, TeachingLevel, DocumentQuestion
 # from .docx_parsers import Question_Parser
@@ -38,6 +39,15 @@ class QuestionSearchView(HaystackViewSet):
     pagination_class = QuestionPagination
 
     serializer_class = serializers.QuestionSearchSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        print(self.request.query_params)
+        self.request.query_params._mutable = True
+        for key in self.request.query_params:
+            self.request.query_params.setlist(key, [stripaccents(qp_value) for qp_value in self.request.query_params.getlist(key)])
+        self.request.query_params._mutable = False
+        print(self.request.query_params)
+        return super().get_queryset()
 
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):

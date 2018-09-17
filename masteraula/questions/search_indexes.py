@@ -6,6 +6,7 @@ from taggit.models import Tag
 from haystack import indexes
 
 from .models import Question
+from masteraula.questions.templatetags.search_helpers import stripaccents
 
 import re
 import unicodedata
@@ -55,10 +56,10 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         return [ tag.slug for tag in obj.tags.all() ]
 
     def prepare_disciplines(selfy, obj):
-        return [ discipline.name for discipline in obj.disciplines.all() ]
+        return [ stripaccents(discipline.name) for discipline in obj.disciplines.all() ]
 
     def prepare_teaching_levels(self, obj):
-        return [ teaching_level.name for teaching_level in obj.teaching_levels.all() ]
+        return [ stripaccents(teaching_level.name) for teaching_level in obj.teaching_levels.all() ]
 
 class TagIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True,use_template=True)

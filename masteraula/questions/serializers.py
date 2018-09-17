@@ -127,9 +127,6 @@ class QuestionSearchSerializer(HaystackSerializerMixin, QuestionSerializer):
         exclude = []
         ignore_fields = ['text'] 
 
-    def clean_text(self, data):
-        return ''.join((c for c in unicodedata.normalize('NFD', data) if unicodedata.category(c) != 'Mn'))
-
 class DocumentQuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
