@@ -37,16 +37,14 @@ class QuestionPagination(pagination.PageNumberPagination):
 class QuestionSearchView(HaystackViewSet):
     index_models = [Question]
     pagination_class = QuestionPagination
-
     serializer_class = serializers.QuestionSearchSerializer
+    permission_classes = (permissions.QuestionPermission, )
 
     def get_queryset(self, *args, **kwargs):
-        print(self.request.query_params)
         self.request.query_params._mutable = True
         for key in self.request.query_params:
             self.request.query_params.setlist(key, [stripaccents(qp_value) for qp_value in self.request.query_params.getlist(key)])
         self.request.query_params._mutable = False
-        print(self.request.query_params)
         return super().get_queryset()
 
 
