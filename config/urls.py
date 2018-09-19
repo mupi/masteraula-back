@@ -32,6 +32,7 @@ urlpatterns = [
 
     # Your stuff: custom urls includes go here
     url(r'', include('masteraula.questions.urls', namespace='masteraula')),
+    url(r'', include('masteraula.users.urls', namespace='masteraula')),
     # url(r'^search/', include('haystack.urls')),
 
     # Workaround to deal with some urls https://github.com/Tivix/django-rest-auth/issues/292

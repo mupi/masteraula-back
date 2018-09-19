@@ -5,12 +5,14 @@ from django.core.urlresolvers import reverse
 from django.views.generic import DetailView, ListView, RedirectView, UpdateView
 
 from rest_framework import status
+from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from .models import User
+from .models import User, City, State
+from .serializers import CitySerializer, StateSerializer
 
 
 class UserDetailView(LoginRequiredMixin, DetailView):
@@ -50,6 +52,24 @@ class UserListView(LoginRequiredMixin, ListView):
     # These next two lines tell the view to index lookups by username
     slug_field = 'username'
     slug_url_kwarg = 'username'
+
+class CityViewSet(viewsets.ReadOnlyModelViewSet):
+    pagination_class = None
+    serializer_class = CitySerializer
+    queryset = City.objects.all()
+
+    def get_queryset(self):
+        queryset = City.objects.all()
+        if 'uf' not in self.request.query_params:
+            return None
+        uf = self.request.query_params['uf']
+        queryset = queryset.filter(uf=uf)
+        return queryset
+
+class StateViewSet(viewsets.ReadOnlyModelViewSet):
+    pagination_class = None
+    serializer_class = StateSerializer
+    queryset = State.objects.all()
 
 @api_view()
 def null_view(request):
