@@ -7,8 +7,8 @@ from . import views
 
 urlpatterns = [
     url(
-        regex=r'^$',
-        view=views.UserListView.as_view(),
+        regex=r'^resend_confirmation_email$',
+        view=views.UserConfirmationEmailView.as_view(),
         name='list'
     ),
 ]

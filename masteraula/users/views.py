@@ -7,10 +7,13 @@ from django.views.generic import DetailView, ListView, RedirectView, UpdateView
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.generics import GenericAPIView
+from rest_framework.permissions import AllowAny
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .models import User
+from .serializers import ResendConfirmationEmailSerializer
 
 
 class UserDetailView(LoginRequiredMixin, DetailView):
@@ -50,6 +53,16 @@ class UserListView(LoginRequiredMixin, ListView):
     # These next two lines tell the view to index lookups by username
     slug_field = 'username'
     slug_url_kwarg = 'username'
+
+class UserConfirmationEmailView(GenericAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = ResendConfirmationEmailSerializer
+
+    def post(self, request, *args, **kwargs):
+        self.serializer = self.get_serializer(data=request.data,
+                                                context={'request': request})
+        self.serializer.is_valid(raise_exception=True)            
+        return Response({"status": "Confirmation e-mail was sent with success"}, status=status.HTTP_200_OK)
 
 @api_view()
 def null_view(request):
