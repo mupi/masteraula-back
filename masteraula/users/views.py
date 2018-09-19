@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .models import User, City, State
-from .serializers import CitySerializer
+from .serializers import CitySerializer, StateSerializer
 
 
 class UserDetailView(LoginRequiredMixin, DetailView):
@@ -65,6 +65,11 @@ class CityViewSet(viewsets.ReadOnlyModelViewSet):
         uf = self.request.query_params['uf']
         queryset = queryset.filter(uf=uf)
         return queryset
+
+class StateViewSet(viewsets.ReadOnlyModelViewSet):
+    pagination_class = None
+    serializer_class = StateSerializer
+    queryset = State.objects.all()
 
 @api_view()
 def null_view(request):
