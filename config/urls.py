@@ -31,6 +31,7 @@ urlpatterns = [
     # url(r'^accounts/', include('allauth.urls')),
 
     # Your stuff: custom urls includes go here
+    url(r'', include('masteraula.users.urls', namespace='masteraula')),
     url(r'', include('masteraula.questions.urls', namespace='masteraula')),
     # url(r'^search/', include('haystack.urls')),
 

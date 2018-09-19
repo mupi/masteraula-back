@@ -15,7 +15,7 @@ from rest_auth import serializers as auth_serializers
 
 from rest_framework import serializers, exceptions
 
-from .models import User, Profile
+from .models import User, Profile, City, State
 
 class UserSerializer(serializers.ModelSerializer):
 
@@ -124,3 +124,8 @@ class JWTSerializer(serializers.Serializer):
     """
     token = serializers.CharField()
     user = UserSerializer()
+
+class CitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = ('id' ,'name',)
