@@ -11,5 +11,9 @@ router.register(r'cities', views.CityViewSet, base_name='cities-list')
 router.register(r'states', views.StateViewSet, base_name='states-list')
 
 urlpatterns = [
-    url(r'^', include(router.urls)),
+    url(
+        regex=r'^resend_confirmation_email$',
+        view=views.UserConfirmationEmailView.as_view(),
+        name='list'
+    ),
 ]

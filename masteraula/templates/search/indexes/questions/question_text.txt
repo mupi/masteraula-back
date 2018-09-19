@@ -12,5 +12,8 @@
 {% for tag in object.tags.all %}
     {{ tag.name|stripaccents }}
 {% endfor %}
+{% for alternative in object.alternative.all %}
+    {{ alternative.name|stripaccents }}
+{% endfor %}
 {{ object.year }}
 {{ object.source|stripaccents }}
