@@ -42,6 +42,13 @@ Then you can activate it to install the libraries requirements.
 
 ```bash
 $ source env/bin/activate
+```
+On Windows:
+```bash
+$ . env/Scripts/activate
+```
+Then
+```bash
 $ pip install -r requirements/local.txt
 ```
 
@@ -50,7 +57,11 @@ If some error appear, consider installing the python 3 developer libraries
 ```bash
 $ sudo apt-get install python3-dev
 ```
-
+Windows has a known error installing Pillow package. If this is your case, consider downloading specific Pillow wheel for your Windows and Python version at https://www.lfd.uci.edu/~gohlke/pythonlibs/#pillow an then run
+```bash
+$ pip install Pillow<your-version-here>.whl
+```
+After the installation run the previous `pip install` command again.
 ### Mupi question database
 
 After cloning this repository, creating a databse and a virtual environment, it is time to run the migrations of the project.
