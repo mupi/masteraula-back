@@ -4,6 +4,22 @@ from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.core import validators
 
+
+#populated by fixture
+class State (models.Model):
+    uf = models.CharField(max_length=2, primary_key=True)
+    name = models.CharField(max_length=50)
+    uf_code = models.CharField(max_length=5)
+
+#populated by fixture
+class City (models.Model):
+    code = models.CharField(max_length=10)
+    name = models.CharField(max_length=80)
+    uf = models.ForeignKey(State, on_delete=models.CASCADE)
+
+    def __unicode__(self):
+        return self.uf.uf + " " + self.name
+
 @python_2_unicode_compatible
 class User(AbstractUser):
 
@@ -16,6 +32,7 @@ class User(AbstractUser):
             ],)
     email = models.EmailField(blank=False, null=False)
     about = models.TextField(blank=True)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.username
