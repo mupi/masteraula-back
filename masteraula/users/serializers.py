@@ -17,6 +17,17 @@ from rest_framework import serializers, exceptions
 
 from .models import User, Profile, City, State
 
+class CitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = ('id' ,'name',)
+        read_only_fields = ('name',)
+
+class StateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = State
+        fields = ('uf' ,'name',)
+
 class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -26,7 +37,8 @@ class UserSerializer(serializers.ModelSerializer):
             'username',
             'name',
             'email',
-            'about'
+            'about',
+            'city'
         )
         read_only_fields = ('username', 'email'),
         extra_kwargs = {
@@ -48,10 +60,24 @@ class RegisterSerializer(auth_register_serializers.RegisterSerializer):
                     message='Name should contain only valid characters',
                 ),
             ])
+    city = serializers.IntegerField(required=False)
+    
+    def validate_city(self, data):
+        try:
+            City.objects.get(id=data)
+            return data
+        except:
+            raise serializers.ValidationError(_('City does not exist'))
 
     def custom_signup(self, request, user):
         user.name = self.validated_data.get('name', '')
-        user.save(update_fields=['name'])
+        if 'city' in self.validated_data:
+            city_id = self.validated_data.get('city', '')
+            user.city = City.objects.get(id=city_id)
+
+            user.save(update_fields=['name', 'city'])
+        else:
+            user.save(update_fields=['name'])
 
 class LoginSerializer(auth_serializers.LoginSerializer):
 
@@ -124,13 +150,3 @@ class JWTSerializer(serializers.Serializer):
     """
     token = serializers.CharField()
     user = UserSerializer()
-
-class CitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = City
-        fields = ('id' ,'name',)
-
-class StateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = State
-        fields = ('uf' ,'name',)
