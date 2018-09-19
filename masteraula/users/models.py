@@ -19,6 +19,8 @@ class City (models.Model):
 
     def __unicode__(self):
         return self.uf.uf + " " + self.name
+    def __str__(self):
+        return self.uf.uf + " " + self.name
 
 @python_2_unicode_compatible
 class User(AbstractUser):
