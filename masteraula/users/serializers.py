@@ -20,8 +20,15 @@ from .models import User, Profile, City, State
 class CitySerializer(serializers.ModelSerializer):
     class Meta:
         model = City
-        fields = ('id' ,'name',)
+        fields = ('id' ,'name', 'uf')
         read_only_fields = ('name',)
+
+    def to_internal_value(self, data):
+        try:
+            city = City.objects.get(id=data)
+            return city
+        except:
+            raise serializers.ValidationError(_('City does not exist'))
 
 class StateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -29,6 +36,7 @@ class StateSerializer(serializers.ModelSerializer):
         fields = ('uf' ,'name',)
 
 class UserSerializer(serializers.ModelSerializer):
+    city = CitySerializer(required=False)
 
     class Meta:
         model = User
@@ -51,6 +59,19 @@ class UserSerializer(serializers.ModelSerializer):
             ],
         },
     }
+
+    def create(self, validated_data):
+        city = validated_data.pop('city')
+        user = super().create(validated_data)
+        user.city = city.save
+        user.save()
+        return user
+
+    def update(self, instance, validated_data):
+        city = validated_data.pop('city')
+        instance.city = city
+        instance.save()
+        return instance
 
 # django-rest-auth custom serializers
 class RegisterSerializer(auth_register_serializers.RegisterSerializer):
