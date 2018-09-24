@@ -36,7 +36,7 @@ class StateSerializer(serializers.ModelSerializer):
         fields = ('uf' ,'name',)
 
 class UserSerializer(serializers.ModelSerializer):
-    city = CitySerializer(required=False)
+    city = CitySerializer(required=False, allow_null=True)
 
     class Meta:
         model = User
