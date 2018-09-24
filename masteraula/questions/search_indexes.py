@@ -20,14 +20,14 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     resolution = indexes.CharField(model_attr='resolution')
     difficulty = indexes.CharField(model_attr='difficulty', null=True)
 
-    disciplines = indexes.MultiValueField()
-    descriptors = indexes.MultiValueField()
-    teaching_levels = indexes.MultiValueField()
+    disciplines = indexes.MultiValueField(indexed=True)
+    descriptors = indexes.MultiValueField(indexed=True)
+    teaching_levels = indexes.MultiValueField(indexed=True)
     
     year = indexes.CharField(model_attr='year', null=True)
     source = indexes.CharField(model_attr='source', null=True)
 
-    tags = indexes.MultiValueField()
+    tags = indexes.MultiValueField(indexed=True)
 
     def get_model(self):
         return Question
@@ -55,11 +55,11 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_tags_slugs(self, obj):
         return [ tag.slug for tag in obj.tags.all() ]
 
-    def prepare_disciplines(selfy, obj):
-        return [ stripaccents(discipline.name) for discipline in obj.disciplines.all() ]
+    def prepare_disciplines(self, obj):
+        return [ discipline.pk for discipline in obj.disciplines.all() ]
 
     def prepare_teaching_levels(self, obj):
-        return [ stripaccents(teaching_level.name) for teaching_level in obj.teaching_levels.all() ]
+        return [ teaching_level.pk for teaching_level in obj.teaching_levels.all() ]
 
 class TagIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True,use_template=True)

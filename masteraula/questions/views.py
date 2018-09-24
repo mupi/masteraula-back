@@ -41,12 +41,36 @@ class QuestionSearchView(HaystackViewSet):
     permission_classes = (permissions.QuestionPermission, )
 
     def get_queryset(self, *args, **kwargs):
+        disciplines = self.request.query_params.getlist('disciplines', None)
+        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
+        difficulties = self.request.query_params.getlist('difficulties', None)
+        
         self.request.query_params._mutable = True
         for key in self.request.query_params:
-            self.request.query_params.setlist(key, [stripaccents(qp_value) for qp_value in self.request.query_params.getlist(key)])
+            if key == 'text' or key=='page':
+                self.request.query_params.setlist(key, [stripaccents(qp_value) for qp_value in self.request.query_params.getlist(key)])
+            else:
+                self.request.query_params.setlist(key, [])
         self.request.query_params._mutable = False
-        return super().get_queryset()
 
+        queryset = super().get_queryset()
+
+        if disciplines is not None and disciplines:
+            queryset = queryset.filter(disciplines__id__in=disciplines)
+        if teaching_levels is not None and teaching_levels:
+            queryset = queryset.filter(teaching_levels__in=teaching_levels)
+        if difficulties is not None and difficulties:
+            difficulties_texts = []
+            if 'E' in difficulties:
+                difficulties_texts.append('Facil')
+            if 'M' in difficulties:
+                difficulties_texts.append('Medio')
+            if 'H' in difficulties:
+                difficulties_texts.append('Dificil')
+            queryset = queryset.filter(difficulty=difficulties_texts)
+
+        return queryset
+ 
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Question.objects.all()
