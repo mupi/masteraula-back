@@ -60,18 +60,18 @@ class UserSerializer(serializers.ModelSerializer):
         },
     }
 
-    def create(self, validated_data):
-        city = validated_data.pop('city')
-        user = super().create(validated_data)
-        user.city = city.save
-        user.save()
-        return user
+    # def create(self, validated_data):
+    #     city = validated_data.pop('city')
+    #     user = super().create(validated_data)
+    #     user.city = city.save
+    #     user.save()
+    #     return user
 
-    def update(self, instance, validated_data):
-        city = validated_data.pop('city')
-        instance.city = city
-        instance.save()
-        return instance
+    # def update(self, instance, validated_data):
+    #     city = validated_data.pop('city')
+    #     instance.city = city
+    #     instance.save()
+    #     return instance
 
 # django-rest-auth custom serializers
 class RegisterSerializer(auth_register_serializers.RegisterSerializer):
