@@ -67,7 +67,7 @@ class QuestionSearchView(HaystackViewSet):
                 difficulties_texts.append('Medio')
             if 'H' in difficulties:
                 difficulties_texts.append('Dificil')
-            queryset = queryset.filter(difficulty=difficulties_texts)
+            queryset = queryset.filter(difficulty__in=difficulties_texts)
 
         return queryset
  
