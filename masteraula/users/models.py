@@ -28,7 +28,7 @@ class User(AbstractUser):
     name = models.CharField(blank=False, max_length=255,
             validators=[
                 validators.RegexValidator(
-                    regex='^[A-Za-zÀ-ÿ ]+$',
+                    regex='^[A-Za-zÀ-ÿ-´\' ]+$',
                     message='Name should contain only valid characters',
                 ),
             ],)
