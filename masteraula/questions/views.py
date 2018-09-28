@@ -17,7 +17,7 @@ from masteraula.users.models import User
 from masteraula.questions.templatetags.search_helpers import stripaccents
 
 from .models import Question, Document, Discipline, TeachingLevel, DocumentQuestion
-# from .docx_parsers import Question_Parser
+from .docx_parsers import Question_Parser
 from . import permissions as permissions
 from . import serializers as serializers
 
@@ -173,6 +173,66 @@ class DocumentViewSet(viewsets.ModelViewSet):
         serializer = serializers.DocumentListSerializer(queryset, many=True)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+    @detail_route(methods=['get'])
+    def get_list(self, request, pk=None):
+        """
+        Generate a docx file containing all the list.
+        """
+        document = self.get_object()
+        document_name = document.name
+        docx_name = pk + document_name + '.docx'
+
+        data = open(docx_name, "rb").read()
+
+        response = HttpResponse(
+            data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+        response['Content-Disposition'] = 'attachment; filename="' + document_name + '.docx"'
+        # Apaga o arquivo temporario criado
+        os.remove(docx_name)
+        return response
+
+    @detail_route(methods=['get'])
+    def generate_list(self, request, pk=None):
+        """
+        Generate a docx file containing all the list.
+        """
+        document = self.get_object()
+        questions = [q.question for q in DocumentQuestion.objects.filter(document=document)]
+        flags = request.query_params
+        resolution = False
+        # question_parents = []
+        all_questions = []
+
+        if not questions:
+            raise exceptions.ValidationError('Can not generate an empty list')
+
+        if 'resolution' in flags and flags['resolution'] == 'True':
+            resolution = True
+
+        document_name = document.name
+
+        # Nome aleatorio para nao causar problemas
+        docx_name = pk + document_name + '.docx'
+        parser = Question_Parser(docx_name)
+
+        for q in questions:
+        #     if q.question_parent != None:
+        #         if q.question_parent not in question_parents:
+        #             question_parents.append(q.question_parent)
+        #             all_questions.append(q.question_parent)
+            all_questions.append(q)
+
+        parser.parse_list_questions(all_questions, resolution)
+
+        if 'answers' in flags and flags['answers'] == 'True':
+            parser.parse_answers_list_questions(all_questions)
+
+        parser.end_parser()
+
+        return Response({'code': pk})
         
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,
@@ -635,65 +695,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
 #         serializer.save(owner=self.request.user, cloned_from=original_list)
 #         headers = self.get_success_headers(serializer.data)
 #         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-#     @detail_route(methods=['get'])
-#     def generate_list(self, request, pk=None):
-#         """
-#         Generate a docx file containing all the list.
-#         """
-#         question_list = self.get_object()
-#         questions = [q.question for q in QuestionQuestion_List.objects.filter(question_list=question_list)]
-#         flags = request.query_params
-#         resolution = False
-#         question_parents = []
-#         all_questions = []
-
-#         if not questions:
-#             raise exceptions.ValidationError('Can not generate an empty list')
-
-#         if 'resolution' in flags and flags['resolution'] == 'True':
-#             resolution = True
-
-#         list_header = question_list.question_list_header
-
-#         # Nome aleatorio para nao causar problemas
-#         docx_title = pk + list_header + '.docx'
-#         parser = Question_Parser(docx_title)
-
-#         for q in questions:
-#             if q.question_parent != None:
-#                 if q.question_parent not in question_parents:
-#                     question_parents.append(q.question_parent)
-#                     all_questions.append(q.question_parent)
-#             all_questions.append(q)
-
-#         parser.parse_list_questions(all_questions, resolution)
-
-#         if 'answers' in flags and flags['answers'] == 'True':
-#             parser.parse_answers_list_questions(all_questions)
-
-#         parser.end_parser()
-
-#         return Response({'code': pk})
-
-#     @detail_route(methods=['get'])
-#     def get_list(self, request, pk=None):
-#         """
-#         Generate a docx file containing all the list.
-#         """
-#         question_list = self.get_object()
-#         list_header = question_list.question_list_header
-#         docx_title = pk + list_header + '.docx'
-
-#         data = open(docx_title, "rb").read()
-
-#         response = HttpResponse(
-#             data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-#         )
-#         response['Content-Disposition'] = 'attachment; filename="' + list_header + '.docx"'
-#         # Apaga o arquivo temporario criado
-#         os.remove(docx_title)
-#         return response
 
 # class TagListView(mixins.ListModelMixin, viewsets.GenericViewSet):
 #     queryset = Question.tags.most_common()

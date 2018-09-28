@@ -36,7 +36,7 @@ class Question_Parser(HTMLParser):
     font_size = 10
 
     # Flags
-    answers = False         # resposta em uma unica linha
+    alternatives = False         # resposta em uma unica linha
     is_table = False        # texto dentro da tabela
     is_list = False         # Listas de itens
     is_poem = False
@@ -104,10 +104,10 @@ class Question_Parser(HTMLParser):
             self.run = None
 
             # o WysWyg adiciona varios \r, o parser nao trata esse caso especial entao remove-se todas suas ocorrencias
-            self.feed(question.question_statement.replace('\n', ' ').replace('\r', ''))
+            self.feed(question.statement.replace('\n', ' ').replace('\r', ''))
 
             # Respotas enumeradas de a a quantidade de respostas
-            self.parse_list_answers(question.answers.all())
+            self.parse_list_alternatives(question.alternatives.all())
 
             if resolution:
                 self.parse_resolution(question)
@@ -130,7 +130,7 @@ class Question_Parser(HTMLParser):
         question_item = 'a'
         answered = False
         # Procura pela questao correta
-        for answer in question.answers.all():
+        for answer in question.alternatives.all():
             if answer.is_correct:
                 answered = True
             elif not answered:
@@ -147,14 +147,14 @@ class Question_Parser(HTMLParser):
             self.feed(resolution.replace('\n', '').replace('\r', ''))
 
 
-    def parse_list_answers(self, list_answer):
+    def parse_list_alternatives(self, list_answer):
         '''Faz o parser das respostas de cada questao'''
         # Seta a flag para escrever as resposas
-        self.answers = True
+        self.alternatives = True
         for answer in list_answer:
             self.init_parser_answer()
 
-            to_parse = self.question_item + ') ' + answer.answer_text
+            to_parse = self.question_item + ') ' + answer.text
             self.feed(to_parse.replace('\t', '').replace('\r', '').replace('\n',''))
             self.question_item = chr(ord(self.question_item) + 1)
 
@@ -192,7 +192,7 @@ class Question_Parser(HTMLParser):
         self.document.add_heading(level=2)
 
         # Flag de respostas False pois comecara com o enunciado
-        self.answers = False
+        self.alternatives = False
         self.printed_counter = False
         self.question_item = 'a'
 
@@ -291,7 +291,7 @@ class Question_Parser(HTMLParser):
 
         # Textos normais, nota que textos de respostas ocupam somente uma linha,
         # mesmo que contenham varias tags <p>
-        elif tag == 'p' and not self.answers:
+        elif tag == 'p' and not self.alternatives:
             self.paragraph = self.document.add_paragraph()
             self.paragraph.paragraph_format.space_after = Pt(0)
             self.paragraph.paragraph_format.space_before = Pt(0)
@@ -314,7 +314,7 @@ class Question_Parser(HTMLParser):
             else:
                 self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
-        elif tag == 'div' and not self.answers:
+        elif tag == 'div' and not self.answealternativesrs:
             # Verificacao da classe
             p_class = ""
             for attr in attrs:
@@ -442,7 +442,7 @@ class Question_Parser(HTMLParser):
                 self.run.add_text(self.year_source + " " + data)
                 self.printed_counter = True
 
-    def parse_answers_list_questions(self, list_questions):
+    def parse_alternatives_list_questions(self, list_questions):
         '''Faz o parser do gabarito, em formato de tabela'''
 
         question_counter = 0
@@ -466,7 +466,7 @@ class Question_Parser(HTMLParser):
             question_item = 'a'
             answered = False
             # Procura pela questao correta
-            for answer in question.answers.all():
+            for answer in question.alternatives.all():
                 if answer.is_correct:
                     table.cell(question_counter, 1).text = question_item
                     answered = True
@@ -494,7 +494,7 @@ class Answer_Parser():
         self.document = Document()
         self.docx_title = title
 
-    def parse_answers_list_questions(self, list_questions):
+    def parse_alternatives_list_questions(self, list_questions):
         '''Faz o parser do gabarito, em formato de tabela'''
 
         question_counter = 0
@@ -515,7 +515,7 @@ class Answer_Parser():
             question_item = 'a'
             answered = False
             # Procura pela questao correta
-            for answer in question.answers.all():
+            for answer in question.alternatives.all():
                 if answer.is_correct:
                     table.cell(question_counter, 1).text = question_item
                     answered = True
