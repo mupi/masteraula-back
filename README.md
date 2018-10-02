@@ -24,10 +24,11 @@ Before installing, you need some softwares:
 
 ### Database
 
-You will need a Postgres database called **masteraula**, or other in your preference. If you are going to use another name, you need to remember to change it in settings file.
+You will need a Postgres database called **masteraula**, or other in your preference. If you are going to use another name, you need to remember to change it in settings file. Right now our configuration is running on the **mupi** user.
 
 ```bash
 $ createdb --encoding "UTF-8" masteraula
+$ createuser mupi
 ```
 
 ### Virtual Environment
