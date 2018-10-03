@@ -222,9 +222,12 @@ class Question_Parser(HTMLParser):
                 if attr[0] == 'src':
                     src = attr[1]
             # Faz o download da imagem
+            self.paragraph = self.document.add_paragraph()
+            self.run = self.paragraph.add_run()
             image_name = str(current_milli_time()) + ".png"
             urllib.request.urlretrieve(src, image_name)
             image = self.run.add_picture(image_name)
+            self.paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
             os.remove(image_name)
 
             if (image.width > self.page_width):
