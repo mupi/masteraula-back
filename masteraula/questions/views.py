@@ -17,6 +17,7 @@ from masteraula.users.models import User
 from masteraula.questions.templatetags.search_helpers import stripaccents
 
 from .models import Question, Document, Discipline, TeachingLevel, DocumentQuestion
+from .templatetags.search_helpers import stripaccents
 from .docx_parsers import Question_Parser
 from . import permissions as permissions
 from . import serializers as serializers
@@ -212,7 +213,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if 'resolution' in flags and flags['resolution'] == 'True':
             resolution = True
 
-        document_name = document.name
+        document_name = stripaccents(document.name)
 
         # Nome aleatorio para nao causar problemas
         docx_name = pk + document_name + '.docx'
@@ -228,11 +229,19 @@ class DocumentViewSet(viewsets.ModelViewSet):
         parser.parse_list_questions(all_questions, resolution)
 
         if 'answers' in flags and flags['answers'] == 'True':
-            parser.parse_answers_list_questions(all_questions)
+            parser.parse_alternatives_list_questions(all_questions)
 
         parser.end_parser()
 
-        return Response({'code': pk})
+        data = open(docx_name, "rb").read()
+
+        response = HttpResponse(
+            data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+        response['Content-Disposition'] = 'attachment; filename="' + document_name + '.docx"'
+        # Apaga o arquivo temporario criado
+        os.remove(docx_name)
+        return response
         
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,

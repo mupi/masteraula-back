@@ -314,7 +314,7 @@ class Question_Parser(HTMLParser):
             else:
                 self.paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
-        elif tag == 'div' and not self.answealternativesrs:
+        elif tag == 'div' and not self.alternatives:
             # Verificacao da classe
             p_class = ""
             for attr in attrs:
