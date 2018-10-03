@@ -504,7 +504,7 @@ class Answer_Parser():
         table.style = 'TableGrid'
         hdr_cells = table.rows[0].cells
         hdr_cells[0].text = 'Questao'
-        hdr_cells[1].text = 'Reposta'
+        hdr_cells[1].text = 'Resposta'
 
         # Faz o parser de cada questao
         for question in list_questions:
