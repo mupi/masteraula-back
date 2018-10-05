@@ -25,6 +25,8 @@ from . import serializers as serializers
 import os
 import time
 
+current_milli_time = lambda: int(round(time.time() * 1000))
+
 class DocumentPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 10
@@ -175,25 +177,24 @@ class DocumentViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    # @detail_route(methods=['get'])
+    # def get_list(self, request, pk=None):
+    #     """
+    #     Generate a docx file containing all the list.
+    #     """
+    #     document = self.get_object()
+    #     document_name = document.name
+    #     docx_name = pk + document_name + '.docx'
 
-    @detail_route(methods=['get'])
-    def get_list(self, request, pk=None):
-        """
-        Generate a docx file containing all the list.
-        """
-        document = self.get_object()
-        document_name = document.name
-        docx_name = pk + document_name + '.docx'
+    #     data = open(docx_name, "rb").read()
 
-        data = open(docx_name, "rb").read()
-
-        response = HttpResponse(
-            data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        )
-        response['Content-Disposition'] = 'attachment; filename="' + document_name + '.docx"'
-        # Apaga o arquivo temporario criado
-        os.remove(docx_name)
-        return response
+    #     response = HttpResponse(
+    #         data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    #     )
+    #     response['Content-Disposition'] = 'attachment; filename="' + document_name + '.docx"'
+    #     # Apaga o arquivo temporario criado
+    #     os.remove(docx_name)
+    #     return response
 
     @detail_route(methods=['get'])
     def generate_list(self, request, pk=None):
@@ -213,10 +214,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if 'resolution' in flags and flags['resolution'] == 'True':
             resolution = True
 
-        document_name = stripaccents(document.name)
-
         # Nome aleatorio para nao causar problemas
-        docx_name = pk + document_name + '.docx'
+        docx_name = pk + str(current_milli_time()) + '.docx'
         parser = Question_Parser(docx_name)
 
         for q in questions:
@@ -238,7 +237,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         response = HttpResponse(
             data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         )
-        response['Content-Disposition'] = 'attachment; filename="' + document_name + '.docx"'
+        response['Content-Disposition'] = 'attachment; filename="' + docx_name + '.docx"'
         # Apaga o arquivo temporario criado
         os.remove(docx_name)
         return response

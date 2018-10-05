@@ -222,7 +222,7 @@ class Question_Parser(HTMLParser):
                 if attr[0] == 'src':
                     src = attr[1]
             # Faz o download da imagem
-            image_name = str(current_milli_time()) + ".png"
+            image_name = self.docx_title + str(current_milli_time()) + ".png"
             urllib.request.urlretrieve(src, image_name)
             image = self.run.add_picture(image_name)
             os.remove(image_name)
