@@ -229,6 +229,9 @@ class Question_Parser(HTMLParser):
             image = self.run.add_picture(image_name)
             self.paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
             os.remove(image_name)
+ 
+            if  not self.alternatives:
+                self.paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
             if (image.width > self.page_width):
                 widthMult = self.page_width / image.width
