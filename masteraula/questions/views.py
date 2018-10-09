@@ -104,7 +104,7 @@ class TeachingLevelViewSet(viewsets.ReadOnlyModelViewSet):
 
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
-    # permission_classes = (permissions.DocumentsPermission, )
+    permission_classes = (permissions.DocumentsPermission, )
 
     def get_serializer_class(self):
         if self.action == 'list':
