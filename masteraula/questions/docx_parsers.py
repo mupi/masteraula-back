@@ -81,21 +81,24 @@ class Question_Parser(HTMLParser):
         header.alignment = WD_ALIGN_PARAGRAPH.CENTER 
         header.paragraph_format.space_after = Pt(8)
 
-        table = self.document.add_table(rows=3, cols=1)    
+        table = self.document.add_table(rows=0, cols=1)
         table.style = 'TableGrid'
-        
-        table.rows[0].cells[0].text= 'Instituição: ' + doc.institution_name
-        table.rows[1].cells[0].text= 'Disciplina: ' + doc.discipline_name
-        table.rows[2].cells[0].text= 'Professor(a): ' + doc.professor_name
+
+        if doc.institution_name:
+            table.add_row().cells[0].text = 'Instituição: ' + doc.institution_name
+        if doc.discipline_name:
+            table.add_row().cells[0].text = 'Disciplina: ' + doc.discipline_name
+        if doc.professor_name:
+            table.add_row().cells[0].text = 'Professor(a): ' + doc.professor_name
 
         
-        if doc.student_indicator == True:
+        if doc.student_indicator:
             table.add_row().cells[0].text ='Aluno:'
-        if doc.class_indicator == True:
+        if doc.class_indicator:
             table.add_row().cells[0].text ='Turma:'
-        if doc.score_indicator == True:
+        if doc.score_indicator:
             table.add_row().cells[0].text ='Nota da avaliação:'
-        if doc.date_indicator == True:
+        if doc.date_indicator:
             table.add_row().cells[0].text ='Data:      /      /      '
       
     def parse_list_questions(self, list_questions, resolution):
