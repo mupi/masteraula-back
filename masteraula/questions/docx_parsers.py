@@ -222,10 +222,16 @@ class Question_Parser(HTMLParser):
                 if attr[0] == 'src':
                     src = attr[1]
             # Faz o download da imagem
+            self.paragraph = self.document.add_paragraph()
+            self.run = self.paragraph.add_run()
             image_name = self.docx_title + str(current_milli_time()) + ".png"
             urllib.request.urlretrieve(src, image_name)
             image = self.run.add_picture(image_name)
+            self.paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
             os.remove(image_name)
+ 
+            if  not self.alternatives:
+                self.paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
             if (image.width > self.page_width):
                 widthMult = self.page_width / image.width
@@ -504,7 +510,7 @@ class Answer_Parser():
         table.style = 'TableGrid'
         hdr_cells = table.rows[0].cells
         hdr_cells[0].text = 'Questao'
-        hdr_cells[1].text = 'Reposta'
+        hdr_cells[1].text = 'Resposta'
 
         # Faz o parser de cada questao
         for question in list_questions:
