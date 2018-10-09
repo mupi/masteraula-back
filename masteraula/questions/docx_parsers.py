@@ -94,7 +94,7 @@ class Question_Parser(HTMLParser):
         if doc.class_indicator == True:
             table.add_row().cells[0].text ='Turma:'
         if doc.score_indicator == True:
-            table.add_row().cells[0].text ='Nota:'
+            table.add_row().cells[0].text ='Nota da avaliação:'
         if doc.date_indicator == True:
             table.add_row().cells[0].text ='Data:      /      /      '
       
