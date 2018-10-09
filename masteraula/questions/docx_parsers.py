@@ -75,15 +75,32 @@ class Question_Parser(HTMLParser):
     def parse_heading(self, list_header):
         '''Cabecalho do gabarito gerado, colocando o nome da lista e tambem
         a data que foi criada'''
-        self.document.add_heading(list_header)
+        doc = list_header
+        
+        header = self.document.add_heading(doc.name, 1)
+        header.alignment = WD_ALIGN_PARAGRAPH.CENTER 
+        header.paragraph_format.space_after = Pt(8)
 
-        # self.document.add_paragraph(
-        #     "Lista gerada em {:s} as {:s}.".format(
-        #         datetime.date.today().strftime('%d/%m/%Y'),
-        #         datetime.datetime.today().strftime('%X')
-        #     )
-        # )
+        table = self.document.add_table(rows=0, cols=1)
+        table.style = 'TableGrid'
 
+        if doc.institution_name:
+            table.add_row().cells[0].text = 'Instituição: ' + doc.institution_name
+        if doc.discipline_name:
+            table.add_row().cells[0].text = 'Disciplina: ' + doc.discipline_name
+        if doc.professor_name:
+            table.add_row().cells[0].text = 'Professor(a): ' + doc.professor_name
+
+        
+        if doc.student_indicator:
+            table.add_row().cells[0].text ='Aluno:'
+        if doc.class_indicator:
+            table.add_row().cells[0].text ='Turma:'
+        if doc.score_indicator:
+            table.add_row().cells[0].text ='Nota da avaliação:'
+        if doc.date_indicator:
+            table.add_row().cells[0].text ='Data:      /      /      '
+      
     def parse_list_questions(self, list_questions, resolution):
         '''Faz o parser de cada questao da lista, tambem chamara a funcao
         auxiliar que faz o parser das respostas de cada questao'''

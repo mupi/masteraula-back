@@ -218,6 +218,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         # Nome aleatorio para nao causar problemas
         docx_name = pk + document_name + '.docx'
         parser = Question_Parser(docx_name)
+        parser.parse_heading(document)
 
         for q in questions:
         #     if q.question_parent != None:
