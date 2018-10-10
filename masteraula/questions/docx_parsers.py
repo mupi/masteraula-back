@@ -241,7 +241,7 @@ class Question_Parser(HTMLParser):
             # Faz o download da imagem
             self.paragraph = self.document.add_paragraph()
             self.run = self.paragraph.add_run()
-            image_name = str(current_milli_time()) + ".png"
+            image_name = self.docx_title + str(current_milli_time()) + ".png"
             urllib.request.urlretrieve(src, image_name)
             image = self.run.add_picture(image_name)
             self.paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
