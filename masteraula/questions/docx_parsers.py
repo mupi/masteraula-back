@@ -478,7 +478,7 @@ class Question_Parser(HTMLParser):
         table.style = 'TableGrid'
         hdr_cells = table.rows[0].cells
         hdr_cells[0].text = 'Questão'
-        hdr_cells[1].text = 'Reposta'
+        hdr_cells[1].text = 'Resposta'
 
         # Faz o parser de cada questao
         for question in list_questions:
