@@ -265,7 +265,8 @@ class Question_Parser(HTMLParser):
             except HTTPError as e:
                 if e.code == 403:
                     p = self.document.add_paragraph()
-                    p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    if  not self.alternatives:
+                        p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     r = p.add_run('Imagem não encontrada!')
                     r.font.size = Pt(8)
                     r.bold = True
