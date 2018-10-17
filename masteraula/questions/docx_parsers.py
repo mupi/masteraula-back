@@ -4,6 +4,7 @@ from docx import *
 from docx.shared import Inches, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 import urllib
+from urllib.error import HTTPError
 
 import re
 import os
@@ -239,27 +240,37 @@ class Question_Parser(HTMLParser):
                 if attr[0] == 'src':
                     src = attr[1]
             # Faz o download da imagem
-            self.paragraph = self.document.add_paragraph()
-            self.run = self.paragraph.add_run()
-            image_name = self.docx_title + str(current_milli_time()) + ".png"
-            urllib.request.urlretrieve(src, image_name)
-            image = self.run.add_picture(image_name)
-            self.paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
-            os.remove(image_name)
- 
-            if  not self.alternatives:
-                self.paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            try:
+                self.paragraph = self.document.add_paragraph()
+                self.run = self.paragraph.add_run()
+                image_name = self.docx_title + str(current_milli_time()) + ".png"
+                urllib.request.urlretrieve(src, image_name)
+                image = self.run.add_picture(image_name)
+                self.paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                os.remove(image_name)
 
-            if (image.width > self.page_width):
-                widthMult = self.page_width / image.width
-                image.width = self.page_width
-                image.height = (int)(image.height * widthMult)
+                if  not self.alternatives:
+                    self.paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-            if (image.height > self.max_image_height):
-                heightMult = self.max_image_height / image.height
-                image.height = self.max_image_height
-                image.width = (int)(image.width * heightMult)
+                if (image.width > self.page_width):
+                    widthMult = self.page_width / image.width
+                    image.width = self.page_width
+                    image.height = (int)(image.height * widthMult)
 
+                if (image.height > self.max_image_height):
+                    heightMult = self.max_image_height / image.height
+                    image.height = self.max_image_height
+                    image.width = (int)(image.width * heightMult)
+
+            except HTTPError as e:
+                if e.code == 403:
+                    p = self.document.add_paragraph()
+                    if  not self.alternatives:
+                        p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    r = p.add_run('Imagem não encontrada!')
+                    r.font.size = Pt(8)
+                    r.bold = True
+            
         # Habilita variaveis que alteram os estilo do texto (sublinhado, negrito e italico)
         elif tag == 'u' or tag == 'em' or tag == 'strong' or tag == 'sub' or tag == 'sup':
             self.run = self.add_or_create_run()
