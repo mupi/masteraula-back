@@ -24,6 +24,12 @@ class Command(BaseCommand):
        
         for q in question:
             
+            difficulty = None
+            disc = None
+            teaching_level = None 
+            resp = None 
+            alternative = None
+            
             answer = Alternative.objects.filter(question=q)
             disciplines = Discipline.objects.filter(question=q)
             teaching_levels = TeachingLevel.objects.filter(question=q)
