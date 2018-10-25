@@ -34,7 +34,7 @@ class Command(BaseCommand):
                 print(e)
                 continue
 
-            reader = csv.reader(csvfile, quoting=csv.QUOTE_ALL)
+            reader = csv.reader(csvfile, delimiter=',')
             first = True
             for row in reader:
                 try:
