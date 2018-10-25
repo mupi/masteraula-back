@@ -22,7 +22,9 @@ class Command(BaseCommand):
         for filename in options['filename']:
             print('Adding images from ' + filename)
             file_added_images = []
+            file_existed_images = []
             file_failed_images = []
+            file_learning_objects = {}
             line = 0
 
             csvfile = None
@@ -47,13 +49,15 @@ class Command(BaseCommand):
                     
                     author = User.objects.get(name=row[0])
 
+                    learning_object = None
                     if row[2]:
-                        if row[1].upper() == 'S':
-                            learning_object = LearningObject.objects.create(owner=author)
+                        if row[2] in file_learning_objects:
+                            learning_object = file_learning_objects[row[2]]
+                        elif row[1].upper() == 'S':
+                            learning_object = LearningObject.objects.create(owner=author, folder_name=filename.split('.')[0])
                             learning_object.image.save(row[2], File(open(img_dir + '/' + row[2], 'rb')))
                         else:
-                            LearningObject.objects.create(owner=author, text=row[2])
-
+                            learning_object = LearningObject.objects.create(owner=author, text=row[2])
 
                     statement = row[3]
                     alternatives_text = []
@@ -68,12 +72,14 @@ class Command(BaseCommand):
                     source = row[11] if row[11] else ''
                     year = int(row[12]) if row[12] else ''
                     
-                    disciplines = [int(discipline_id) for discipline_id in row[13].split(',')]
+                    disciplines = [discipline_id.strip() for discipline_id in row[13].split(',')]
+                    disciplines = [int(discipline_id.split(' ')[0]) for discipline_id in disciplines]
                     disciplines = [d for d in Discipline.objects.filter(id__in=disciplines)]
 
                     difficulty = row[14].upper() if row[14] else 'M'
 
-                    teaching_levels = [int(teaching_level_id) for teaching_level_id in row[15].split(',')]
+                    teaching_levels = [teaching_level_id.strip() for teaching_level_id in row[15].split(',')]
+                    teaching_levels = [int(teaching_level_id.split(' ')[0]) for teaching_level_id in teaching_levels]
                     teaching_levels = [d for d in TeachingLevel.objects.filter(id__in=teaching_levels)]
 
                     tags = row[16].split(',')
@@ -85,8 +91,11 @@ class Command(BaseCommand):
                                                         year=year,
                                                         source=source)
 
+                    if learning_object:
+                        question.learning_object = learning_object
+
                     for alternative in alternatives_text:
-                        question.alternatives.add(text=alternative[0], is_correct=alternative[1])
+                        Alternative.objects.create(question=question,text=alternative[0], is_correct=alternative[1])
                     
                     for discipline in disciplines:
                         question.disciplines.add(discipline)
