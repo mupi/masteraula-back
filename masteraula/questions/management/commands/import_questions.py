@@ -53,11 +53,13 @@ class Command(BaseCommand):
                     if row[2]:
                         if row[2] in file_learning_objects:
                             learning_object = file_learning_objects[row[2]]
-                        elif row[1].upper() == 'S':
-                            learning_object = LearningObject.objects.create(owner=author, folder_name=filename.split('.')[0])
-                            learning_object.image.save(row[2], File(open(img_dir + '/' + row[2], 'rb')))
                         else:
-                            learning_object = LearningObject.objects.create(owner=author, text=row[2])
+                            if row[1].upper() == 'S':
+                                learning_object = LearningObject.objects.create(owner=author, folder_name=filename.split('.')[0])
+                                learning_object.image.save(row[2], File(open(img_dir + '/' + row[2], 'rb')))
+                            else:
+                                learning_object = LearningObject.objects.create(owenr=author, text=row[2])
+                            file_learning_objects[row[2]] = learning_object
 
                     statement = row[3]
                     alternatives_text = []
@@ -108,7 +110,7 @@ class Command(BaseCommand):
 
                     question.save()
                     file_added_images.append(question.id)
-                    print('Succes adding question with id ' + str(question.id) + ' in line ' + str(line))
+                    print('Success adding question with id ' + str(question.id) + ' in line ' + str(line))
                 except Exception as e:
                     print('ERROR adding question in line ' + str(line))
                     print(e)
