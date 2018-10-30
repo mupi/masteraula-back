@@ -82,7 +82,7 @@ class AlternativeSerializer(serializers.ModelSerializer):
 
 class QuestionSerializer(serializers.ModelSerializer):
     author = UserDetailsSerializer(read_only=False)
-    create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
+    create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
     
     # alternatives = AlternativeSerializer(many=True, read_only=False)
     
@@ -177,7 +177,7 @@ class DocumentQuestionListDetailSerializer(serializers.ModelSerializer):
         
 class DocumentListSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionSerializer(many=True, source='documentquestion_set', read_only=True)
-    create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
+    create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
 
     class Meta:
         model = Document
@@ -204,7 +204,7 @@ class DocumentListSerializer(serializers.ModelSerializer):
 
 class DocumentDetailSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionListDetailSerializer(many=True, source='documentquestion_set', read_only=True)
-    create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
+    create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
   
 
     class Meta:
