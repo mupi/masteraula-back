@@ -41,9 +41,6 @@ django-redis==4.5.0
 redis>=2.10.5
 
 
-
-
-
 # Your custom requirements go here
 python-docx==0.8.6
 django-taggit==0.21.2
@@ -57,3 +54,6 @@ markdown==2.6.7
 django-rest-auth==0.9.1
 django-cors-headers==2.0.1
 elasticsearch>=2.0,<3.0
+
+#Decouple
+python-decouple==2.3
