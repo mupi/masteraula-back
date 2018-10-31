@@ -16,6 +16,8 @@ from django.utils import six
 
 from .common import *  # noqa
 
+env.read_env()
+
 # SECRET CONFIGURATION
 # ------------------------------------------------------------------------------
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
@@ -40,7 +42,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = env.bool(
     'DJANGO_SECURE_CONTENT_TYPE_NOSNIFF', default=True)
 SECURE_BROWSER_XSS_FILTER = True
 SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY = False
 SECURE_SSL_REDIRECT = env.bool('DJANGO_SECURE_SSL_REDIRECT', default=True)
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = True
@@ -56,54 +58,30 @@ ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['mupi.me'])
 INSTALLED_APPS += ('gunicorn', )
 
 
-# STORAGE CONFIGURATION
+# S3 CONFIGURATION
 # ------------------------------------------------------------------------------
-# Uploaded Media Files
-# ------------------------
-# See: http://django-storages.readthedocs.io/en/latest/index.html
-INSTALLED_APPS += (
-    'storages',
-)
-
-AWS_ACCESS_KEY_ID = env('DJANGO_AWS_ACCESS_KEY_ID')
+AWS_ACCESS_KEY_ID =  env('DJANGO_AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = env('DJANGO_AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = env('DJANGO_AWS_STORAGE_BUCKET_NAME')
-AWS_AUTO_CREATE_BUCKET = True
-AWS_QUERYSTRING_AUTH = False
-AWS_S3_CALLING_FORMAT = OrdinaryCallingFormat()
-
-# AWS cache settings, don't change unless you know what you're doing:
-AWS_EXPIRY = 60 * 60 * 24 * 7
-
-# TODO See: https://github.com/jschneier/django-storages/issues/47
-# Revert the following and use str after the above-mentioned bug is fixed in
-# either django-storage-redux or boto
-AWS_HEADERS = {
-    'Cache-Control': six.b('max-age=%d, s-maxage=%d, must-revalidate' % (
-        AWS_EXPIRY, AWS_EXPIRY))
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
 }
-
-# URL that handles the media served from MEDIA_ROOT, used for managing
-# stored files.
-
-#  See:http://stackoverflow.com/questions/10390244/
-from storages.backends.s3boto import S3BotoStorage
-StaticRootS3BotoStorage = lambda: S3BotoStorage(location='static')
-MediaRootS3BotoStorage = lambda: S3BotoStorage(location='media')
-DEFAULT_FILE_STORAGE = 'config.settings.production.MediaRootS3BotoStorage'
-
-MEDIA_URL = 'https://s3.amazonaws.com/%s/media/' % AWS_STORAGE_BUCKET_NAME
+AWS_LOCATION = 'static'
+STATIC_URL = 'https://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+DEFAULT_FILE_STORAGE = 'masteraula.questions.storage_backends.MediaStorage'
 
 # Static Assets
 # ------------------------
 
-STATIC_URL = 'https://s3.amazonaws.com/%s/static/' % AWS_STORAGE_BUCKET_NAME
-STATICFILES_STORAGE = 'config.settings.production.StaticRootS3BotoStorage'
-# See: https://github.com/antonagestam/collectfast
-# For Django 1.7+, 'collectfast' should come before
-# 'django.contrib.staticfiles'
-AWS_PRELOAD_METADATA = True
-INSTALLED_APPS = ('collectfast', ) + INSTALLED_APPS
+# STATIC_URL = 'https://s3.amazonaws.com/%s/static/' % AWS_STORAGE_BUCKET_NAME
+# STATICFILES_STORAGE = 'config.settings.production.StaticRootS3BotoStorage'
+# # See: https://github.com/antonagestam/collectfast
+# # For Django 1.7+, 'collectfast' should come before
+# # 'django.contrib.staticfiles'
+# AWS_PRELOAD_METADATA = True
+# INSTALLED_APPS = ('collectfast', ) + INSTALLED_APPS
 
 # EMAIL
 # ------------------------------------------------------------------------------
@@ -113,45 +91,63 @@ EMAIL_SUBJECT_PREFIX = env('DJANGO_EMAIL_SUBJECT_PREFIX', default='[Mupi Questio
 SERVER_EMAIL = env('DJANGO_SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
 
 # Anymail with Mailgun
-INSTALLED_APPS += ("anymail", )
-ANYMAIL = {
-    "MAILGUN_API_KEY": env('DJANGO_MAILGUN_API_KEY'),
-    "MAILGUN_SENDER_DOMAIN": env('MAILGUN_SENDER_DOMAIN')
-}
-EMAIL_BACKEND = "anymail.backends.mailgun.MailgunBackend"
+# INSTALLED_APPS += ("anymail", )
+# ANYMAIL = {
+#     "MAILGUN_API_KEY": env('DJANGO_MAILGUN_API_KEY'),
+#     "MAILGUN_SENDER_DOMAIN": env('MAILGUN_SENDER_DOMAIN')
+# }
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = env('DJANGO_DEFAULT_FROM_EMAIL')
+EMAIL_HOST_USER = env('DJANGO_DEFAULT_FROM_EMAIL')
+EMAIL_HOST_PASSWORD = env('DJANGO_DEFAULT_FROM_EMAIL')
+EMAIL_PORT = env('DJANGO_DEFAULT_FROM_EMAIL')
+EMAIL_USE_TLS = env('DJANGO_DEFAULT_FROM_EMAIL')
+EMAIL_USE_SSL = env('DJANGO_DEFAULT_FROM_EMAIL')
 
 # TEMPLATE CONFIGURATION
 # ------------------------------------------------------------------------------
 # See:
 # https://docs.djangoproject.com/en/dev/ref/templates/api/#django.template.loaders.cached.Loader
-TEMPLATES[0]['OPTIONS']['loaders'] = [
-    ('django.template.loaders.cached.Loader', [
-        'django.template.loaders.filesystem.Loader', 'django.template.loaders.app_directories.Loader', ]),
-]
+# TEMPLATES[0]['OPTIONS']['loaders'] = [
+#     ('django.template.loaders.cached.Loader', [
+#         'django.template.loaders.filesystem.Loader', 'django.template.loaders.app_directories.Loader', ]),
+# ]
 
 # DATABASE CONFIGURATION
 # ------------------------------------------------------------------------------
 
 # Use the Heroku-style specification
 # Raises ImproperlyConfigured exception if DATABASE_URL not in os.environ
-DATABASES['default'] = env.db('DATABASE_URL')
+# DATABASES['default'] = env.db('DATABASE_URL')
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': env('POSTGRES_DB_NAME'),
+        'USER': env('POSTGRES_USER'),
+        'PASSWORD': env('POSTGRES_PASSWORD'),
+        'HOST': env('POSTGRES_HOST'),
+        'PORT': env('POSTGRES_PORT'),
+    }
+}
+
 
 # CACHING
 # ------------------------------------------------------------------------------
 
-REDIS_LOCATION = '{0}/{1}'.format(env('REDIS_URL', default='redis://127.0.0.1:6379'), 0)
-# Heroku URL does not pass the DB number, so we parse it in
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': REDIS_LOCATION,
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'IGNORE_EXCEPTIONS': True,  # mimics memcache behavior.
-                                        # http://niwinz.github.io/django-redis/latest/#_memcached_exceptions_behavior
-        }
-    }
-}
+# REDIS_LOCATION = '{0}/{1}'.format(env('REDIS_URL', default='redis://127.0.0.1:6379'), 0)
+# # Heroku URL does not pass the DB number, so we parse it in
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django_redis.cache.RedisCache',
+#         'LOCATION': REDIS_LOCATION,
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#             'IGNORE_EXCEPTIONS': True,  # mimics memcache behavior.
+#                                         # http://niwinz.github.io/django-redis/latest/#_memcached_exceptions_behavior
+#         }
+#     }
+# }
 
 
 # LOGGING CONFIGURATION
@@ -162,6 +158,10 @@ CACHES = {
 # the site admins on every HTTP 500 error when DEBUG=False.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
+ADMINS = (
+    env('DJANGO_ADMINS')
+)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -207,3 +207,14 @@ ADMIN_URL = env('DJANGO_ADMIN_URL')
 
 # Your production stuff: Below this line define 3rd party library settings
 # ------------------------------------------------------------------------------
+
+URL_FRONT = env('DJANGO_URL_FRONT')
+CORS_ORIGIN_WHITELIST = env('DJANGO_CORS_ORIGIN_WHITELIST')
+CORS_ORIGIN_ALLOW_ALL = env('DJANGO_CORS_ALLOW_ALL')
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.elasticsearch2_backend.Elasticsearch2SearchEngine',
+        'URL': env('DJANGO_HAYSTACK_URL')
+        'INDEX_NAME': env('DJANGO_HAYSTACK_INDEX_NAME'),
+    },
+}
