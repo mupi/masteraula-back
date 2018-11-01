@@ -80,6 +80,18 @@ class AlternativeSerializer(serializers.ModelSerializer):
             'is_correct'
         )
 
+class ListDocumentQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Document
+        fields = (
+            'id',
+            'name',
+           
+        )
+        extra_kwargs = {
+            'create_date' : { 'read_only' : True },
+        }
+
 class QuestionSerializer(serializers.ModelSerializer):
     author = UserDetailsSerializer(read_only=False)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
@@ -90,7 +102,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     # descriptors = DescriptorSerializer(read_only=False, many=True)
     # teaching_levels = TeachingLevelSerializer(read_only=False, many=True)
     
-    tags = TagListSerializer(read_only=False)
+    tags = TagListSerializer(read_only=False) 
 
     class Meta:
         model = Question
@@ -114,9 +126,10 @@ class QuestionSerializer(serializers.ModelSerializer):
             'credit_cost',
 
             'tags',
+            
         )
         depth = 1
-
+   
 class QuestionSearchSerializer(HaystackSerializerMixin, QuestionSerializer):
 
     class Meta(QuestionSerializer.Meta):
@@ -300,7 +313,8 @@ class DocumentCreatesSerializer(serializers.ModelSerializer):
 
         return document
     
-   
+
+
 # class ProfileSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = Profile

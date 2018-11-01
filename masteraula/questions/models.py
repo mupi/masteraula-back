@@ -98,7 +98,7 @@ class Alternative(models.Model):
 class Document(models.Model):
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    questions = models.ManyToManyField(Question, through='DocumentQuestion', related_name='questions')
+    questions = models.ManyToManyField(Question, through='DocumentQuestion', related_name='document_questions')
     create_date = models.DateTimeField(auto_now_add=True)
     secret = models.BooleanField()
     
