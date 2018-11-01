@@ -157,7 +157,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         return Response(status = status.HTTP_204_NO_CONTENT)
 
     @list_route(methods=['get'])
-    def my_documents(self, request, pk=None):
+    def my_documents(self, request):
         order_field = request.query_params.get('order_field', None)
         order_type = request.query_params.get('order', None)
         
@@ -191,6 +191,25 @@ class DocumentViewSet(viewsets.ModelViewSet):
         serializer = serializers.DocumentListSerializer(queryset, many=True)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    # @detail_route(methods=['get'])
+    # def get_list(self, request, pk=None):
+    #     """
+    #     Generate a docx file containing all the list.
+    #     """
+    #     document = self.get_object()
+    #     document_name = document.name
+    #     docx_name = pk + document_name + '.docx'
+
+    #     data = open(docx_name, "rb").read()
+
+    #     response = HttpResponse(
+    #         data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    #     )
+    #     response['Content-Disposition'] = 'attachment; filename="' + document_name + '.docx"'
+    #     # Apaga o arquivo temporario criado
+    #     os.remove(docx_name)
+    #     return response
 
     @detail_route(methods=['get'])
     def generate_list(self, request, pk=None):
@@ -238,26 +257,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
         # Apaga o arquivo temporario criado
         os.remove(docx_name)
         return response
-
-# @detail_route(methods=['get'])
-    # def get_list(self, request, pk=None):
-    #     """
-    #     Generate a docx file containing all the list.
-    #     """
-    #     document = self.get_object()
-    #     document_name = document.name
-    #     docx_name = pk + document_name + '.docx'
-
-    #     data = open(docx_name, "rb").read()
-
-    #     response = HttpResponse(
-    #         data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    #     )
-    #     response['Content-Disposition'] = 'attachment; filename="' + document_name + '.docx"'
-    #     # Apaga o arquivo temporario criado
-    #     os.remove(docx_name)
-    #     return response
-
 
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,

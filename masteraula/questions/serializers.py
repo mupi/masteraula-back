@@ -85,12 +85,9 @@ class ListDocumentQuestionSerializer(serializers.ModelSerializer):
         model = Document
         fields = (
             'id',
-            'name',
-           
+            'name',   
         )
-        extra_kwargs = {
-            'create_date' : { 'read_only' : True },
-        }
+       
 
 class QuestionSerializer(serializers.ModelSerializer):
     author = UserDetailsSerializer(read_only=False)
@@ -124,9 +121,8 @@ class QuestionSerializer(serializers.ModelSerializer):
             'source',
 
             'credit_cost',
-
-            'tags',
             
+            'tags',   
         )
         depth = 1
    
@@ -312,8 +308,6 @@ class DocumentCreatesSerializer(serializers.ModelSerializer):
                 pass
 
         return document
-    
-
 
 # class ProfileSerializer(serializers.ModelSerializer):
 #     class Meta:
