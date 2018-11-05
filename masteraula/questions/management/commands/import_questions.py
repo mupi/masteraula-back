@@ -58,7 +58,7 @@ class Command(BaseCommand):
                                 learning_object = LearningObject.objects.create(owner=author, folder_name=filename.split('.')[0])
                                 learning_object.image.save(row[2], File(open(img_dir + '/' + row[2], 'rb')))
                             else:
-                                learning_object = LearningObject.objects.create(owenr=author, text=row[2])
+                                learning_object = LearningObject.objects.create(owner=author, text=row[2])
                             file_learning_objects[row[2]] = learning_object
 
                     statement = row[3]
