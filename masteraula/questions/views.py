@@ -10,6 +10,7 @@ from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response
 from rest_framework import viewsets, exceptions, pagination
 from django.db.models import Count
+from django.shortcuts import get_object_or_404
 
 from taggit.models import Tag
 
@@ -93,6 +94,20 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
         if difficulties is not None and difficulties:
             queryset = queryset.filter(difficulty__in=difficulties).distinct()
         return queryset
+    
+    def retrieve(self, request, pk=None):
+        question = get_object_or_404(self.get_queryset(), pk=pk)
+        serializer_question = self.serializer_class(question)
+
+        documents_questions = DocumentQuestion.objects.filter(question__id=pk)
+        documents = [dq.document for dq in documents_questions if dq.document.owner==request.user]
+        documents = sorted(documents, key=lambda doc: doc.create_date)
+        serializer_documents = serializers.ListDocumentQuestionSerializer(documents, many = True)
+
+        return_data = serializer_question.data
+        return_data['documents'] = serializer_documents.data
+        
+        return Response(return_data)   
 
 class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Discipline.objects.all().order_by('name')
@@ -242,7 +257,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         # Apaga o arquivo temporario criado
         os.remove(docx_name)
         return response
-        
+
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,
 #                     mixins.RetrieveModelMixin,
