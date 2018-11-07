@@ -14,16 +14,27 @@ import socket
 import os
 from .common import *  # noqa
 
+SECRET_KEY = env('DJANGO_SECRET_KEY', default='-s=9j=jj#gwtm_%0&eyqz(tk!wd2pw86#kd!nyx5nu8js_!o=7')
+
+# S3 CONFIGURATION
+# ------------------------------------------------------------------------------
+# env.read_env()
+# AWS_ACCESS_KEY_ID =  env('DJANGO_AWS_ACCESS_KEY_ID')
+# AWS_SECRET_ACCESS_KEY = env('DJANGO_AWS_SECRET_ACCESS_KEY')
+# AWS_STORAGE_BUCKET_NAME = env('DJANGO_AWS_STORAGE_BUCKET_NAME')
+# AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+# AWS_S3_OBJECT_PARAMETERS = {
+#     'CacheControl': 'max-age=86400',
+# }
+# AWS_LOCATION = 'static'
+# STATIC_URL = 'https://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
+# STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# DEFAULT_FILE_STORAGE = 'masteraula.questions.storage_backends.MediaStorage'
+
 # DEBUG
 # ------------------------------------------------------------------------------
 DEBUG = env.bool('DJANGO_DEBUG', default=True)
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
-
-# SECRET CONFIGURATION
-# ------------------------------------------------------------------------------
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
-# Note: This key only used for development and testing.
-SECRET_KEY = env('DJANGO_SECRET_KEY', default='-s=9j=jj#gwtm_%0&eyqz(tk!wd2pw86#kd!nyx5nu8js_!o=7')
 
 # Mail settings
 # ------------------------------------------------------------------------------
