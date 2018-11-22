@@ -39,6 +39,7 @@ class LearningObject(models.Model):
     # name = models.CharField(max_length=100, null=False, blank=False)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    source = models.TextField(null=True, blank=True)
     image = models.ImageField(null=True, blank=True, upload_to=get_upload_file_name)
     folder_name = models.CharField(max_length=100, null=True, blank=True)
     text = models.TextField(null=True, blank=True)

@@ -32,7 +32,7 @@ class LearningObjectModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', )
     # list_display = ('id', 'name', 'image', 'text', 'tag_list')
     # search_fields = ['id', 'name',]
-    list_display = ('id', 'image', 'text', 'tag_list')
+    list_display = ('id', 'source', 'image', 'text', 'tag_list')
     search_fields = ['id',]
     list_per_page = 100
 
