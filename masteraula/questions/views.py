@@ -135,6 +135,21 @@ class DocumentViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     @detail_route(methods=['post'])
+    def copy_document(self, request, pk=None):
+        obj = self.get_object()
+        questions = obj.questions.all()
+                                       
+        obj.pk = None
+        obj.name = obj.name + ' (Cópia)'
+        obj.save()
+
+        for count, q in enumerate(questions):
+            dq = DocumentQuestion.objects.create(document=obj, question=q, order=count) 
+       
+        serializer = serializers.DocumentCreatesSerializer(obj)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @detail_route(methods=['post'])
     def add_question(self, request, pk=None):
         document = self.get_object()
         serializer = serializers.DocumentQuestionSerializer(data=request.data)
@@ -144,7 +159,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(list_document.data)
         
         return Response(list_document.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    
     @detail_route(methods=['post'])
     def remove_question(self, request, pk=None):
         document = self.get_object()
