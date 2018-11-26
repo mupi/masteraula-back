@@ -15,7 +15,7 @@ router.register(r'questions', views.QuestionViewSet, base_name='questions')
 router.register(r'disciplines', views.DisciplineViewSet, base_name='disciplines')
 router.register(r'teaching_levels', views.TeachingLevelViewSet, base_name='teaching_levels')
 router.register(r'documents', views.DocumentViewSet, base_name='documents')
-
+router.register(r'headers', views.HeaderViewSet, base_name='headers')
 
 # router.register(r'users', rest_views.UserViewSet, base_name='users')
 # router.register(r'question_lists', rest_views.Question_ListViewSet, base_name='question_lists')

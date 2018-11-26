@@ -20,7 +20,7 @@ from masteraula.users.models import User, Profile
 from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
-                     Alternative, Document, DocumentQuestion)
+                     Alternative, Document, DocumentQuestion, Header)
 
 import unicodedata
 
@@ -308,6 +308,39 @@ class DocumentCreatesSerializer(serializers.ModelSerializer):
                 pass
 
         return document
+
+class HeaderSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Document
+        fields = (
+            'id',
+            'name',
+            'owner',
+            'institution_name',
+            'discipline_name',
+            'professor_name',
+            'student_indicator',
+            'class_indicator',
+            'score_indicator',
+            'date_indicator',
+        )
+        extra_kwargs = {
+            'owner' : { 'read_only' : True },
+            }
+
+    def create(self, validated_data):
+
+        header = Header.objects.create(**validated_data)
+
+        return header
+
+    def update(self, instance, validated_data):
+        
+        instance.update(**validated_data)
+        
+        return instance
+
 
 # class ProfileSerializer(serializers.ModelSerializer):
 #     class Meta:
