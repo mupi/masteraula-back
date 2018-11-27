@@ -101,15 +101,7 @@ class Document(models.Model):
     questions = models.ManyToManyField(Question, through='DocumentQuestion', related_name='questions')
     create_date = models.DateTimeField(auto_now_add=True)
     secret = models.BooleanField()
-    
-    institution_name = models.CharField(max_length=200, blank=True, null=True)
-    discipline_name = models.CharField(max_length=50, blank=True, null=True)
-    professor_name = models.CharField(max_length=200, blank=True, null=True)
-    student_indicator = models.BooleanField(default=False, blank=True)
-    class_indicator = models.BooleanField(default=False, blank=True)
-    score_indicator = models.BooleanField(default=False, blank=True)
-    date_indicator = models.BooleanField(default=False, blank=True)
-    
+      
     def __str__(self):
         return self.name[:50]
         
@@ -138,9 +130,7 @@ class Document(models.Model):
 
     def update(self, **kwargs):
         # https://www.dabapps.com/blog/django-models-and-encapsulation/
-        allowed_attributes = {'name', 'secret', 'document_header', 'institution_name',
-        'discipline_name', 'professor_name', 'student_indicator', 'class_indicator',
-        'score_indicator', 'date_indicator'}
+        allowed_attributes = {'name', 'secret'}
         for name, value in kwargs.items():
             assert name in allowed_attributes
             setattr(self, name, value)

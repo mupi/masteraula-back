@@ -197,13 +197,6 @@ class DocumentListSerializer(serializers.ModelSerializer):
             'questions',
             'create_date',
             'secret',
-            'institution_name',
-            'discipline_name',
-            'professor_name',
-            'student_indicator',
-            'class_indicator',
-            'score_indicator',
-            'date_indicator',
         )
         extra_kwargs = {
             'owner' : { 'read_only' : True },
@@ -225,13 +218,6 @@ class DocumentDetailSerializer(serializers.ModelSerializer):
             'questions',
             'create_date',
             'secret',
-            'institution_name',
-            'discipline_name',
-            'professor_name',
-            'student_indicator',
-            'class_indicator',
-            'score_indicator',
-            'date_indicator',
         )
         extra_kwargs = {
             'owner' : { 'read_only' : True },
@@ -276,13 +262,6 @@ class DocumentCreatesSerializer(serializers.ModelSerializer):
             'questions',
             'create_date',
             'secret',
-            'institution_name',
-            'discipline_name',
-            'professor_name',
-            'student_indicator',
-            'class_indicator',
-            'score_indicator',
-            'date_indicator',
         )
         extra_kwargs = {
             'owner' : { 'read_only' : True },
