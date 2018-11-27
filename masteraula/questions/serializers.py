@@ -291,7 +291,7 @@ class DocumentCreatesSerializer(serializers.ModelSerializer):
 class HeaderSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model = Document
+        model = Header
         fields = (
             'id',
             'name',
