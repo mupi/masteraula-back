@@ -76,6 +76,9 @@ class Question_Parser(HTMLParser):
     def parse_heading(self, list_header):
         '''Cabecalho do gabarito gerado, colocando o nome da lista e tambem
         a data que foi criada'''
+        
+        pass
+    
         # doc = list_header
         
         # header = self.document.add_heading(doc.name, 1)
