@@ -94,7 +94,7 @@ class Command(BaseCommand):
                                                         source=source)
 
                     if learning_object:
-                        question.learning_object = learning_object
+                        question.learning_objects.add(learning_object)
 
                     for alternative in alternatives_text:
                         Alternative.objects.create(question=question,text=alternative[0], is_correct=alternative[1])

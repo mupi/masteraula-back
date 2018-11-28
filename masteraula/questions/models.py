@@ -67,7 +67,7 @@ class Question(models.Model):
     create_date = models.DateTimeField(auto_now_add=True)
 
     statement = models.TextField()
-    learning_object = models.ForeignKey(LearningObject, null=True, blank=True)
+    learning_objects = models.ManyToManyField(LearningObject, blank=True)
     resolution = models.TextField(null=True, blank=True)
     difficulty = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)
 

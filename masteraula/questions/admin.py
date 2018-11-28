@@ -43,7 +43,7 @@ class LearningObjectModelAdmin(admin.ModelAdmin):
         return u", ".join(o.name for o in obj.tags.all())
 
 class QuestionModelAdmin(admin.ModelAdmin):
-    raw_id_fields = ('author', 'learning_object', 'disciplines')
+    raw_id_fields = ('author', 'learning_objects', 'disciplines')
     list_display = ('id', 'statement', 'year', 'source', 'tag_list')
     search_fields = ['id', 'year', 'source', 'statement']
 
