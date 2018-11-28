@@ -80,9 +80,18 @@ class AlternativeSerializer(serializers.ModelSerializer):
             'is_correct'
         )
 
+class ListDocumentQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Document
+        fields = (
+            'id',
+            'name',   
+        )
+       
+
 class QuestionSerializer(serializers.ModelSerializer):
     author = UserDetailsSerializer(read_only=False)
-    create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
+    create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
     
     # alternatives = AlternativeSerializer(many=True, read_only=False)
     
@@ -90,7 +99,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     # descriptors = DescriptorSerializer(read_only=False, many=True)
     # teaching_levels = TeachingLevelSerializer(read_only=False, many=True)
     
-    tags = TagListSerializer(read_only=False)
+    tags = TagListSerializer(read_only=False) 
 
     class Meta:
         model = Question
@@ -112,11 +121,11 @@ class QuestionSerializer(serializers.ModelSerializer):
             'source',
 
             'credit_cost',
-
-            'tags',
+            
+            'tags',   
         )
         depth = 1
-
+   
 class QuestionSearchSerializer(HaystackSerializerMixin, QuestionSerializer):
 
     class Meta(QuestionSerializer.Meta):
@@ -177,7 +186,7 @@ class DocumentQuestionListDetailSerializer(serializers.ModelSerializer):
         
 class DocumentListSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionSerializer(many=True, source='documentquestion_set', read_only=True)
-    create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
+    create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
 
     class Meta:
         model = Document
@@ -204,7 +213,7 @@ class DocumentListSerializer(serializers.ModelSerializer):
 
 class DocumentDetailSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionListDetailSerializer(many=True, source='documentquestion_set', read_only=True)
-    create_date = serializers.DateField(format="%Y/%m/%d", required=False, read_only=True)
+    create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
   
 
     class Meta:
@@ -299,8 +308,7 @@ class DocumentCreatesSerializer(serializers.ModelSerializer):
                 pass
 
         return document
-    
-   
+
 # class ProfileSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = Profile

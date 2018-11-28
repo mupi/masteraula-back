@@ -32,16 +32,18 @@ class TeachingLevel(models.Model):
         return self.name
 
 class LearningObject(models.Model):
-    name = models.CharField(max_length=100, null=False, blank=False)
+    def get_upload_file_name(learning_object,filename):
+        folder_name = learning_object.folder_name if learning_object.folder_name else 'default'
+        return u'masteraula/%s/%s' % (folder_name, filename)
+
+    # name = models.CharField(max_length=100, null=False, blank=False)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    image = models.ImageField(null=True, blank=True)
+    image = models.ImageField(null=True, blank=True, upload_to=get_upload_file_name)
+    folder_name = models.CharField(max_length=100, null=True, blank=True)
     text = models.TextField(null=True, blank=True)
 
     tags = TaggableManager(blank=True)
-
-    def __str__(self):
-        return self.name
 
 
 class Descriptor(models.Model):
@@ -61,7 +63,7 @@ class Question(models.Model):
     )
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    create_date = models.DateField(auto_now_add=True)
+    create_date = models.DateTimeField(auto_now_add=True)
 
     statement = models.TextField()
     learning_object = models.ForeignKey(LearningObject, null=True, blank=True)
@@ -97,7 +99,7 @@ class Document(models.Model):
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     questions = models.ManyToManyField(Question, through='DocumentQuestion', related_name='questions')
-    create_date = models.DateField(auto_now_add=True)
+    create_date = models.DateTimeField(auto_now_add=True)
     secret = models.BooleanField()
     
     # Document Header details
