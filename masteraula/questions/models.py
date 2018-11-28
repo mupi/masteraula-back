@@ -101,16 +101,7 @@ class Document(models.Model):
     questions = models.ManyToManyField(Question, through='DocumentQuestion', related_name='questions')
     create_date = models.DateTimeField(auto_now_add=True)
     secret = models.BooleanField()
-    
-    # Document Header details
-    institution_name = models.CharField(max_length=200, blank=True, null=True)
-    discipline_name = models.CharField(max_length=50, blank=True, null=True)
-    professor_name = models.CharField(max_length=200, blank=True, null=True)
-    student_indicator = models.BooleanField(default=False, blank=True)
-    class_indicator = models.BooleanField(default=False, blank=True)
-    score_indicator = models.BooleanField(default=False, blank=True)
-    date_indicator = models.BooleanField(default=False, blank=True)
-
+      
     def __str__(self):
         return self.name[:50]
         
@@ -139,9 +130,7 @@ class Document(models.Model):
 
     def update(self, **kwargs):
         # https://www.dabapps.com/blog/django-models-and-encapsulation/
-        allowed_attributes = {'name', 'secret', 'document_header', 'institution_name',
-        'discipline_name', 'professor_name', 'student_indicator', 'class_indicator',
-        'score_indicator', 'date_indicator'}
+        allowed_attributes = {'name', 'secret'}
         for name, value in kwargs.items():
             assert name in allowed_attributes
             setattr(self, name, value)
@@ -159,4 +148,26 @@ class DocumentQuestion(models.Model):
 
     def set_order(self, order):
         self.order = order
+        self.save()
+
+class Header(models.Model):
+    name = models.CharField(max_length=200)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE) 
+    institution_name = models.CharField(max_length=200, blank=True, null=True)
+    discipline_name = models.CharField(max_length=50, blank=True, null=True)
+    professor_name = models.CharField(max_length=200, blank=True, null=True)
+    student_indicator = models.BooleanField(default=False, blank=True)
+    class_indicator = models.BooleanField(default=False, blank=True)
+    score_indicator = models.BooleanField(default=False, blank=True)
+    date_indicator = models.BooleanField(default=False, blank=True)
+
+    def __str__(self):
+        return self.name[:50]
+
+    def update(self, **kwargs):
+        allowed_attributes = {'name', 'institution_name', 'discipline_name', 'professor_name', 'student_indicator', 'class_indicator',
+        'score_indicator', 'date_indicator'}
+        for name, value in kwargs.items():
+            assert name in allowed_attributes
+            setattr(self, name, value)
         self.save()

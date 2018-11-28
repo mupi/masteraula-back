@@ -36,7 +36,24 @@ class DocumentsPermission(permissions.BasePermission):
         if request.user.is_superuser:
            return True
         return obj.owner == request.user
-                  
+
+class HeaderPermission(permissions.BasePermission):
+    """Regras: 
+    - Qualquer usuário logado pode criar um cabeçalho;
+    - Só pode editar e visualizar um cabeçalho o autor e o super_usuario."""
+
+    def has_permission(self, request, view, obj=None):
+        if request.user.is_authenticated:
+            return True
+        
+        #if obj.secret:
+           #return obj.owner == request.user
+
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_superuser:
+           return True
+        return obj.owner == request.user
+
 """from rest_framework import permissions
 
 class Question_ListPermission(permissions.BasePermission):
