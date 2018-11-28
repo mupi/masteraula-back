@@ -17,7 +17,7 @@ from taggit.models import Tag
 from masteraula.users.models import User
 from masteraula.questions.templatetags.search_helpers import stripaccents
 
-from .models import Question, Document, Discipline, TeachingLevel, DocumentQuestion
+from .models import Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header
 from .templatetags.search_helpers import stripaccents
 from .docx_parsers import Question_Parser
 from . import permissions as permissions
@@ -37,6 +37,11 @@ class QuestionPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 16
     max_page_size = 64
+
+class HeaderPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 10
+    max_page_size = 50
 
 class QuestionSearchView(HaystackViewSet):
     index_models = [Question]
@@ -75,7 +80,6 @@ class QuestionSearchView(HaystackViewSet):
 
         return queryset
  
-
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
@@ -135,6 +139,21 @@ class DocumentViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     @detail_route(methods=['post'])
+    def copy_document(self, request, pk=None):
+        obj = self.get_object()
+        questions = obj.questions.all()
+                                       
+        obj.pk = None
+        obj.name = obj.name + ' (Cópia)'
+        obj.save()
+
+        for count, q in enumerate(questions):
+            dq = DocumentQuestion.objects.create(document=obj, question=q, order=count) 
+       
+        serializer = serializers.DocumentCreatesSerializer(obj)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @detail_route(methods=['post'])
     def add_question(self, request, pk=None):
         document = self.get_object()
         serializer = serializers.DocumentQuestionSerializer(data=request.data)
@@ -144,7 +163,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(list_document.data)
         
         return Response(list_document.data, status=status.HTTP_201_CREATED, headers=headers)
-
+    
     @detail_route(methods=['post'])
     def remove_question(self, request, pk=None):
         document = self.get_object()
@@ -257,6 +276,57 @@ class DocumentViewSet(viewsets.ModelViewSet):
         # Apaga o arquivo temporario criado
         os.remove(docx_name)
         return response
+
+class HeaderViewSet(viewsets.ModelViewSet):
+    queryset = Header.objects.all()
+    serializer_class = serializers.HeaderSerializer
+    pagination_class = HeaderPagination
+    permission_classes = (permissions.HeaderPermission,)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+        
+    @list_route(methods=['get'])
+    def my_headers(self, request):
+        order_field = request.query_params.get('order_field', None)
+        order_type = request.query_params.get('order', None)
+        
+        if order_field == 'name':
+            if order_type == 'desc':
+                queryset = Header.objects.filter(owner=self.request.user).order_by('-name')
+            else:
+                queryset = Header.objects.filter(owner=self.request.user).order_by('name')
+
+        elif order_field == 'discipline':
+            if order_type =='desc':
+                queryset = Header.objects.filter(owner=self.request.user).order_by('-discipline_name')
+            else:
+                queryset = Header.objects.filter(owner=self.request.user).order_by('discipline_name')
+
+        elif order_field =='institution':
+            if order_type =='desc':
+                queryset = Header.objects.filter(owner=self.request.user).order_by('-institution_name')
+            else:
+                queryset = Header.objects.filter(owner=self.request.user).order_by('institution_name')
+
+        elif order_field =='teacher':
+            if order_type =='desc':
+                queryset = Header.objects.filter(owner=self.request.user).order_by('-professor_name')
+            else:
+                queryset = Header.objects.filter(owner=self.request.user).order_by('professor_name')
+
+        else:
+            queryset = Header.objects.filter(owner=self.request.user).order_by('name')
+
+        self.pagination_class = HeaderPagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = serializers.HeaderSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = serializers.HeaderSerializer(queryset, many=True)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 # class UserViewSet(mixins.CreateModelMixin,
 #                     mixins.ListModelMixin,
