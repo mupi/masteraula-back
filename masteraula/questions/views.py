@@ -124,8 +124,15 @@ class TeachingLevelViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
 
 class DocumentViewSet(viewsets.ModelViewSet):
-    queryset = Document.objects.all()
     permission_classes = (permissions.DocumentsPermission, )
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            queryset = Document.objects.all() 
+            return queryset
+        else:
+            queryset = Document.objects.filter(owner=self.request.user)
+            return queryset
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -278,10 +285,17 @@ class DocumentViewSet(viewsets.ModelViewSet):
         return response
 
 class HeaderViewSet(viewsets.ModelViewSet):
-    queryset = Header.objects.all()
     serializer_class = serializers.HeaderSerializer
     pagination_class = HeaderPagination
     permission_classes = (permissions.HeaderPermission,)
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            queryset = Header.objects.all() 
+            return queryset
+        else:
+            queryset = Header.objects.filter(owner=self.request.user)
+            return queryset
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

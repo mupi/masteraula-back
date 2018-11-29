@@ -9,7 +9,6 @@ class QuestionPermission(permissions.BasePermission):
         if request.user.is_authenticated:
             return True
         
-
     def has_object_permission(self, request, view, obj):
         if request.user.is_superuser:
             return True
@@ -18,8 +17,6 @@ class QuestionPermission(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         
-
-
 class DocumentsPermission(permissions.BasePermission):
     """Regras: 
     - Qualquer usuário logado pode criar um documento;
@@ -28,9 +25,6 @@ class DocumentsPermission(permissions.BasePermission):
     def has_permission(self, request, view, obj=None):
         if request.user.is_authenticated:
             return True
-        
-        #if obj.secret:
-           #return obj.owner == request.user
 
     def has_object_permission(self, request, view, obj):
         if request.user.is_superuser:
@@ -45,10 +39,7 @@ class HeaderPermission(permissions.BasePermission):
     def has_permission(self, request, view, obj=None):
         if request.user.is_authenticated:
             return True
-        
-        #if obj.secret:
-           #return obj.owner == request.user
-
+       
     def has_object_permission(self, request, view, obj):
         if request.user.is_superuser:
            return True
