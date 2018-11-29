@@ -131,7 +131,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
             queryset = Document.objects.all() 
             return queryset
         else:
-            queryset = Header.objects.filter(owner=self.request.user)
+            queryset = Document.objects.filter(owner=self.request.user)
             return queryset
 
     def get_serializer_class(self):
