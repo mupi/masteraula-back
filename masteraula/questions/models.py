@@ -39,6 +39,7 @@ class LearningObject(models.Model):
     # name = models.CharField(max_length=100, null=False, blank=False)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    source = models.TextField(null=True, blank=True)
     image = models.ImageField(null=True, blank=True, upload_to=get_upload_file_name)
     folder_name = models.CharField(max_length=100, null=True, blank=True)
     text = models.TextField(null=True, blank=True)
@@ -66,7 +67,7 @@ class Question(models.Model):
     create_date = models.DateTimeField(auto_now_add=True)
 
     statement = models.TextField()
-    learning_object = models.ForeignKey(LearningObject, null=True, blank=True)
+    learning_objects = models.ManyToManyField(LearningObject, blank=True)
     resolution = models.TextField(null=True, blank=True)
     difficulty = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)
 

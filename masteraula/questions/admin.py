@@ -29,7 +29,7 @@ class LearningObjectModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', )
     # list_display = ('id', 'name', 'image', 'text', 'tag_list')
     # search_fields = ['id', 'name',]
-    list_display = ('id', 'image', 'text', 'tag_list')
+    list_display = ('id', 'source', 'image', 'text', 'tag_list')
     search_fields = ['id',]
     list_per_page = 100
 
@@ -40,7 +40,7 @@ class LearningObjectModelAdmin(admin.ModelAdmin):
         return u", ".join(o.name for o in obj.tags.all())
 
 class QuestionModelAdmin(admin.ModelAdmin):
-    raw_id_fields = ('author', 'learning_object', 'disciplines')
+    raw_id_fields = ('author', 'learning_objects', 'disciplines')
     list_display = ('id', 'statement', 'year', 'source', 'tag_list')
     search_fields = ['id', 'year', 'source', 'statement']
 

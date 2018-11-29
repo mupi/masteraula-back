@@ -109,7 +109,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             'create_date',
 
             'statement',
-            'learning_object',
+            'learning_objects',
             'resolution',
             'difficulty',
             'alternatives',
