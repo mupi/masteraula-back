@@ -244,10 +244,11 @@ class DocumentViewSet(viewsets.ModelViewSet):
         Generate a docx file containing all the list.
         """
         document = self.get_object()
-        questions = [q.question for q in DocumentQuestion.objects.filter(document=document)]
-        document_generator = Docx_Generator('teste')
-        document_generator.writeHtmlFile(questions)
-        document_generator.closeHtmlFile()
+        #questions = [q.question for q in DocumentQuestion.objects.filter(document=document)]
+        document_generator = Docx_Generator()
+        document_generator.writeQuestions(document.questions.all())
+        docx_name = document_generator.close()
+
         # flags = request.query_params
         # resolution = False
         # # question_parents = []
@@ -278,14 +279,14 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
         # parser.end_parser()
 
-        # data = open(docx_name, "rb").read()
+        data = open(docx_name + '.docx', "rb").read()
 
         response = HttpResponse(
             data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         )
-        # response['Content-Disposition'] = 'attachment; filename="' + docx_name + '.docx"'
+        response['Content-Disposition'] = 'attachment; filename="' + docx_name + '.docx"'
         # Apaga o arquivo temporario criado
-        # os.remove(docx_name)
+        os.remove(docx_name + '.docx')
         return response
 
 class HeaderViewSet(viewsets.ModelViewSet):
