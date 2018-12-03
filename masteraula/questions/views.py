@@ -20,6 +20,7 @@ from masteraula.questions.templatetags.search_helpers import stripaccents
 from .models import Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header
 from .templatetags.search_helpers import stripaccents
 from .docx_parsers import Question_Parser
+from .docx_generator import Docx_Generator
 from . import permissions as permissions
 from . import serializers as serializers
 
@@ -244,44 +245,47 @@ class DocumentViewSet(viewsets.ModelViewSet):
         """
         document = self.get_object()
         questions = [q.question for q in DocumentQuestion.objects.filter(document=document)]
-        flags = request.query_params
-        resolution = False
-        # question_parents = []
-        all_questions = []
+        document_generator = Docx_Generator('teste')
+        document_generator.writeHtmlFile(questions)
+        document_generator.closeHtmlFile()
+        # flags = request.query_params
+        # resolution = False
+        # # question_parents = []
+        # all_questions = []
 
-        if not questions:
-            raise exceptions.ValidationError('Can not generate an empty list')
+        # if not questions:
+        #     raise exceptions.ValidationError('Can not generate an empty list')
 
-        if 'resolution' in flags and flags['resolution'] == 'True':
-            resolution = True
+        # if 'resolution' in flags and flags['resolution'] == 'True':
+        #     resolution = True
 
-        # Nome aleatorio para nao causar problemas
-        docx_name = pk + str(current_milli_time()) + '.docx'
-        parser = Question_Parser(docx_name)
-        parser.parse_heading(document)
+        # # Nome aleatorio para nao causar problemas
+        # docx_name = pk + str(current_milli_time()) + '.docx'
+        # parser = Question_Parser(docx_name)
+        # parser.parse_heading(document)
 
-        for q in questions:
-        #     if q.question_parent != None:
-        #         if q.question_parent not in question_parents:
-        #             question_parents.append(q.question_parent)
-        #             all_questions.append(q.question_parent)
-            all_questions.append(q)
+        # for q in questions:
+        # #     if q.question_parent != None:
+        # #         if q.question_parent not in question_parents:
+        # #             question_parents.append(q.question_parent)
+        # #             all_questions.append(q.question_parent)
+        #     all_questions.append(q)
 
-        parser.parse_list_questions(all_questions, resolution)
+        # parser.parse_list_questions(all_questions, resolution)
 
-        if 'answers' in flags and flags['answers'] == 'True':
-            parser.parse_alternatives_list_questions(all_questions)
+        # if 'answers' in flags and flags['answers'] == 'True':
+        #     parser.parse_alternatives_list_questions(all_questions)
 
-        parser.end_parser()
+        # parser.end_parser()
 
-        data = open(docx_name, "rb").read()
+        # data = open(docx_name, "rb").read()
 
         response = HttpResponse(
             data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         )
-        response['Content-Disposition'] = 'attachment; filename="' + docx_name + '.docx"'
+        # response['Content-Disposition'] = 'attachment; filename="' + docx_name + '.docx"'
         # Apaga o arquivo temporario criado
-        os.remove(docx_name)
+        # os.remove(docx_name)
         return response
 
 class HeaderViewSet(viewsets.ModelViewSet):

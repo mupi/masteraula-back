@@ -22,7 +22,6 @@ class Docx_Generator():
     column_index = -1
 
     def __init__(self, title):
-        HTMLParser.__init__(self)
         # Faz o novo documento
         self.document = Document()
         self.docx_title = title
@@ -33,12 +32,12 @@ class Docx_Generator():
         for question in questions:
             question_counter = question_counter + 1
             self.html_file.write('<h1>Questao %d</h1>' % question_counter)
-            for learning_object in question.learning_objects:
+            for learning_object in question.learning_objects.all():
                 if learning_object.image:
                     self.html_file.write('<img src="localhost:8000%s" />' % image)
                 else:
                     self.html_file.write(learning_object.text)
-            self.html_file.write(learning_object.statement)
+            self.html_file.write(question.statement)
 
             question_item = 'a'
             for alternative in question.alternatives.all():
