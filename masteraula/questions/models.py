@@ -114,10 +114,19 @@ class Document(models.Model):
         self.save()
 
     def add_question(self, question):
-        question_qty = self.documentquestion_set.count()
-        self.documentquestion_set.create(question=question, order=question_qty)
-        self.update_orders()
+        order = 0
+        new_order = self.documentquestion_set.count()
+        last_learning_object = None
+        for order, documentQuestion in enumerate(self.documentquestion_set.all().order_by('order')):
+            if (last_learning_object and last_learning_object != [q for q  in documentQuestion.question.learning_objects.values()]
+                    and last_learning_object == [q for q in question.learning_objects.values()]):
+                new_order = order
+                break
+
+            last_learning_object = [q for q  in documentQuestion.question.learning_objects.values()]
+        documentQuestion = self.documentquestion_set.create(question=question, order=new_order)
         self.save()
+        return documentQuestion
 
     def remove_question(self, question):
         self.documentquestion_set.filter(question=question).delete()
@@ -125,9 +134,28 @@ class Document(models.Model):
         self.update_orders()
 
     def update_orders(self):
+        added_questions = []
         documentQuestions = self.documentquestion_set.all().order_by('order')
-        for order, documentQuestion in enumerate(documentQuestions):
+
+        order = 0
+        for i, documentQuestion in enumerate(documentQuestions):
+            # Added questions
+            if i in added_questions:
+                continue
+            
             documentQuestion.set_order(order)
+            order = order + 1
+
+            # unify the questions with same learning object
+            learning_objects = [q for q  in documentQuestion.question.learning_objects.values()]
+            if learning_objects:
+                for j in range(i, len(documentQuestions)):
+                    if j in added_questions:
+                        continue
+                    if learning_objects == [q for q  in documentQuestions[j].question.learning_objects.values()]:
+                        added_questions.append(j)
+                        documentQuestions[j].set_order(order)
+                        order = order + 1
 
     def update(self, **kwargs):
         # https://www.dabapps.com/blog/django-models-and-encapsulation/
