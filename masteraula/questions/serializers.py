@@ -88,7 +88,6 @@ class ListDocumentQuestionSerializer(serializers.ModelSerializer):
             'name',   
         )
        
-
 class QuestionSerializer(serializers.ModelSerializer):
     author = UserDetailsSerializer(read_only=False)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
@@ -320,7 +319,15 @@ class HeaderSerializer(serializers.ModelSerializer):
         
         return instance
 
-
+class HeaderListSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Header
+        fields = (
+            'id',
+            'name',
+        )
+        
 # class ProfileSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = Profile

@@ -244,10 +244,32 @@ class DocumentViewSet(viewsets.ModelViewSet):
         Generate a docx file containing all the list.
         """
         document = self.get_object()
-        #questions = [q.question for q in DocumentQuestion.objects.filter(document=document)]
         document_generator = Docx_Generator()
+        flags = request.query_params
+
+        if not document.questions:
+            raise exceptions.ValidationError('Can not generate an empty list')
+        
+        document_generator.writeTitle(document)
+        
+        if 'header' in flags:
+            header = Header.objects.get(pk=int(flags['header']))
+            document_generator.writeHeader(header)
+
         document_generator.writeQuestions(document.questions.all())
+
+        if 'answers' in flags and flags['answers'] == 'True':
+            document_generator.writeAnswers(document.questions.all())
+        
         docx_name = document_generator.close()
+        data = open(docx_name + '.docx', "rb").read()
+
+        response = HttpResponse(
+            data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+        response['Content-Disposition'] = 'attachment; filename="' + docx_name + '.docx"'
+        os.remove(docx_name + '.docx')
+        return response
 
         # flags = request.query_params
         # resolution = False
@@ -279,16 +301,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
         # parser.end_parser()
 
-        data = open(docx_name + '.docx', "rb").read()
-
-        response = HttpResponse(
-            data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        )
-        response['Content-Disposition'] = 'attachment; filename="' + docx_name + '.docx"'
-        # Apaga o arquivo temporario criado
-        os.remove(docx_name + '.docx')
-        return response
-
 class HeaderViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.HeaderSerializer
     pagination_class = HeaderPagination
@@ -304,7 +316,13 @@ class HeaderViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
-        
+
+    @list_route(methods=['get'])
+    def list_headers(self, request):
+        queryset = self.get_queryset().order_by('name')
+        serializer = serializers.HeaderListSerializer(queryset, many=True)
+        return Response(serializer.data)    
+    
     @list_route(methods=['get'])
     def my_headers(self, request):
         order_field = request.query_params.get('order_field', None)
