@@ -156,12 +156,8 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
         try:
             return document.documentquestion_set.get(question=validated_data['question'])
         except:
-            questions_count = document.documentquestion_set.count()
-            if 'order' not in validated_data or validated_data['order'] > questions_count:
-                validated_data['order'] = questions_count
-
-            documentQuestion = DocumentQuestion.objects.create(**validated_data)
-
+            documentQuestion = document.add_question(validated_data['question'])
+            print(document.documentquestion_set.all())
             return documentQuestion 
 
 class DocumentQuestionListDetailSerializer(serializers.ModelSerializer):
