@@ -70,7 +70,7 @@ class Docx_Generator():
                     if learning_object.image:
                         if learning_obj != learning_object.image:
                             self.html_file.write('<h4> Imagem %d </h4>' % count)
-                            self.html_file.write('<img src="localhost:8000%s"/>' % image)
+                            self.html_file.write('<img src="http://localhost:8000%s"/>' % learning_object.image.url)
                             learning_obj = learning_object.image
                             img_obj = count
                             
