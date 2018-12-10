@@ -24,7 +24,7 @@ class Docx_Generator():
         self.docx_name = str(current_milli_time())
 
         #self.html_file = open('file.html', 'w')
-        self.html_file = open(self.docx_name + '.html', 'w')
+        self.html_file = open(self.docx_name + '.html', 'w', encoding='utf8')
         self.html_file.write('<head><meta charset="UTF-8"></head>')
 
     def write_title(self, document):
