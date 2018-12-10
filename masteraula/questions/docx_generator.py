@@ -26,12 +26,12 @@ class Docx_Generator():
         #self.html_file = open('file.html', 'w')
         self.html_file = open(self.docx_name + '.html', 'w')
         self.html_file.write('<head><meta charset="UTF-8"></head>')
-    
-    def writeTitle(self, document):
+
+    def write_title(self, document):
         #Insere o texto com o nome do documento
         self.html_file.write('<h1>%s</h1>' % document.name)
     
-    def writeHeader(self, header):               
+    def write_header(self, header):               
         self.html_file.write('<table>')
                 
         if header.institution_name:
@@ -52,42 +52,54 @@ class Docx_Generator():
       
         self.html_file.write('</table>')    
         
-    def writeQuestions(self, questions):
-        question_counter = 0
-        learning_obj = None
-        text_obj = 0
-        img_obj = 0
+    def write_questions(self, questions):
+        learning_objects_questions = []
+        for question_counter, question in enumerate(questions):
+            if question_counter not in learning_objects_questions:
+                learning_objects = [q for q in question.learning_objects.values()]
+                if learning_objects:
+                    first = question_counter + 1
+                    last = first
+                    for i in range(first, len(questions)):
+                        if learning_objects != [q for q in questions[i].learning_objects.values()]:
+                            break
+                        learning_objects_questions.append(i)
+                        last = last + 1
+                    
+                    self.write_learning_objects(question.learning_objects.all(), first, last)
 
-        for question in questions:
-            question_counter = question_counter + 1
-            
-            for count, learning_object in enumerate(question.learning_objects.all()):
-                count = count + 1
-                if learning_obj == learning_object:
-                    pass
-                
-                else:
-                    if learning_object.image:
-                        if learning_obj != learning_object.image:
-                            self.html_file.write('<h4> Imagem %d </h4>' % count)
-                            self.html_file.write('<img src="http://localhost:8000%s"/>' % learning_object.image.url)
-                            learning_obj = learning_object.image
-                            img_obj = count
-                            
-                    else:
-                        if learning_obj != learning_object.text:
-                            self.html_file.write('<h4> Texto %d </h4>' % count)
-                            self.html_file.write(learning_object.text)
-                            learning_obj = learning_object.text
-                            text_obj = count
-                        
-            self.html_file.write('<h3>Questão %d</h3>' % question_counter)
-            
+    
+    def write_learning_objects(self, learning_objects, first, last):
+        if first == last:
+            self.html_file.write('<h2> Material para a questão %d</h2>\n' %  first)
+        else:
+            self.html_file.write('<h2> Material para a questão %d a %d </h2>\n' % (first, last))
+
+        for learning_object in learning_objects:
             if learning_object.image:
-                self.html_file.write('<h5>Veja a imagem %d </h5></br>' % img_obj)
-            
-            if learning_object.text:
-                self.html_file.write('<h5>Leia o texto %d </h5></br>' % text_obj)
+                self.html_file.write('<img src="http://localhost:8000%s" />\n' % learning_object.image.url)
+            else:
+                self.html_file.write(learning_object.text)
+
+    def write_questions(self, questions):
+        learning_objects_questions = []
+
+        for question_counter, question in enumerate(questions):
+            if question_counter not in learning_objects_questions:
+                learning_objects = [q for q in question.learning_objects.values()]
+                if learning_objects:
+                    first = question_counter + 1
+                    last = first
+                    for i in range(first, len(questions)):
+                        if learning_objects != [q for q in questions[i].learning_objects.values()]:
+                            break
+
+                        learning_objects_questions.append(i)
+                        last = last + 1
+                    
+                    self.write_learning_objects(question.learning_objects.all().order_by('id'), first, last)
+                        
+            self.html_file.write('<h3>Questão %d</h3>' % (question_counter + 1))
 
             self.html_file.write(question.statement)
             
@@ -97,7 +109,7 @@ class Docx_Generator():
                 #self.html_file.write(alternative.text)
                 question_item = chr(ord(question_item) + 1)
 
-    def writeAnswers(self, questions):
+    def write_answers(self, questions):
         '''Faz o parser do gabarito, em formato de tabela'''
 
         question_counter = 0

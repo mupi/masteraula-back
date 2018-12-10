@@ -250,16 +250,16 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if not document.questions:
             raise exceptions.ValidationError('Can not generate an empty list')
         
-        document_generator.writeTitle(document)
+        document_generator.write_title(document)
         
         if 'header' in flags:
             header = Header.objects.get(pk=int(flags['header']))
-            document_generator.writeHeader(header)
+            document_generator.write_header(header)
 
-        document_generator.writeQuestions(document.questions.all())
+        document_generator.write_questions([dq.question for dq in document.documentquestion_set.all().order_by('order')])
 
         if 'answers' in flags and flags['answers'] == 'True':
-            document_generator.writeAnswers(document.questions.all())
+            document_generator.write_answers([dq.question for dq in document.documentquestion_set.all().order_by('order')])
         
         docx_name = document_generator.close()
         data = open(docx_name + '.docx', "rb").read()
