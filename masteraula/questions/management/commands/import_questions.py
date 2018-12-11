@@ -13,11 +13,11 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('filename', nargs='+')
-        parser.add_argument('img_dir', nargs='+')
+        parser.add_argument('img_dir')
 
 
     def handle(self, *args, **options):
-        img_dir = options['img_dir'][0]
+        img_dir = options['img_dir']
 
         for filename in options['filename']:
             print('Adding images from ' + filename)
