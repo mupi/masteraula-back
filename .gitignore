@@ -62,9 +62,6 @@ env
 # User-uploaded media
 masteraula/media/
 
-# generated list
-*.docx
-
 # index of Haystack
 whoosh_index
 
