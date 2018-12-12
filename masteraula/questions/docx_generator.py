@@ -77,7 +77,7 @@ class Docx_Generator():
 
         for learning_object in learning_objects:
             if learning_object.image:
-                self.html_file.write('<img src="http://localhost:8000%s" />\n' % learning_object.image.url)
+                self.html_file.write('<img src="%s" />\n' % learning_object.image.url)
             else:
                 self.html_file.write(learning_object.text)
 
