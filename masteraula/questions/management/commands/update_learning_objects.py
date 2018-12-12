@@ -42,8 +42,8 @@ class Command(BaseCommand):
         errors = []
 
         # Todos os objetos de aprendizagem
-        for filename in os.listdir('csv-files/'):
-            all_files = open('csv-files/' + filename, 'r') 
+        for filename in os.listdir('json-files/'):
+            all_files = open('json-files/' + filename, 'r') 
             for line in all_files: 
                 questions_with_objects.append(int(line)) 
                 
