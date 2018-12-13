@@ -307,12 +307,8 @@ class HeaderViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.HeaderPermission,)
 
     def get_queryset(self):
-        if self.request.user.is_superuser:
-            queryset = Header.objects.all() 
-            return queryset
-        else:
-            queryset = Header.objects.filter(owner=self.request.user)
-            return queryset
+        queryset = Header.objects.filter(owner=self.request.user)
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
