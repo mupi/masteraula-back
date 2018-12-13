@@ -60,10 +60,7 @@ node_modules/
 env
 
 # User-uploaded media
-mupi_question_database/media/
-
-# generated list
-*.docx
+masteraula/media/
 
 # index of Haystack
 whoosh_index
@@ -72,3 +69,4 @@ whoosh_index
 backup.sql
 corrects
 errors
+.vscode

@@ -1,5 +1,5 @@
 [run]
-include = mupi_question_database/*
+include = masteraula/*
 omit = *migrations*, *tests*
 plugins =
     django_coverage_plugin

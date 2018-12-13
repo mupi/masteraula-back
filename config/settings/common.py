@@ -15,8 +15,8 @@ import os
 
 import datetime
 
-ROOT_DIR = environ.Path(__file__) - 3  # (mupi_question_database/config/settings/common.py - 3 = mupi_question_database/)
-APPS_DIR = ROOT_DIR.path('mupi_question_database')
+ROOT_DIR = environ.Path(__file__) - 3  # (masteraula/config/settings/common.py - 3 = masteraula/)
+APPS_DIR = ROOT_DIR.path('masteraula')
 
 env = environ.Env()
 
@@ -49,15 +49,15 @@ THIRD_PARTY_APPS = (
     'rest_framework_swagger',
     'rest_auth',
     'rest_auth.registration',
-    'corsheaders'
+    'corsheaders',
 )
 
 # Apps specific for this project go here.
 LOCAL_APPS = (
     # custom users app
-    'mupi_question_database.users.apps.UsersConfig',
-    'mupi_question_database.questions',
+    'masteraula.users.apps.UsersConfig',
     # Your stuff: custom apps go here
+    'masteraula.questions',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -79,7 +79,7 @@ MIDDLEWARE = (
 # MIGRATIONS CONFIGURATION
 # ------------------------------------------------------------------------------
 MIGRATION_MODULES = {
-    'sites': 'mupi_question_database.contrib.sites.migrations'
+    'sites': 'masteraula.contrib.sites.migrations'
 }
 
 # DEBUG
@@ -112,7 +112,7 @@ MANAGERS = ADMINS
 # ------------------------------------------------------------------------------
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='postgres:///mupi_question_database'),
+    'default': env.db('DATABASE_URL', default='postgres:///masteraula'),
 }
 DATABASES['default']['ATOMIC_REQUESTS'] = True
 
@@ -236,28 +236,28 @@ AUTH_PASSWORD_VALIDATORS = [
 # AUTHENTICATION CONFIGURATION
 # ------------------------------------------------------------------------------
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
-)
+    'allauth.account.auth_backends.AuthenticationBackend',
+    )
 
 # Some really nice defaults
-ACCOUNT_AUTHENTICATION_METHOD = 'username'
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 ACCOUNT_ALLOW_REGISTRATION = env.bool('DJANGO_ACCOUNT_ALLOW_REGISTRATION', True)
-ACCOUNT_ADAPTER = 'mupi_question_database.users.adapters.AccountAdapter'
-SOCIALACCOUNT_ADAPTER = 'mupi_question_database.users.adapters.SocialAccountAdapter'
+ACCOUNT_ADAPTER = 'masteraula.users.adapters.AccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'masteraula.users.adapters.SocialAccountAdapter'
 
 
 # Change the verifyemail url
-ACCOUNT_ADAPTER = 'mupi_question_database.users.adapters.CustomDefaultAccountAdapter'
-URL_FRONT = 'http://localhost:8080/'
+ACCOUNT_ADAPTER = 'masteraula.users.adapters.CustomDefaultAccountAdapter'
+URL_FRONT = 'http://localhost:3000/'
 
 # Custom user app defaults
 # Select the correct user model
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = 'users:redirect'
-LOGIN_URL = 'account_login'
+# LOGIN_URL = 'account_login'
 
 # SLUGLIFIER
 AUTOSLUG_SLUGIFY_FUNCTION = 'slugify.slugify'
@@ -270,30 +270,38 @@ ADMIN_URL = r'^admin/'
 # ------------------------------------------------------------------------------
 HAYSTACK_CONNECTIONS = {
     'default': {
-        'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
-        'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
+     'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+     'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
     },
     # 'default': {
     #     'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
     #     'URL': 'http://localhost:8983/solr',
     # },
+    # 'default': {
+    #     'ENGINE': 'haystack.backends.simple_backend.SimpleEngine',
+    # },
 }
+
+HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        #'rest_framework.authentication.SessionAuthentication',
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
-    )
+    )   
+    
 }
 
-HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
-
-ACCOUNT_SIGNUP_FORM_CLASS = 'mupi_question_database.users.forms.SignupForm'
+ACCOUNT_SIGNUP_FORM_CLASS = 'masteraula.users.forms.SignupForm'
 
 JWT_AUTH = {
+    'JWT_AUTH_HEADER_PREFIX': 'Bearer',
+    'JWT_ALLOW_REFRESH': True,
     'JWT_VERIFY_EXPIRATION': False,
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=86400),
+    # 'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3600),
+    # 'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=1),
 }
 
 SWAGGER_SETTINGS = {
@@ -311,11 +319,11 @@ ACCOUNT_LOGOUT_ON_GET = False
 OLD_PASSWORD_FIELD_ENABLED = True
 
 REST_AUTH_SERIALIZERS = {
-    'USER_DETAILS_SERIALIZER' : 'mupi_question_database.questions.serializers.UserDetailsSerializer',
-    'JWT_SERIALIZER' : 'mupi_question_database.questions.serializers.JWTSerializer',
-    'LOGIN_SERIALIZER': 'mupi_question_database.questions.serializers.LoginSerializer',
+    'USER_DETAILS_SERIALIZER' : 'masteraula.users.serializers.UserSerializer',
+    'JWT_SERIALIZER' : 'masteraula.users.serializers.JWTSerializer',
+    'LOGIN_SERIALIZER': 'masteraula.users.serializers.LoginSerializer',
 }
 
 REST_AUTH_REGISTER_SERIALIZERS = {
-    'REGISTER_SERIALIZER': 'mupi_question_database.questions.serializers.RegisterSerializer'
+    'REGISTER_SERIALIZER': 'masteraula.users.serializers.RegisterSerializer'
 }

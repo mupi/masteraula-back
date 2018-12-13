@@ -1,0 +1,13 @@
+Olá!
+
+Confirmamos seu cadastro na plataforma Masteraula :)
+
+Estamos felizes por você estar aqui.
+Por favor, clique no link abaixo para confirmar o seu endereço de e-mail.
+{{ activate_url }}
+
+Qualquer dúvida, entre em contato conosco.
+Abraços,
+Equipe Masteraula
+
+

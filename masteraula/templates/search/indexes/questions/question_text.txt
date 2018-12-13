@@ -1,0 +1,21 @@
+{% load search_helpers %}
+
+{{ object.author.name|stripaccents }}
+{{ object.create_date }}
+{{ object.statement|stripaccents }}
+{{ object.resolution|stripaccents }}
+
+{% for descriptor in object.descriptors.all %}
+    {{ descriptor.name|stripaccents }}
+{% endfor %}
+
+{% for tag in object.tags.all %}
+    {{ tag.name|stripaccents }}
+{% endfor %}
+
+{% for alternative in object.alternatives.all %}
+    {{ alternative.text|stripaccents }}
+{% endfor %}
+
+{{ object.year }}
+{{ object.source|stripaccents }}
