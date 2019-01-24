@@ -35,6 +35,7 @@ class User(AbstractUser):
     email = models.EmailField(blank=False, null=False)
     about = models.TextField(blank=True)
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
+    profile_pic = models.ImageField(null=True, upload_to='media')
 
     def __str__(self):
         return self.username

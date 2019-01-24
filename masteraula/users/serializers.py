@@ -46,7 +46,8 @@ class UserSerializer(serializers.ModelSerializer):
             'name',
             'email',
             'about',
-            'city'
+            'city',
+            'profile_pic'
         )
         read_only_fields = ('username', 'email'),
         extra_kwargs = {
