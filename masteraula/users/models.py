@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.core import validators
+from django.core.exceptions import ValidationError
 
 
 #populated by fixture
@@ -25,6 +26,12 @@ class City (models.Model):
 @python_2_unicode_compatible
 class User(AbstractUser):
 
+    def validate_image(fileobj):
+        max_size = 1024 * 1024
+        if fileobj.size > max_size:
+            raise ValidationError('Max file size is %sMB' % str(1))
+            
+
     name = models.CharField(blank=False, max_length=255,
             validators=[
                 validators.RegexValidator(
@@ -35,7 +42,7 @@ class User(AbstractUser):
     email = models.EmailField(blank=False, null=False)
     about = models.TextField(blank=True)
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
-    profile_pic = models.ImageField(null=True, upload_to='media')
+    profile_pic = models.ImageField(null=True, upload_to='profile_pics', validators=[validate_image])
 
     def __str__(self):
         return self.username
