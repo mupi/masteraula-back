@@ -9,7 +9,7 @@ from rest_framework.decorators import detail_route, list_route
 #from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework import viewsets, exceptions, pagination
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 
 from taggit.models import Tag
@@ -27,6 +27,8 @@ from . import serializers as serializers
 
 import os
 import time
+import operator
+from functools import reduce
 
 current_milli_time = lambda: int(round(time.time() * 1000))
 
@@ -55,6 +57,8 @@ class QuestionSearchView(HaystackViewSet):
         disciplines = self.request.query_params.getlist('disciplines', None)
         teaching_levels = self.request.query_params.getlist('teaching_levels', None)
         difficulties = self.request.query_params.getlist('difficulties', None)
+        years = self.request.query_params.getlist('years', None)
+        sources = self.request.query_params.getlist('sources', None)
         
         self.request.query_params._mutable = True
         for key in self.request.query_params:
@@ -79,6 +83,11 @@ class QuestionSearchView(HaystackViewSet):
             if 'H' in difficulties:
                 difficulties_texts.append('Dificil')
             queryset = queryset.filter(difficulty__in=difficulties_texts)
+        if years is not None and years:
+            queryset = queryset.filter(year__in=years)
+        if sources is not None and sources:
+            query = reduce(operator.and_, (Q(source__contains = source) for source in sources))
+            queryset = queryset.filter(query)
 
         return queryset
  
@@ -93,12 +102,20 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
         disciplines = self.request.query_params.getlist('disciplines', None)
         teaching_levels = self.request.query_params.getlist('teaching_levels', None)
         difficulties = self.request.query_params.getlist('difficulties', None)
+        years = self.request.query_params.getlist('years', None)
+        sources = self.request.query_params.getlist('sources', None)
+
         if disciplines is not None and disciplines:
             queryset = queryset.filter(disciplines__in=disciplines).distinct()
         if teaching_levels is not None and teaching_levels:
             queryset = queryset.filter(teaching_levels__in=teaching_levels).distinct()
         if difficulties is not None and difficulties:
             queryset = queryset.filter(difficulty__in=difficulties).distinct()
+        if years is not None and years:
+            queryset = queryset.filter(year__in=years)
+        if sources is not None and sources:
+            query = reduce(operator.and_, (Q(source__contains = source) for source in sources))
+            queryset = queryset.filter(query)
         return queryset
     
     def retrieve(self, request, pk=None):
