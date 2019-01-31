@@ -3,6 +3,16 @@
 {{ object.author.name|stripaccents }}
 {{ object.create_date }}
 {{ object.statement|stripaccents }}
+
+{% for learning_objects in object.learning_objects.all %}
+    {{ learning_objects.owner.name|stripaccents }}
+    {{ learning_objects.source|stripaccents }}
+    {{ learning_objects.text|stripaccents }}
+    {% for tag in learning_objects.tags.all %}
+        {{ tag.name|stripaccents }}
+    {% endfor %}
+{% endfor %}
+
 {{ object.resolution|stripaccents }}
 
 {% for descriptor in object.descriptors.all %}

@@ -17,6 +17,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     create_date = indexes.DateTimeField(model_attr='create_date')
     
     statement = indexes.CharField(model_attr='statement')
+    learning_objects = indexes.MultiValueField(indexed=True)
     resolution = indexes.CharField(model_attr='resolution')
     difficulty = indexes.CharField(model_attr='difficulty', null=True)
 
@@ -39,6 +40,12 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_statement(self, obj):
         cleaner = re.compile('<.*?>')
         return re.sub(cleaner, '', obj.statement)
+
+    def prepare_learning_objects(self, obj):
+        cleaner = re.compile('<.*?>')
+        for learning_objects in obj.learning_objects.all():
+            if learning_objects.text is not None:
+                return [re.sub(cleaner, '', learning_objects.text)]      
 
     def prepare_difficulty(self, obj):
         if obj.difficulty == 'E':
