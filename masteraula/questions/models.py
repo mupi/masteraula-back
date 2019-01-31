@@ -24,12 +24,23 @@ class Discipline(models.Model):
     def __str__(self):
         return self.name
 
-
 class TeachingLevel(models.Model):
     name = models.CharField(max_length=50, null=False, blank=False)
 
     def __str__(self):
         return self.name
+
+class Year(models.Model):
+    name = models.PositiveIntegerField()
+
+    def __str__(self):
+        return str(self.name)
+
+class Source(models.Model):
+    name = models.CharField(max_length=50, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.name)
 
 class LearningObject(models.Model):
     def get_upload_file_name(learning_object,filename):
