@@ -17,7 +17,8 @@ from taggit.models import Tag
 from masteraula.users.models import User
 from masteraula.questions.templatetags.search_helpers import stripaccents
 
-from .models import Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header
+from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
+                    Year, Source)
 from .templatetags.search_helpers import stripaccents
 from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
@@ -122,6 +123,16 @@ class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
 class TeachingLevelViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TeachingLevel.objects.all().order_by('id')
     serializer_class = serializers.TeachingLevelSerializer
+    pagination_class = None
+
+class YearViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Year.objects.all().order_by('name')
+    serializer_class = serializers.YearSerializer
+    pagination_class = None
+    
+class SourceViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Source.objects.all().order_by('name')
+    serializer_class = serializers.SourceSerializer
     pagination_class = None
 
 class DocumentViewSet(viewsets.ModelViewSet):

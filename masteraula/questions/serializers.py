@@ -20,7 +20,7 @@ from masteraula.users.models import User, Profile
 from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
-                     Alternative, Document, DocumentQuestion, Header)
+                     Alternative, Document, DocumentQuestion, Header, Year, Source)
 
 import unicodedata
 
@@ -57,6 +57,22 @@ class DisciplineSerialzier(serializers.ModelSerializer):
 class TeachingLevelSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeachingLevel
+        fields = (
+            'id',
+            'name'
+        )
+
+class YearSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Year
+        fields = (
+            'id',
+            'name'
+        )
+
+class SourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Source
         fields = (
             'id',
             'name'
@@ -156,7 +172,6 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
             return document.documentquestion_set.get(question=validated_data['question'])
         except:
             documentQuestion = document.add_question(validated_data['question'])
-            print(document.documentquestion_set.all())
             return documentQuestion 
 
 class DocumentQuestionListDetailSerializer(serializers.ModelSerializer):
