@@ -86,11 +86,11 @@ class QuestionSearchView(HaystackViewSet):
         if years is not None and years:
             queryset = queryset.filter(year__in=years)
         if sources is not None and sources:
-            query = reduce(operator.and_, (Q(source__contains = source) for source in sources))
+            query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             queryset = queryset.filter(query)
 
         return queryset
- 
+
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
@@ -114,8 +114,9 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
         if years is not None and years:
             queryset = queryset.filter(year__in=years)
         if sources is not None and sources:
-            query = reduce(operator.and_, (Q(source__contains = source) for source in sources))
+            query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             queryset = queryset.filter(query)
+
         return queryset
     
     def retrieve(self, request, pk=None):
