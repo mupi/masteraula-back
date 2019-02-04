@@ -84,7 +84,7 @@ class Command(BaseCommand):
                     teaching_levels = [int(teaching_level_id.split(' ')[0]) for teaching_level_id in teaching_levels]
                     teaching_levels = [d for d in TeachingLevel.objects.filter(id__in=teaching_levels)]
 
-                    tags = [tag.strip() for tag in row[16].split(',')]
+                    tags = [tag.strip() for tag in row[16].split(',') if tag.strip() != '']
 
                     question = Question.objects.create(author=author,
                                                         statement=statement,
