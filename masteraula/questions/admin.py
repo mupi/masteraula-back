@@ -3,6 +3,10 @@ from django.contrib import admin
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
                      Alternative, Document, DocumentQuestion, Header, Year, Source)
 
+class QuestionsLearningObjectsInline(admin.TabularInline):
+    model = Question.learning_objects.through
+    raw_id_fields = ('question',)
+
 class QuestionsInline(admin.TabularInline):
     model = Document.questions.through
     raw_id_fields = ('question',)
@@ -38,11 +42,12 @@ class SourceModelAdmin(admin.ModelAdmin):
 
 class LearningObjectModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', )
-    # list_display = ('id', 'name', 'image', 'text', 'tag_list')
-    # search_fields = ['id', 'name',]
+    search_fields = ['id', 'name', 'source', 'tags__name']
     list_display = ('id', 'source', 'image', 'text', 'tag_list')
     search_fields = ['id',]
     list_per_page = 100
+
+    inlines = [QuestionsLearningObjectsInline,]
 
     def get_queryset(self, request):
         return super(LearningObjectModelAdmin, self).get_queryset(request).prefetch_related('tags')
@@ -53,7 +58,7 @@ class LearningObjectModelAdmin(admin.ModelAdmin):
 class QuestionModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('author', 'learning_objects', 'disciplines')
     list_display = ('id', 'statement', 'year', 'source', 'tag_list')
-    search_fields = ['id', 'year', 'source', 'statement']
+    search_fields = ['id', 'year', 'source', 'statement', 'tags__name']
 
     inlines = [AlternativesInline,]
 
