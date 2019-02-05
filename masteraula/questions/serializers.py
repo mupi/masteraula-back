@@ -51,7 +51,8 @@ class DisciplineSerialzier(serializers.ModelSerializer):
         model = Discipline
         fields = (
             'id',
-            'name'
+            'name',
+            'slug',
         )
 
 class TeachingLevelSerializer(serializers.ModelSerializer):
@@ -59,7 +60,8 @@ class TeachingLevelSerializer(serializers.ModelSerializer):
         model = TeachingLevel
         fields = (
             'id',
-            'name'
+            'name',
+            'slug',
         )
 
 class YearSerializer(serializers.ModelSerializer):
