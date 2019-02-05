@@ -3,147 +3,168 @@
        "pk":1,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Polivalente"
+          "name":"Polivalente",
+          "slug":"Pol"
        }
     },
     {
        "pk":2,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Português"
+          "name":"Português",
+          "slug":"Por"
        }
     },
     {
        "pk":3,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Literatura"
+          "name":"Literatura",
+          "slug":"Lit"
        }
     },
     {
        "pk":4,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Matemática"
+          "name":"Matemática",
+          "slug":"Mat"
        }
     },
     {
        "pk":5,
        "model":"questions.Discipline",
        "fields":{
-          "name":"História"
+          "name":"História",
+          "slug":"His"
        }
     },
     {
        "pk":6,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Geografia"
+          "name":"Geografia",
+          "slug":"Geo"
        }
     },
     {
        "pk":7,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Ciências"
+          "name":"Ciências",
+          "slug":"Cie"
        }
     },
     {
        "pk":8,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Biologia"
+          "name":"Biologia",
+          "slug":"Bio"
        }
     },
     {
        "pk":9,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Física"
+          "name":"Física",
+          "slug":"Fis"
        }
     },
     {
        "pk":10,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Química"
+          "name":"Química",
+          "slug":"Qui"
        }
     },
     {
        "pk":11,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Sociologia"
+          "name":"Sociologia",
+          "slug":"Soc"
        }
     },
     {
        "pk":12,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Filosofia"
+          "name":"Filosofia",
+          "slug":"Fil"
        }
     },
     {
        "pk":13,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Inglês"
+          "name":"Inglês",
+          "slug":"Ing"
        }
     },
     {
        "pk":14,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Espanhol"
+          "name":"Espanhol",
+          "slug":"Esp"
        }
     },
     {
        "pk":15,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Língua Estrangeira - Outras"
+          "name":"Língua Estrangeira - Outras",
+          "slug":"LEO"
        }
     },
     {
        "pk":16,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Artes"
+          "name":"Artes",
+          "slug":"Art"
        }
     },
     {
        "pk":17,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Ensino Religioso"
+          "name":"Ensino Religioso",
+          "slug":"Enr"
        }
     },
     {
        "pk":18,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Educação Física"
+          "name":"Educação Física",
+          "slug":"Edf"
        }
     },
     {
        "pk":19,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Informática"
+          "name":"Informática",
+          "slug":"Inf"
        }
     },
     {
        "pk":20,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Estudos Sociais"
+          "name":"Estudos Sociais",
+          "slug":"Ess"
        }
     },
     {
        "pk":21,
        "model":"questions.Discipline",
        "fields":{
-          "name":"Outros"
+          "name":"Outros",
+          "slug":"Out"
        }
     }
  ]
