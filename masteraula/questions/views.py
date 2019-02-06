@@ -86,8 +86,9 @@ class QuestionSearchView(HaystackViewSet):
         if years is not None and years:
             queryset = queryset.filter(year__in=years)
         if sources is not None and sources:
-            query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
-            queryset = queryset.filter(query)
+            # query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
+            # queryset = queryset.filter(query)
+            queryset = queryset.filter(source__in=sources)
 
         return queryset
 
@@ -112,11 +113,11 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
         if difficulties is not None and difficulties:
             queryset = queryset.filter(difficulty__in=difficulties).distinct()
         if years is not None and years:
-            queryset = queryset.filter(year__in=years)
+            queryset = queryset.filter(year__in=years).distinct()
         if sources is not None and sources:
             query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             queryset = queryset.filter(query)
-
+            
         return queryset
     
     def retrieve(self, request, pk=None):
