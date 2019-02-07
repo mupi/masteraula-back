@@ -28,15 +28,33 @@ class CitySerializer(serializers.ModelSerializer):
             city = City.objects.get(id=data)
             return city
         except:
-            raise serializers.ValidationError(_('City does not exist'))
+            raise serializers.ValidationError(_('City does not exist 0'))
 
 class StateSerializer(serializers.ModelSerializer):
     class Meta:
         model = State
         fields = ('uf' ,'name',)
 
+
+class CityEditSerializer(serializers.Field):
+    def to_internal_value(self, data):
+        try:
+            if data and data != 'null':
+                return City.objects.get(id=data)
+            return None
+        except:
+            raise serializers.ValidationError(_('City does not exist 1'))
+
+    def to_representation(self, data):
+        try:
+            if data:
+                return {'id' : data.id ,'name' : data.name, 'uf' : data.uf.uf}
+            return None
+        except:
+            raise serializers.ValidationError(_('City does not exist 2'))
+
 class UserSerializer(serializers.ModelSerializer):
-    city = CitySerializer(required=False, allow_null=True)
+    city = CityEditSerializer(required=False, allow_null=True)
 
     class Meta:
         model = User
@@ -61,18 +79,19 @@ class UserSerializer(serializers.ModelSerializer):
         },
     }
 
-    # def create(self, validated_data):
-    #     city = validated_data.pop('city')
-    #     user = super().create(validated_data)
-    #     user.city = city.save
-    #     user.save()
-    #     return user
+    def create(self, validated_data):
+        city = validated_data.pop('city')
+        user = super().create(validated_data)
+        user.city = city
+        user.save()
+        return user
 
-    # def update(self, instance, validated_data):
-    #     city = validated_data.pop('city')
-    #     instance.city = city
-    #     instance.save()
-    #     return instance
+    def update(self, instance, validated_data):
+        city = validated_data.pop('city')
+        instance = super().update(instance, validated_data)
+        instance.city = city
+        instance.save()
+        return instance
 
 # django-rest-auth custom serializers
 class RegisterSerializer(auth_register_serializers.RegisterSerializer):
