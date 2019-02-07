@@ -1,7 +1,6 @@
 {% load search_helpers %}
 
 {{ object.author.name|stripaccents }}
-{{ object.create_date }}
 {{ object.statement|stripaccents }}
 
 {% for learning_objects in object.learning_objects.all %}
