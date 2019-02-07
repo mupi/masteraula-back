@@ -14,7 +14,7 @@ import unicodedata
 class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True,use_template=True)
     author = indexes.CharField(model_attr='author')
-    create_date = indexes.DateTimeField(model_attr='create_date')
+    #create_date = indexes.DateTimeField(model_attr='create_date')
     
     statement = indexes.CharField(model_attr='statement')
     learning_objects = indexes.MultiValueField(indexed=True)
