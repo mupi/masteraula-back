@@ -88,6 +88,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         city = validated_data.pop('city')
+        instance = super().update(instance, validated_data)
         instance.city = city
         instance.save()
         return instance
