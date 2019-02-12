@@ -44,6 +44,13 @@ class Source(models.Model):
     def __str__(self):
         return str(self.name)
 
+class Topic(models.Model):
+    name = models.CharField(max_length=50, null=False, blank=False)
+    parent = models.ForeignKey('Topic', related_name='childs', on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.name)
+
 class LearningObject(models.Model):
     def get_upload_file_name(learning_object,filename):
         folder_name = learning_object.folder_name if learning_object.folder_name else 'default'
@@ -87,6 +94,8 @@ class Question(models.Model):
     disciplines = models.ManyToManyField(Discipline, blank=True)
     descriptors = models.ManyToManyField(Descriptor, blank=True)
     teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)
+    topics = models.ManyToManyField(Topic, blank=True)
+
     year = models.PositiveIntegerField(null=True, blank=True)
     source = models.CharField(max_length=50, null=True, blank=True)
 
