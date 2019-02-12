@@ -18,7 +18,7 @@ from masteraula.users.models import User
 from masteraula.questions.templatetags.search_helpers import stripaccents
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
-                    Year, Source)
+                    Year, Source, Topic)
 from .templatetags.search_helpers import stripaccents
 from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
@@ -152,6 +152,11 @@ class YearViewSet(viewsets.ReadOnlyModelViewSet):
 class SourceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Source.objects.all().order_by('name')
     serializer_class = serializers.SourceSerializer
+    pagination_class = None
+
+class TopicViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Topic.objects.filter(parent=None)
+    serializer_class = serializers.TopicSerializer
     pagination_class = None
 
 class DocumentViewSet(viewsets.ModelViewSet):

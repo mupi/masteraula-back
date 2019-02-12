@@ -1,18 +1,21 @@
 from django.contrib import admin
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
-                     Alternative, Document, DocumentQuestion, Header, Year, Source)
+                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic)
 
-class QuestionsLearningObjectsInline(admin.TabularInline):
+class LearningObjectQuestionsInline(admin.TabularInline):
     model = Question.learning_objects.through
     raw_id_fields = ('question',)
 
-class QuestionsInline(admin.TabularInline):
+class DocumentQuestionsInline(admin.TabularInline):
     model = Document.questions.through
     raw_id_fields = ('question',)
 
 class AlternativesInline(admin.TabularInline):
     model = Alternative
+
+class TopicsInline(admin.TabularInline):
+    model = Topic
 
 class DisciplineModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'name',)
@@ -39,6 +42,13 @@ class SourceModelAdmin(admin.ModelAdmin):
     search_fields = ['id', 'name',]
     list_per_page = 100
 
+class TopicModelAdmin(admin.ModelAdmin):
+    raw_id_fields = ('parent', )
+    list_display = ('id', 'name',)
+    search_fields = ['id', 'name',]
+    list_per_page = 100
+
+    inlines = [TopicsInline,]
 
 class LearningObjectModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', )
@@ -47,7 +57,7 @@ class LearningObjectModelAdmin(admin.ModelAdmin):
     search_fields = ['id',]
     list_per_page = 100
 
-    inlines = [QuestionsLearningObjectsInline,]
+    inlines = [LearningObjectQuestionsInline,]
 
     def get_queryset(self, request):
         return super(LearningObjectModelAdmin, self).get_queryset(request).prefetch_related('tags')
@@ -56,11 +66,11 @@ class LearningObjectModelAdmin(admin.ModelAdmin):
         return u", ".join(o.name for o in obj.tags.all())
 
 class QuestionModelAdmin(admin.ModelAdmin):
-    raw_id_fields = ('author', 'learning_objects', 'disciplines')
+    raw_id_fields = ('author', 'learning_objects', 'topics')
     list_display = ('id', 'statement', 'year', 'source', 'tag_list')
     search_fields = ['id', 'year', 'source', 'statement', 'tags__name']
 
-    inlines = [AlternativesInline,]
+    inlines = [AlternativesInline, ]
 
     list_per_page = 100
 
@@ -82,7 +92,7 @@ class DocumentModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'create_date', 'secret',)
     search_fields = ['id', 'name']
 
-    inlines = [QuestionsInline, ]
+    inlines = [DocumentQuestionsInline, ]
 
     list_per_page = 100
 
@@ -98,6 +108,7 @@ admin.site.register(Descriptor, DescriptorModelAdmin)
 admin.site.register(TeachingLevel, TeachingLeveltModelAdmin)
 admin.site.register(Year, YearModelAdmin)
 admin.site.register(Source, SourceModelAdmin)
+admin.site.register(Topic, TopicModelAdmin)
 admin.site.register(LearningObject, LearningObjectModelAdmin)
 admin.site.register(Alternative, AlternativeModelAdmin)
 admin.site.register(Question, QuestionModelAdmin)
