@@ -1,0 +1,58 @@
+[
+    {
+       "pk":1,
+       "model":"questions.Topic",
+       "fields":{
+          "name":"Estrutura de dados",
+          "parent": null
+       }
+    },
+    {
+        "pk":2,
+        "model":"questions.Topic",
+        "fields":{
+           "name":"Grafos",
+           "parent": 1
+        }
+     },
+     {
+        "pk":3,
+        "model":"questions.Topic",
+        "fields":{
+           "name":"DFS",
+           "parent": 2
+        }
+     },
+     {
+        "pk":4,
+        "model":"questions.Topic",
+        "fields":{
+           "name":"BFS",
+           "parent": 2
+        }
+     },
+     {
+        "pk":5,
+        "model":"questions.Topic",
+        "fields":{
+           "name":"Pilha",
+           "parent": 1
+        }
+     },
+     {
+        "pk":6,
+        "model":"questions.Topic",
+        "fields":{
+           "name": "Análise de Algoritmos",
+           "parent": null
+        }
+     },
+     {
+        "pk":7,
+        "model":"questions.Topic",
+        "fields":{
+           "name": "Ordem de grandeza",
+           "parent": 6
+        }
+     }
+ ]
