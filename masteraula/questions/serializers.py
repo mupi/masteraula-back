@@ -22,7 +22,7 @@ from masteraula.users.models import User, Profile
 from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
-                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic)
+                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, LearningObject)
 
 import unicodedata
 import ast
@@ -81,6 +81,47 @@ class SourceSerializer(serializers.ModelSerializer):
             'id',
             'name'
         )
+
+class LearningObjectSerializer(serializers.ModelSerializer):
+    tags = TagListSerializer(read_only=False, required=False) 
+
+    class Meta:
+        model = LearningObject
+        fields = (
+            'id',
+            'owner',
+            'source',
+            'image',
+            'text',
+            'tags',
+        )
+
+        extra_kwargs = {
+            'owner' : { 'read_only' : True },
+        }            
+
+    def create(self, validated_data):
+        obj = LearningObject.objects.create(**validated_data)
+        learning_object = LearningObject.objects.get(id=obj.id)
+        tags = validated_data.pop('tags', None)
+
+        if tags != None:
+            for t in tags:
+                learning_object.tags.add(t)
+        
+        return learning_object
+
+    def update(self, instance, validated_data):
+        tags = validated_data.pop('tags', None)
+
+        learning_object = super().update(instance, validated_data)
+
+        if tags != None:
+            learning_object.tags.clear()
+            for t in tags:
+                learning_object.tags.add(t)
+
+        return learning_object
 
 class TopicSerializer(serializers.ModelSerializer):
     childs = serializers.ListSerializer(child=RecursiveField())
@@ -367,15 +408,11 @@ class HeaderSerializer(serializers.ModelSerializer):
             }
 
     def create(self, validated_data):
-
         header = Header.objects.create(**validated_data)
-
         return header
 
     def update(self, instance, validated_data):
-        
         instance.update(**validated_data)
-        
         return instance
 
 class HeaderListSerializer(serializers.ModelSerializer):

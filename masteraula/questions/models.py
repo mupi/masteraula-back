@@ -66,6 +66,12 @@ class LearningObject(models.Model):
 
     tags = TaggableManager(blank=True)
 
+    def update(self, **kwargs):
+        allowed_attributes = {'owner', 'source', 'image', 'text', 'tags'}
+        for name, value in kwargs.items():
+            assert name in allowed_attributes
+            setattr(self, name, value)
+        self.save()
 
 class Descriptor(models.Model):
     name = models.CharField(max_length=100, null=False, blank=False)

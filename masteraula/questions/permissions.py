@@ -16,6 +16,12 @@ class QuestionPermission(permissions.BasePermission):
             return True
         if request.method in permissions.SAFE_METHODS:
             return True
+
+class LearningObjectPermission(permissions.BasePermission):
+    
+    def has_permission(self, request, view):
+        if request.user.is_authenticated:
+            return True
         
 class DocumentsPermission(permissions.BasePermission):
     """Regras: 
