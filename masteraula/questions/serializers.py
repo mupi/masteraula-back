@@ -14,15 +14,18 @@ from rest_auth import serializers as auth_serializers
 
 from rest_framework import serializers, exceptions
 
+from rest_framework_recursive.fields import RecursiveField
+
 from taggit.models import Tag
 
 from masteraula.users.models import User, Profile
 from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
-                     Alternative, Document, DocumentQuestion, Header, Year, Source)
+                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic)
 
 import unicodedata
+import ast
 
 # from .search_indexes import QuestionIndex, TagIndex
 
@@ -39,7 +42,6 @@ class TagListSerializer(serializers.Field):
             return taglist
         except BaseException as e:
             raise serializers.ValidationError("expected a list of data")
-
 
     def to_representation(self, obj):
         if type(obj) is not list:
@@ -80,6 +82,25 @@ class SourceSerializer(serializers.ModelSerializer):
             'name'
         )
 
+class TopicSerializer(serializers.ModelSerializer):
+    childs = serializers.ListSerializer(child=RecursiveField())
+
+    class Meta:
+        model = Topic
+        fields = (
+            'id',
+            'name',
+            'childs',
+        )
+        
+class TopicSimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Topic
+        fields = (
+            'id',
+            'name'
+        )
+
 class DescriptorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Descriptor
@@ -107,14 +128,10 @@ class ListDocumentQuestionSerializer(serializers.ModelSerializer):
         )
        
 class QuestionSerializer(serializers.ModelSerializer):
-    author = UserDetailsSerializer(read_only=False)
+    author = UserDetailsSerializer(read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
-    
-    # alternatives = AlternativeSerializer(many=True, read_only=False)
-    
-    # disciplines = DisciplineSerialzier(read_only=False, many=True)
-    # descriptors = DescriptorSerializer(read_only=False, many=True)
-    # teaching_levels = TeachingLevelSerializer(read_only=False, many=True)
+    topics = TopicSimpleSerializer(read_only=True, many=True)
+    topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
     
     tags = TagListSerializer(read_only=False) 
 
@@ -136,12 +153,41 @@ class QuestionSerializer(serializers.ModelSerializer):
             'teaching_levels',
             'year',
             'source',
+            'topics',
+            'topics_ids',
 
             'credit_cost',
             
             'tags',   
         )
+
+        extra_kwargs = {
+            'statement' : { 'read_only' : True },
+            'resolution' : { 'read_only' : True },
+            'difficulty' : { 'read_only' : True },
+            'year' : { 'read_only' : True },
+            'source' : { 'read_only' : True },
+            'credit_cost' : { 'read_only' : True },
+        }
         depth = 1
+
+    def update(self, instance, validated_data):
+        tags = validated_data.pop('tags', None)
+        topics = validated_data.pop('topics_ids', None)
+
+        question = super().update(instance, validated_data)
+
+        if tags != None:
+            question.tags.clear()
+            for t in tags:
+                question.tags.add(t)
+
+        if topics != None:
+            question.topics.clear()
+            for t in topics:
+                question.topics.add(t)
+
+        return question
    
 class QuestionSearchSerializer(HaystackSerializerMixin, QuestionSerializer):
 
