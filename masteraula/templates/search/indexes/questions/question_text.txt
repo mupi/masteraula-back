@@ -18,6 +18,10 @@
     {{ descriptor.name|stripaccents }}
 {% endfor %}
 
+{% for topic in object.topics.all %}
+    {{ topic.name|stripaccents }}
+{% endfor %}
+
 {% for tag in object.tags.all %}
     {{ tag.name|stripaccents }}
 {% endfor %}
