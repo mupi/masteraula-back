@@ -24,6 +24,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     disciplines = indexes.MultiValueField(indexed=True)
     descriptors = indexes.MultiValueField(indexed=True)
     teaching_levels = indexes.MultiValueField(indexed=True)
+    topics = indexes.MultiValueField(indexed=True)
     
     year = indexes.CharField(model_attr='year', null=True)
     source = indexes.CharField(model_attr='source', null=True)
