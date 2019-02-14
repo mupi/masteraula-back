@@ -4,7 +4,8 @@
        "model":"questions.Topic",
        "fields":{
           "name":"Estrutura de dados",
-          "parent": null
+          "parent": null,
+          "discipline": 19
        }
     },
     {
@@ -12,7 +13,8 @@
         "model":"questions.Topic",
         "fields":{
            "name":"Grafos",
-           "parent": 1
+           "parent": 1,
+           "discipline": 19
         }
      },
      {
@@ -20,7 +22,8 @@
         "model":"questions.Topic",
         "fields":{
            "name":"DFS",
-           "parent": 2
+           "parent": 2,
+           "discipline": 19
         }
      },
      {
@@ -28,7 +31,8 @@
         "model":"questions.Topic",
         "fields":{
            "name":"BFS",
-           "parent": 2
+           "parent": 2,
+           "discipline": 19
         }
      },
      {
@@ -36,7 +40,8 @@
         "model":"questions.Topic",
         "fields":{
            "name":"Pilha",
-           "parent": 1
+           "parent": 1,
+           "discipline": 19
         }
      },
      {
@@ -44,7 +49,8 @@
         "model":"questions.Topic",
         "fields":{
            "name": "Análise de Algoritmos",
-           "parent": null
+           "parent": null,
+           "discipline": 19
         }
      },
      {
@@ -52,7 +58,11 @@
         "model":"questions.Topic",
         "fields":{
            "name": "Ordem de grandeza",
-           "parent": 6
+           "parent": 6,
+           "discipline": 19
         }
      }
- ]
+    ]
+
+
+    
