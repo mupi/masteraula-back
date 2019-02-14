@@ -42,6 +42,11 @@ class QuestionPagination(pagination.PageNumberPagination):
     page_size = 16
     max_page_size = 64
 
+class LearningObjectPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 16
+    max_page_size = 64
+
 class HeaderPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 10
@@ -162,7 +167,7 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
 class LearningObjectViewSet(viewsets.ModelViewSet):
     queryset = LearningObject.objects.all()
     serializer_class = serializers.LearningObjectSerializer
-    pagination_class = None
+    pagination_class = LearningObjectPagination
     permission_classes = (permissions.QuestionPermission, )
 
     def perform_create(self, serializer):
