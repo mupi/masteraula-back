@@ -174,6 +174,7 @@ class ListDocumentQuestionSerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.ModelSerializer):
     author = UserDetailsSerializer(read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
+    learning_objects =  LearningObjectSerializer(many=True)
     topics = TopicSimpleSerializer(read_only=True, many=True)
     topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
     

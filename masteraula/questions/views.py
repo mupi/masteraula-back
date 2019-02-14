@@ -168,7 +168,7 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
     queryset = LearningObject.objects.all()
     serializer_class = serializers.LearningObjectSerializer
     pagination_class = LearningObjectPagination
-    permission_classes = (permissions.QuestionPermission, )
+    permission_classes = (permissions.LearningObjectPermission, )
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
