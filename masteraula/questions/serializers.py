@@ -98,6 +98,9 @@ class LearningObjectSerializer(serializers.ModelSerializer):
 
         extra_kwargs = {
             'owner' : { 'read_only' : True },
+            'source': { 'read_only' : True },
+            'image': { 'read_only' : True },
+            'text': { 'read_only' : True },
         }            
 
     def create(self, validated_data):
