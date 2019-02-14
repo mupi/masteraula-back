@@ -16,6 +16,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='topic',
             name='discipline',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='questions.Discipline'),
+            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, to='questions.Discipline'),
+            preserve_default=False,
         ),
     ]
