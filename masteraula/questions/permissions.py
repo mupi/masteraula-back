@@ -1,20 +1,24 @@
 from rest_framework import permissions
 
 class QuestionPermission(permissions.BasePermission):
-    """Regras: 
-    - Qualquer usuário logado pode criar uma questão;
-    - Só podem editar uma questão o autor dessa questão e o super_usuario. """
+    """Só poderá editar a questão se o usuário for autenticado"""
    
     def has_permission(self, request, view):
         if request.user.is_authenticated:
             return True
         
-    def has_object_permission(self, request, view, obj):
-        if request.user.is_superuser:
-            return True
-        if obj.author == request.user:
-            return True
-        if request.method in permissions.SAFE_METHODS:
+    # def has_object_permission(self, request, view, obj):
+    #     if request.user.is_superuser:
+    #         return True
+    #     if obj.author == request.user:
+    #         return True
+    #     if request.method in permissions.SAFE_METHODS:
+    #         return True
+
+class LearningObjectPermission(permissions.BasePermission):
+    """Só poderá editar o objeto se o usuário for autenticado"""
+    def has_permission(self, request, view):
+        if request.user.is_authenticated:
             return True
         
 class DocumentsPermission(permissions.BasePermission):
