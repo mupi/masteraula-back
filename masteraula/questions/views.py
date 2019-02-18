@@ -160,9 +160,14 @@ class SourceViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
 
 class TopicViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Topic.objects.filter(parent=None)
     serializer_class = serializers.TopicSerializer
     pagination_class = None
+
+    def get_queryset(self, *args, **kwargs):
+        disciplines = self.request.query_params.getlist('disciplines', None)
+
+        queryset = Topic.objects.filter(parent=None).filter(discipline__in=disciplines).distinct()
+        return queryset
 
 class LearningObjectViewSet(viewsets.ModelViewSet):
     queryset = LearningObject.objects.all()
