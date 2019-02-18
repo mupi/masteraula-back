@@ -219,7 +219,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'statement' : { 'read_only' : True },
             'resolution' : { 'read_only' : True },
-            'difficulty' : { 'read_only' : True },
+            'difficulty' : { 'read_only' : False },
             'year' : { 'read_only' : True },
             'source' : { 'read_only' : True },
             'credit_cost' : { 'read_only' : True },
