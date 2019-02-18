@@ -50,7 +50,7 @@
         "fields":{
            "name": "Análise de Algoritmos",
            "parent": null,
-           "discipline": 19
+           "discipline": 18
         }
      },
      {
@@ -59,7 +59,7 @@
         "fields":{
            "name": "Ordem de grandeza",
            "parent": 6,
-           "discipline": 19
+           "discipline": 18
         }
      }
     ]
