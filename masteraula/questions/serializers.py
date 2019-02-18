@@ -138,12 +138,22 @@ class TopicSerializer(serializers.ModelSerializer):
         )
         
 class TopicSimpleSerializer(serializers.ModelSerializer):
+    parent = serializers.SerializerMethodField()
+
     class Meta:
         model = Topic
         fields = (
             'id',
-            'name'
+            'name',
+            'parent',
         )
+
+
+    def get_parent(self, obj):
+        if obj.parent is not None:
+            return TopicSimpleSerializer(obj.parent).data
+        else:
+            return None
 
 class DescriptorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -177,7 +187,8 @@ class QuestionSerializer(serializers.ModelSerializer):
     learning_objects =  LearningObjectSerializer(many=True)
     topics = TopicSimpleSerializer(read_only=True, many=True)
     topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
-    
+    difficulty = serializers.CharField()
+
     tags = TagListSerializer(read_only=False) 
 
     class Meta:
@@ -209,7 +220,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'statement' : { 'read_only' : True },
             'resolution' : { 'read_only' : True },
-            'difficulty' : { 'read_only' : True },
+            'difficulty' : { 'read_only' : False, 'required' : True},
             'year' : { 'read_only' : True },
             'source' : { 'read_only' : True },
             'credit_cost' : { 'read_only' : True },
