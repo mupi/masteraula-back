@@ -6187,7 +6187,7 @@
       "model": "questions.Topic", 
       "fields": {
         "discipline": 5, 
-        "name": "Revoluções de 1917, 
+        "name": "Revoluções de 1917", 
         "parent": 686
       }
     },
@@ -6259,7 +6259,7 @@
       "model": "questions.Topic", 
       "fields": {
         "discipline": 5, 
-        "name": "Crise de 1929, 
+        "name": "Crise de 1929", 
         "parent": 694
       }
     },
@@ -25600,7 +25600,7 @@
       "model": "questions.Topic", 
       "fields": {
         "discipline": 10, 
-        "name": 1ª Lei (Lei de Soddy): Emissão de Partículas α", 
+        "name": "1ª Lei (Lei de Soddy): Emissão de Partículas α", 
         "parent": 2844
       }
     },
@@ -25609,7 +25609,7 @@
       "model": "questions.Topic", 
       "fields": {
         "discipline": 10, 
-        "name": 2ª Lei(Lei de Soddy,  Fajans e Russel): Emissão de Partículas β", 
+        "name": "2ª Lei(Lei de Soddy,  Fajans e Russel): Emissão de Partículas β", 
         "parent": 2844
       }
     },
