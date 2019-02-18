@@ -138,12 +138,22 @@ class TopicSerializer(serializers.ModelSerializer):
         )
         
 class TopicSimpleSerializer(serializers.ModelSerializer):
+    parent = serializers.SerializerMethodField()
+
     class Meta:
         model = Topic
         fields = (
             'id',
-            'name'
+            'name',
+            'parent',
         )
+
+
+    def get_parent(self, obj):
+        if obj.parent is not None:
+            return TopicSimpleSerializer(obj.parent).data
+        else:
+            return None
 
 class DescriptorSerializer(serializers.ModelSerializer):
     class Meta:
