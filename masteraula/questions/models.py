@@ -45,7 +45,7 @@ class Source(models.Model):
         return str(self.name)
 
 class Topic(models.Model):
-    name = models.CharField(max_length=50, null=False, blank=False)
+    name = models.CharField(max_length=100, null=False, blank=False)
     discipline = models.ForeignKey(Discipline, on_delete=models.CASCADE, null=False, blank=False)
     parent = models.ForeignKey('Topic', related_name='childs', on_delete=models.CASCADE, null=True, blank=True)
 
