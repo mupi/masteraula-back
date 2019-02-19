@@ -120,7 +120,7 @@ class LearningObjectSerializer(serializers.ModelSerializer):
 
         if tags != None:
             learning_object.tags.clear()
-            for t in [tag for tag in tags if tag != '']:
+            for t in [tag for tag in tags if tag.strip() != '']:
                 learning_object.tags.add(t)
 
         return learning_object
@@ -233,7 +233,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         question = super().create(instance, validated_data)
 
         if tags != None:
-            for t in [tag for tag in tags if tag != '']:
+            for t in [tag for tag in tags if tag.strip() != '']:
                 question.tags.add(t)
 
         if topics != None:
@@ -250,7 +250,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
         if tags != None:
             question.tags.clear()
-            for t in [tag for tag in tags if tag != '']:
+            for t in [tag for tag in tags if tag.strip() != '']:
                 question.tags.add(t)
 
         if topics != None:
