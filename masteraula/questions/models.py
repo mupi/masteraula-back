@@ -113,6 +113,14 @@ class Question(models.Model):
     def __str__(self):
         return self.statement[:75]
 
+    def get_all_topics(self):
+        topics = []
+        new_topics = [t for t in self.topics.all()]
+        while new_topics:
+            parents_id = [t.parent for t in new_topics if t.parent]
+            topics = topics + new_topics
+            new_topics = parents_id
+        return list(set(topics))
 
 class Alternative(models.Model):
     question = models.ForeignKey(Question, related_name='alternatives', on_delete=models.CASCADE)
