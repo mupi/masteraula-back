@@ -104,12 +104,11 @@ class LearningObjectSerializer(serializers.ModelSerializer):
         }            
 
     def create(self, validated_data):
-        obj = LearningObject.objects.create(**validated_data)
-        learning_object = LearningObject.objects.get(id=obj.id)
         tags = validated_data.pop('tags', None)
+        learning_object = super().create(validated_data)
 
         if tags != None:
-            for t in tags:
+            for t in [tag for tag in tags if tag != '']:
                 learning_object.tags.add(t)
         
         return learning_object
@@ -121,7 +120,7 @@ class LearningObjectSerializer(serializers.ModelSerializer):
 
         if tags != None:
             learning_object.tags.clear()
-            for t in tags:
+            for t in [tag for tag in tags if tag != '']:
                 learning_object.tags.add(t)
 
         return learning_object
@@ -227,6 +226,22 @@ class QuestionSerializer(serializers.ModelSerializer):
         }
         depth = 1
 
+    def create(self, validated_data):
+        tags = validated_data.pop('tags', None)
+        topics = validated_data.pop('topics_ids', None)
+
+        question = super().create(instance, validated_data)
+
+        if tags != None:
+            for t in [tag for tag in tags if tag != '']:
+                question.tags.add(t)
+
+        if topics != None:
+            for t in topics:
+                question.topics.add(t)
+        
+        return question
+
     def update(self, instance, validated_data):
         tags = validated_data.pop('tags', None)
         topics = validated_data.pop('topics_ids', None)
@@ -235,7 +250,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
         if tags != None:
             question.tags.clear()
-            for t in tags:
+            for t in [tag for tag in tags if tag != '']:
                 question.tags.add(t)
 
         if topics != None:
