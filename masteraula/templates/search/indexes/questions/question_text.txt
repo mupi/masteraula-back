@@ -1,10 +1,8 @@
 {% load search_helpers %}
 
-{{ object.author.name|stripaccents }}
 {{ object.statement|stripaccents }}
 
 {% for learning_objects in object.learning_objects.all %}
-    {{ learning_objects.owner.name|stripaccents }}
     {{ learning_objects.source|stripaccents }}
     {{ learning_objects.text|stripaccents }}
     {% for tag in learning_objects.tags.all %}
@@ -14,11 +12,7 @@
 
 {{ object.resolution|stripaccents }}
 
-{% for descriptor in object.descriptors.all %}
-    {{ descriptor.name|stripaccents }}
-{% endfor %}
-
-{% for topic in object.topics.all %}
+{% for topic in object.get_all_topics %}
     {{ topic.name|stripaccents }}
 {% endfor %}
 
