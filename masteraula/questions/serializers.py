@@ -259,16 +259,11 @@ class QuestionSerializer(serializers.ModelSerializer):
                 question.topics.add(t)
 
         return question
-   
+
 class QuestionSearchSerializer(HaystackSerializerMixin, QuestionSerializer):
 
     class Meta(QuestionSerializer.Meta):
-        search_fields = [
-            'text',
-        ]
-        field_aliases = []
-        exclude = []
-        ignore_fields = ['text'] 
+        search_fields = ('text',)
 
 class DocumentQuestionSerializer(serializers.ModelSerializer):
 
