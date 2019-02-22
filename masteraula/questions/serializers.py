@@ -147,7 +147,6 @@ class TopicSimpleSerializer(serializers.ModelSerializer):
             'parent',
         )
 
-
     def get_parent(self, obj):
         if obj.parent is not None:
             return TopicSimpleSerializer(obj.parent).data
@@ -188,6 +187,11 @@ class QuestionSerializer(serializers.ModelSerializer):
     topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
     difficulty = serializers.CharField()
 
+    all_topics = serializers.SerializerMethodField('all_topics_serializer')
+
+    def all_topics_serializer(self, question):
+        return TopicSimpleSerializer(question.get_all_topics(), many=True).data
+
     tags = TagListSerializer(read_only=False) 
 
     class Meta:
@@ -209,6 +213,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             'year',
             'source',
             'topics',
+            'all_topics',
             'topics_ids',
 
             'credit_cost',
