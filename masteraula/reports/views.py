@@ -53,5 +53,5 @@ class UncategorizedTagsView(LoginRequiredMixin, View):
         response = HttpResponse(
             data, 'text/csv'
         )
-        response['Content-Disposition'] = 'attachment, filename="%s.csv"' % filename
+        response['Content-Disposition'] = 'attachment; filename="%s.csv"' % filename
         return response
