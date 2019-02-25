@@ -15,25 +15,14 @@ from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token
 
 from masteraula.users.views import null_view
 
-# from ckeditor_uploader import views as ckeditor_uploader_views
-
-
 urlpatterns = [
-    # url(r'^$', QuestionListView.as_view(template_name='pages/home.html'), name='home'),
-    # url(r'^', include('django.contrib.auth.urls')),
-    # url(r'^about/$', TemplateView.as_view(template_name='pages/about.html'), name='about'),
-
     # Django Admin, use {% url 'admin:index' %}
     url(settings.ADMIN_URL, admin.site.urls),
 
-    # User management
-    # url(r'^users/', include('masteraula.users.urls', namespace='users')),
-    # url(r'^accounts/', include('allauth.urls')),
-
     # Your stuff: custom urls includes go here
-    url(r'', include('masteraula.questions.urls', namespace='masteraula')),
-    url(r'', include('masteraula.users.urls', namespace='masteraula')),
-    # url(r'^search/', include('haystack.urls')),
+    url(r'', include('masteraula.questions.urls', namespace='questions')),
+    url(r'', include('masteraula.users.urls', namespace='users')),
+    url(r'^reports/', include('masteraula.reports.urls', namespace='reports')),
 
     # Workaround to deal with some urls https://github.com/Tivix/django-rest-auth/issues/292
     url(r'^auth/registration/account-email-verification-sent/', null_view, name='account_email_verification_sent'),
@@ -41,11 +30,8 @@ urlpatterns = [
     url(r'^auth/registration/password-reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$', null_view, name='password_reset_confirm'),
     
     url(r'^auth/', include('rest_auth.urls')),
-    # url(r'^auth/obtain-token', obtain_jwt_token),
     url(r'^auth/refresh-login', refresh_jwt_token),
     url(r'^auth/registration/', include('rest_auth.registration.urls')),
-
-    # url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
