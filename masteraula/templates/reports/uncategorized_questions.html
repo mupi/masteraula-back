@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h1>Questões não categorizadas</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    {% for discipline in disciplines %}
+        <input type="checkbox" name="disciplines" value="{{discipline.id}}">
+            {{discipline.name}}
+        </input><br>
+    {% endfor %}
+    <input type="submit" value="Enviar">
+</form>
+{% endblock %}
