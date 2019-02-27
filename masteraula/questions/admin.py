@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
-                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic)
+                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, Search)
 
 class LearningObjectQuestionsInline(admin.TabularInline):
     model = Question.learning_objects.through
@@ -103,6 +103,13 @@ class HeaderModelAdmin(admin.ModelAdmin):
 
     list_per_page = 100
 
+class SearchModelAdmin(admin.ModelAdmin):
+    raw_id_fields = ('user',)
+    list_display = ('id', 'term',)
+    search_fields = ['id', 'term']
+
+    list_per_page = 100
+
 admin.site.register(Discipline, DisciplineModelAdmin)
 admin.site.register(Descriptor, DescriptorModelAdmin)
 admin.site.register(TeachingLevel, TeachingLeveltModelAdmin)
@@ -114,3 +121,4 @@ admin.site.register(Alternative, AlternativeModelAdmin)
 admin.site.register(Question, QuestionModelAdmin)
 admin.site.register(Document, DocumentModelAdmin)
 admin.site.register(Header, HeaderModelAdmin)
+admin.site.register(Search, SearchModelAdmin)

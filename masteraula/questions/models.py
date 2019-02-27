@@ -237,3 +237,20 @@ class Header(models.Model):
             assert name in allowed_attributes
             setattr(self, name, value)
         self.save()
+
+class Search(models.Model):
+   
+    term = models.CharField(max_length=100, null=False, blank=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE) 
+
+    disciplines = models.ManyToManyField(Discipline, blank=True)
+    teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)
+    difficulty = models.CharField(max_length=20, null=True, blank=True)
+    source = models.CharField(max_length=150, null=True, blank=True)
+    year = models.CharField(max_length=100, null=True, blank=True)
+    date_search = models.DateTimeField(auto_now_add=True)
+
+
+    class Meta:
+        verbose_name = "Search"
+        verbose_name_plural = "Searches"

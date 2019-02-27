@@ -20,6 +20,7 @@ router.register(r'topics', views.TopicViewSet, base_name='topics')
 router.register(r'documents', views.DocumentViewSet, base_name='documents')
 router.register(r'headers', views.HeaderViewSet, base_name='headers')
 router.register(r'learning_object', views.LearningObjectViewSet, base_name='learning_object')
+router.register(r'search', views.SearchViewSet, base_name='search')
 
 # router.register(r'users', rest_views.UserViewSet, base_name='users')
 # router.register(r'question_lists', rest_views.Question_ListViewSet, base_name='question_lists')
