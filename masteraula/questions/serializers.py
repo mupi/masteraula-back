@@ -244,6 +244,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         if topics != None:
             for t in topics:
                 question.topics.add(t)
+        question.save()
         
         return question
 
@@ -262,6 +263,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             question.topics.clear()
             for t in topics:
                 question.topics.add(t)
+        question.save()
 
         return question
    
