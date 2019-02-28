@@ -127,12 +127,7 @@ class QuestionSearchView(HaystackViewSet):
   
         obj.save()
         return queryset
-
-class SearchViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Search.objects.all().order_by('date_search')
-    serializer_class = serializers.SearchSerializer
-    pagination_class = None
-
+    
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
