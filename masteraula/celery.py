@@ -7,9 +7,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.local')
 
 from django.conf import settings
 
-app = Celery(broker=settings.CELERY_BROKER_URL)
+app = Celery('masteraula')
 app.config_from_object('django.conf:settings')
 app.autodiscover_tasks(settings.INSTALLED_APPS)
-
-if __name__ == '__main__':
-    app.start()
