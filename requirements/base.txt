@@ -55,6 +55,3 @@ django-rest-auth==0.9.1
 django-cors-headers==2.0.1
 elasticsearch>=2.0,<3.0
 djangorestframework-recursive==0.1.2
-
-django-celery==3.2.2
-django-celery-email==2.0.1
