@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from taggit.models import Tag
-from .models import Question
+from .models import Question, LearningObject
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -10,3 +10,9 @@ def save_tag(sender, instance, **kwargs):
         if type(tag.content_object) == Question:
             tag.content_object.save()
 
+        if type(tag.content_object) == LearningObject:
+            learning_objects = LearningObject.objects.filter(tags= tag)
+            for l in learning_objects:
+                questions = Question.objects.filter(learning_objects=l)
+                for obj in questions:
+                    obj.save() 
