@@ -18,7 +18,8 @@ Collectfast==0.2.3
 # Email backends for Mailgun, Postmark, SendGrid and more
 # -------------------------------------------------------
 django-anymail==0.5
-
-
+celery==4.2.1
+django-celery-email==2.0.1
+celery[sqs]
 
 

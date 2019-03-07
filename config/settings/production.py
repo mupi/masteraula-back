@@ -96,7 +96,7 @@ SERVER_EMAIL = env('DJANGO_SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
 #     "MAILGUN_API_KEY": env('DJANGO_MAILGUN_API_KEY'),
 #     "MAILGUN_SENDER_DOMAIN": env('MAILGUN_SENDER_DOMAIN')
 # }
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = env('DJANGO_EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = env('DJANGO_EMAIL_HOST')
 EMAIL_HOST_USER = env('DJANGO_EMAIL_USER')
 EMAIL_HOST_PASSWORD = env('DJANGO_EMAIL_PASSWORD')
@@ -217,4 +217,18 @@ HAYSTACK_CONNECTIONS = {
         'URL': env('DJANGO_HAYSTACK_URL'),
         'INDEX_NAME': env('DJANGO_HAYSTACK_INDEX_NAME'),
     },
+}
+
+# Celery
+# -----------------------------------------------------------------------------
+import urllib
+env.read_env()
+BROKER_URL = 'sqs://{0}:{1}@'.format(
+    urllib.parse.quote(env('DJANGO_AWS_ACCESS_KEY_ID'), safe=''),
+    urllib.parse.quote(env('DJANGO_AWS_SECRET_ACCESS_KEY'), safe='')
+)
+CELERY_DEFAULT_QUEUE = env('DJANGO_AWS_CELERY_DEFAULT_QUEUE')
+broker_transport_options = {
+    'region': 'us-east-2',
+    'polling_interval': 20,
 }
