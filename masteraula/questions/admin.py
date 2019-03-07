@@ -1,7 +1,35 @@
+from import_export.admin import ExportMixin
 from django.contrib import admin
+from import_export import resources, widgets
+from import_export.fields import Field
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
-                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic)
+                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, Search)
+
+class SearchResource(resources.ModelResource):
+    
+    class Meta:
+        model = Search
+        fields = ('id','user', 'term', 'disciplines', 'teaching_levels', 'difficulty', 'source', 'year', 'date_search')
+        widgets = {
+                'date_search': {'format': '%d.%m.%Y'},
+                }
+
+    def dehydrate_disciplines(self,search):
+        itens = search.disciplines.all()
+        list_disciplines = []
+        for i in itens:
+            list_disciplines.append(i.name)
+
+        return(', '.join(list_disciplines))
+
+    def dehydrate_teaching_levels(self,search):
+        itens = search.teaching_levels.all()
+        list_levels = []
+        for i in itens:
+            list_levels.append(i.name)
+
+        return(', '.join(list_levels))
 
 class LearningObjectQuestionsInline(admin.TabularInline):
     model = Question.learning_objects.through
@@ -103,6 +131,13 @@ class HeaderModelAdmin(admin.ModelAdmin):
 
     list_per_page = 100
 
+class SearchModelAdmin(ExportMixin, admin.ModelAdmin):
+    resource_class = SearchResource
+    raw_id_fields = ('user',)
+    list_display = ('id', 'user', 'term', 'date_search')
+    search_fields = ['id', 'term', 'date_search']
+    list_per_page = 100
+
 admin.site.register(Discipline, DisciplineModelAdmin)
 admin.site.register(Descriptor, DescriptorModelAdmin)
 admin.site.register(TeachingLevel, TeachingLeveltModelAdmin)
@@ -114,3 +149,4 @@ admin.site.register(Alternative, AlternativeModelAdmin)
 admin.site.register(Question, QuestionModelAdmin)
 admin.site.register(Document, DocumentModelAdmin)
 admin.site.register(Header, HeaderModelAdmin)
+admin.site.register(Search, SearchModelAdmin)

@@ -50,6 +50,7 @@ THIRD_PARTY_APPS = (
     'rest_auth',
     'rest_auth.registration',
     'corsheaders',
+    'import_export',
 )
 
 # Apps specific for this project go here.
