@@ -20,8 +20,8 @@ urlpatterns = [
     url(settings.ADMIN_URL, admin.site.urls),
 
     # Your stuff: custom urls includes go here
-    url(r'', include('masteraula.questions.urls', namespace='questions')),
-    url(r'', include('masteraula.users.urls', namespace='users')),
+    url(r'', include('masteraula.questions.urls', namespace='masteraula.questions')),
+    url(r'', include('masteraula.users.urls', namespace='masteraula.users')),
     url(r'^reports/', include('masteraula.reports.urls', namespace='reports')),
 
     # Workaround to deal with some urls https://github.com/Tivix/django-rest-auth/issues/292
