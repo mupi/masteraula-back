@@ -13757,7 +13757,7 @@
     "fields": {
       "discipline": 4, 
       "name": "Equações Exponenciais", 
-      "parent": 1525
+      "parent": 3192
     }
   },
   {
@@ -15251,7 +15251,7 @@
     "fields": {
       "discipline": 4, 
       "name": "Equações Polinomiais", 
-      "parent": 1688
+      "parent": 3192
     }
   },
   {
@@ -28690,5 +28690,52 @@
       "name": "Polímeros Tridimensionais", 
       "parent": 3186
     }
+  },
+  {
+    "pk": 3189, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 4, 
+      "name": "Números Reais", 
+      "parent": null
+    }
+  },
+  {
+    "pk": 3190, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 4, 
+      "name": "Reta Numérica", 
+      "parent": 3189
+    }
+  },
+  {
+    "pk": 3191, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 4, 
+      "name": "Propriedades", 
+      "parent": 3189
+    }
+  },
+  {
+    "pk": 3192, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 4, 
+      "name": "Equações", 
+      "parent": null
+    }
+  },
+  {
+    "pk": 3193, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 4, 
+      "name": "Raízes da equação", 
+      "parent": 3192
+    }
   }
+ 
+ 
 ]

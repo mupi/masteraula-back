@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h1>Relatórios</h1>
+
+<a href="{% url 'reports:uncategorized_questions' %}">Questões não categorizadas</a>
+
+{% endblock %}

@@ -22,7 +22,7 @@ from masteraula.users.models import User, Profile
 from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
-                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, LearningObject)
+                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, LearningObject, Search)
 
 import unicodedata
 import ast
@@ -147,7 +147,6 @@ class TopicSimpleSerializer(serializers.ModelSerializer):
             'parent',
         )
 
-
     def get_parent(self, obj):
         if obj.parent is not None:
             return TopicSimpleSerializer(obj.parent).data
@@ -188,6 +187,11 @@ class QuestionSerializer(serializers.ModelSerializer):
     topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
     difficulty = serializers.CharField()
 
+    all_topics = serializers.SerializerMethodField('all_topics_serializer')
+
+    def all_topics_serializer(self, question):
+        return TopicSimpleSerializer(question.get_all_topics(), many=True).data
+
     tags = TagListSerializer(read_only=False) 
 
     class Meta:
@@ -209,6 +213,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             'year',
             'source',
             'topics',
+            'all_topics',
             'topics_ids',
 
             'credit_cost',
@@ -239,6 +244,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         if topics != None:
             for t in topics:
                 question.topics.add(t)
+        question.save()
         
         return question
 
@@ -257,6 +263,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             question.topics.clear()
             for t in topics:
                 question.topics.add(t)
+        question.save()
 
         return question
 
@@ -448,6 +455,26 @@ class HeaderListSerializer(serializers.ModelSerializer):
             'id',
             'name',
         )
+
+class SearchSerializer(serializers.ModelSerializer):
+    user = UserDetailsSerializer(read_only=True)
+    difficulty = serializers.CharField()
+    date_search = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
+    
+    class Meta:
+        model = Search
+        fields = (
+            'id',
+            'term',
+            'user',
+            'disciplines',
+            'teaching_levels',
+            'difficulty',
+            'source',
+            'year',
+            'date_search',
+        )
+        
         
 # class ProfileSerializer(serializers.ModelSerializer):
 #     class Meta:

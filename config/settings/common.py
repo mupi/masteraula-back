@@ -50,6 +50,7 @@ THIRD_PARTY_APPS = (
     'rest_auth',
     'rest_auth.registration',
     'corsheaders',
+    'import_export',
 )
 
 # Apps specific for this project go here.
@@ -57,7 +58,8 @@ LOCAL_APPS = (
     # custom users app
     'masteraula.users.apps.UsersConfig',
     # Your stuff: custom apps go here
-    'masteraula.questions',
+    'masteraula.questions.apps.QuestionsConfig',
+    'masteraula.reports.apps.ReportsConfig',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
