@@ -99,11 +99,9 @@ class QuestionSearchView(HaystackViewSet):
         obj = Search.objects.create(user=self.request.user, term=self.request.query_params['text'])
         
         if disciplines is not None:
-            for d in disciplines:
-                obj.disciplines = d
+            obj.disciplines = disciplines
         if teaching_levels is not None:
-            for t in teaching_levels:
-                obj.teaching_levels = t
+            obj.teaching_levels = teaching_levels
         if difficulties is not None:
             difficulties_text = []
 
