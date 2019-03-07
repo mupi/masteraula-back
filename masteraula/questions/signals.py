@@ -13,6 +13,5 @@ def save_tag(sender, instance, **kwargs):
         if type(tag.content_object) == LearningObject:
             learning_objects = LearningObject.objects.filter(tags= tag)
             for l in learning_objects:
-                questions = Question.objects.filter(learning_objects=l)
-                for obj in questions:
-                    obj.save() 
+                for q in l.question_set.all():
+                    q.save()
