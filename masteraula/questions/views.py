@@ -18,7 +18,7 @@ from masteraula.users.models import User
 from masteraula.questions.templatetags.search_helpers import stripaccents
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
-                    Year, Source, Topic, LearningObject)
+                    Year, Source, Topic, LearningObject, Search)
 from .templatetags.search_helpers import stripaccents
 from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
@@ -52,12 +52,12 @@ class HeaderPagination(pagination.PageNumberPagination):
     page_size = 10
     max_page_size = 50
 
-class QuestionSearchView(HaystackViewSet):
+class QuestionSearchView(HaystackViewSet):   
     index_models = [Question]
     pagination_class = QuestionPagination
     serializer_class = serializers.QuestionSearchSerializer
     permission_classes = (permissions.QuestionPermission, )
-
+     
     def get_queryset(self, *args, **kwargs):
         disciplines = self.request.query_params.getlist('disciplines', None)
         teaching_levels = self.request.query_params.getlist('teaching_levels', None)
@@ -93,10 +93,39 @@ class QuestionSearchView(HaystackViewSet):
         if sources is not None and sources:
             # query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             # queryset = queryset.filter(query)
-            queryset = queryset.filter(source__in=sources)
+            queryset = queryset.filter(source__in=sources)   
+        
+        #Salvar os dados de busca
+        obj = Search.objects.create(user=self.request.user, term=self.request.query_params['text'])
+        
+        if disciplines is not None:
+            obj.disciplines = disciplines
+        if teaching_levels is not None:
+            obj.teaching_levels = teaching_levels
+        if difficulties is not None:
+            difficulties_text = []
 
+            for d in difficulties:
+                if 'E' in d:
+                    difficulties_text.append('Easy')     
+                if 'M' in d:
+                    difficulties_text.append('Medium')
+                if 'H' in d:
+                    difficulties_text.append('Hard')
+           
+            dif = ', '.join(difficulties_text)
+            obj.difficulty = dif
+
+        if sources is not None:
+            s = ', '.join(sources)
+            obj.source = s
+        if years is not None:
+            y = ', '.join(years)
+            obj.year = y
+  
+        obj.save()
         return queryset
-
+    
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
