@@ -12,4 +12,4 @@ def save_tag(sender, instance, **kwargs):
 
         if type(tag.content_object) == LearningObject:
             for q in tag.content_object.question_set.all():
-                    q.save()
+                q.save()
