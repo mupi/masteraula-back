@@ -6,6 +6,8 @@ Estamos felizes por você estar aqui.
 Por favor, clique no link abaixo para confirmar o seu endereço de e-mail.
 {{ activate_url }}
 
+Conheça nossos planos e preços em https://masteraula.com.br/#/nossos-planos
+
 Qualquer dúvida, entre em contato conosco.
 Abraços,
 Equipe Masteraula
