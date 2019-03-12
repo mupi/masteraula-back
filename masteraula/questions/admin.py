@@ -135,7 +135,7 @@ class SearchModelAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = SearchResource
     raw_id_fields = ('user',)
     list_display = ('id', 'user', 'term', 'date_search')
-    search_fields = ['id', 'term', 'date_search']
+    search_fields = ['id', 'user__name', 'term', 'date_search']
     list_per_page = 100
 
 admin.site.register(Discipline, DisciplineModelAdmin)
