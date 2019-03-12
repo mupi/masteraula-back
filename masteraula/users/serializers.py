@@ -227,7 +227,6 @@ class ResendConfirmationEmailSerializer(auth_serializers.LoginSerializer):
 class PasswordChangeSerializer(auth_serializers.PasswordChangeSerializer):
 
     def validate_old_password(self, value):
-        print("asdfasdf")
         invalid_password_conditions = (
             self.old_password_field_enabled,
             self.user,
