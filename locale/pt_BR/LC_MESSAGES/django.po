@@ -43,7 +43,7 @@ msgstr "Nome de usuário já cadastrado"
 
 #: masteraula/users/models.py:33
 msgid "Max file size is 1MB"
-msgstr "Tamanh máximo do arquivo é 1Mb"
+msgstr "Tamanho máximo do arquivo é 1Mb"
 
 #: masteraula/users/models.py:40 masteraula/users/serializers.py:76
 #: masteraula/users/serializers.py:101
@@ -72,11 +72,11 @@ msgstr "Usuário está bloqueado"
 
 #: masteraula/users/serializers.py:164 masteraula/users/serializers.py:209
 msgid "Unable to log in with provided credentials."
-msgstr "Usuário e senhas inválidos"
+msgstr "Usuário e/ou senha inválido(s)"
 
 #: masteraula/users/serializers.py:173
 msgid "E-mail is not verified."
-msgstr "Email ainda não verificado"
+msgstr "E-mail ainda não verificado"
 
 #: masteraula/users/serializers.py:218
 msgid "Confirmation e-mail already verified."
