@@ -4,6 +4,7 @@ from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.core import validators
 from django.core.exceptions import ValidationError
+from django.utils.translation import ugettext_lazy as _
 
 
 #populated by fixture
@@ -29,14 +30,14 @@ class User(AbstractUser):
     def validate_image(fileobj):
         max_size = 1024 * 1024
         if fileobj.size > max_size:
-            raise ValidationError('Max file size is %sMB' % str(1))
+            raise ValidationError(_('Max file size is 1MB'))
             
 
     name = models.CharField(blank=False, max_length=255,
             validators=[
                 validators.RegexValidator(
                     regex='^[A-Za-zÀ-ÿ-´\' ]+$',
-                    message='Name should contain only valid characters',
+                    message=_('Name should contain only valid characters'),
                 ),
             ],)
     email = models.EmailField(blank=False, null=False)

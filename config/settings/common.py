@@ -331,5 +331,5 @@ REST_AUTH_REGISTER_SERIALIZERS = {
     'REGISTER_SERIALIZER': 'masteraula.users.serializers.RegisterSerializer'
 }
 
-CELERY_BROKER_URL = 'amqp://guest:guest@localhost:5672/'
-#EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
+LOCALE_PATHS = (
+    str(ROOT_DIR.path('locale')), )

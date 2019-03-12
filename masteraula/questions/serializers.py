@@ -44,7 +44,7 @@ class TagListSerializer(serializers.Field):
             taglist = ast.literal_eval(data)
             return taglist
         except BaseException as e:
-            raise serializers.ValidationError("expected a list of data")
+            raise serializers.ValidationError(_("Expected a list of data"))
 
     def to_representation(self, obj):
         if type(obj) is not list:

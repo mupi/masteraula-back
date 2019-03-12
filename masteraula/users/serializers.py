@@ -73,7 +73,7 @@ class UserSerializer(serializers.ModelSerializer):
             "validators":  [
                 validators.RegexValidator(
                     regex='^[A-Za-zÀ-ÿ-´\' ]+$',
-                    message='Name should contain only valid characters',
+                    message=_('Name should contain only valid characters'),
                 ),
             ],
         },
@@ -98,7 +98,7 @@ class RegisterSerializer(auth_register_serializers.RegisterSerializer):
     name = serializers.CharField(required=True, validators=[
                 validators.RegexValidator(
                     regex='^[A-Za-zÀ-ÿ-´\' ]+$',
-                    message='Name should contain only valid characters',
+                    message=_('Name should contain only valid characters'),
                 ),
             ])
     city = serializers.IntegerField(required=False)
