@@ -38,11 +38,8 @@ class UncategorizedTagsView(LoginRequiredMixin, View):
         disciplines = request.POST.getlist('disciplines',[])
         
         if disciplines:
-            disciplines_names = [d.name for d in Discipline.objects.filter(id__in=disciplines)]
-            filename =  '_'.join(disciplines_names)
             questions = Question.objects.filter(disciplines__in=disciplines).order_by('id')
         else:
-            filname = 'all'
             questions = Question.objects.all().order_by('id')
         
         data = ''
@@ -53,5 +50,5 @@ class UncategorizedTagsView(LoginRequiredMixin, View):
         response = HttpResponse(
             data, 'text/csv'
         )
-        response['Content-Disposition'] = 'attachment; filename="%s.csv"' % filename
+        response['Content-Disposition'] = 'attachment; filename="relatorio.csv"'
         return response
