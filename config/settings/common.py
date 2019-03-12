@@ -50,7 +50,6 @@ THIRD_PARTY_APPS = (
     'rest_auth',
     'rest_auth.registration',
     'corsheaders',
-    'djcelery_email',
     'import_export',
 )
 
