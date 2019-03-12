@@ -84,7 +84,7 @@ class Descriptor(models.Model):
 
 class Question(models.Model):
     LEVEL_CHOICES = (
-        ('', 'Nenhuma opção'),
+        ('', _('None')),
         ('E', _('Easy')),
         ('M', _('Medium')),
         ('H', _('Hard'))
