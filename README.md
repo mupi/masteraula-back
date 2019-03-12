@@ -20,6 +20,12 @@ Before installing, you need some softwares:
   $ sudo apt-get install postgresql-server-dev-all postgres
   ```
 
+* Some libraries
+
+  ```bash
+  $ sudo apt-get install libcurl4-openssl-dev libssl-dev
+  ```
+
 ## Instalation
 
 ### Database
@@ -50,6 +56,7 @@ $ . env/Scripts/activate
 Then
 ```bash
 $ pip install -r requirements/local.txt
+$ pip install celery[sqs]
 ```
 
 If some error appear, consider installing the python 3 developer libraries 
