@@ -224,6 +224,20 @@ class ResendConfirmationEmailSerializer(auth_serializers.LoginSerializer):
         attrs['user'] = user
         return attrs
 
+class PasswordChangeSerializer(auth_serializers.PasswordChangeSerializer):
+
+    def validate_old_password(self, value):
+        print("asdfasdf")
+        invalid_password_conditions = (
+            self.old_password_field_enabled,
+            self.user,
+            not self.user.check_password(value)
+        )
+
+        if all(invalid_password_conditions):
+            raise serializers.ValidationError(_('Invalid password'))
+        return value
+
 class UserDetailsSerializer(serializers.ModelSerializer):
     """
     User model w/o password

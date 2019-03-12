@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-03-12 12:11-0300\n"
+"POT-Creation-Date: 2019-03-12 15:04-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -81,3 +81,7 @@ msgstr "E-mail ainda não verificado"
 #: masteraula/users/serializers.py:218
 msgid "Confirmation e-mail already verified."
 msgstr "Confirmação de e-mail já foi verificado"
+
+#: masteraula/users/serializers.py:238
+msgid "Invalid password"
+msgstr "A senha atual é inválida"

@@ -325,10 +325,11 @@ REST_AUTH_SERIALIZERS = {
     'USER_DETAILS_SERIALIZER' : 'masteraula.users.serializers.UserSerializer',
     'JWT_SERIALIZER' : 'masteraula.users.serializers.JWTSerializer',
     'LOGIN_SERIALIZER': 'masteraula.users.serializers.LoginSerializer',
+    'PASSWORD_CHANGE_SERIALIZER': 'masteraula.users.serializers.PasswordChangeSerializer',
 }
 
 REST_AUTH_REGISTER_SERIALIZERS = {
-    'REGISTER_SERIALIZER': 'masteraula.users.serializers.RegisterSerializer'
+    'REGISTER_SERIALIZER': 'masteraula.users.serializers.RegisterSerializer',
 }
 
 LOCALE_PATHS = (
