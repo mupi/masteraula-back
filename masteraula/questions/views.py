@@ -4,11 +4,10 @@ from django.http import HttpResponse
 from drf_haystack.filters import HaystackAutocompleteFilter
 from drf_haystack.viewsets import HaystackViewSet
 
-from rest_framework import generics, response, viewsets, status, mixins, viewsets
+from rest_framework import (generics, response, viewsets, status, mixins, 
+                    exceptions, pagination, permissions)
 from rest_framework.decorators import detail_route, list_route
-#from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from rest_framework import viewsets, exceptions, pagination
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 
@@ -19,10 +18,11 @@ from masteraula.questions.templatetags.search_helpers import stripaccents
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
                     Year, Source, Topic, LearningObject, Search)
+
 from .templatetags.search_helpers import stripaccents
 from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
-from . import permissions as permissions
+from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission
 from . import serializers as serializers
 
 import os
@@ -56,7 +56,7 @@ class QuestionSearchView(HaystackViewSet):
     index_models = [Question]
     pagination_class = QuestionPagination
     serializer_class = serializers.QuestionSearchSerializer
-    permission_classes = (permissions.QuestionPermission, )
+    permission_classes = (permissions.IsAuthenticated, QuestionPermission, )
      
     def get_queryset(self, *args, **kwargs):
         disciplines = self.request.query_params.getlist('disciplines', None)
@@ -127,10 +127,9 @@ class QuestionSearchView(HaystackViewSet):
         return queryset
     
 class QuestionViewSet(viewsets.ModelViewSet):
-    queryset = Question.objects.all()
     serializer_class = serializers.QuestionSerializer
     pagination_class = QuestionPagination
-    permission_classes = (permissions.QuestionPermission, )
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions, QuestionPermission )
 
     def get_queryset(self):
         queryset = Question.objects.all()
@@ -205,13 +204,13 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
     queryset = LearningObject.objects.all()
     serializer_class = serializers.LearningObjectSerializer
     pagination_class = LearningObjectPagination
-    permission_classes = (permissions.LearningObjectPermission, )
+    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions, LearningObjectPermission, )
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
 class DocumentViewSet(viewsets.ModelViewSet):
-    permission_classes = (permissions.DocumentsPermission, )
+    permission_classes = (DocumentsPermission, )
 
     def get_queryset(self):
         if self.request.user.is_superuser:
@@ -390,7 +389,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
 class HeaderViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.HeaderSerializer
     pagination_class = HeaderPagination
-    permission_classes = (permissions.HeaderPermission,)
+    permission_classes = (HeaderPermission,)
 
     def get_queryset(self):
         queryset = Header.objects.filter(owner=self.request.user)
