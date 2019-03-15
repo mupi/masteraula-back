@@ -55,6 +55,14 @@ class CityEditSerializer(serializers.Field):
 
 class UserSerializer(serializers.ModelSerializer):
     city = CityEditSerializer(required=False, allow_null=True)
+    groups = serializers.SerializerMethodField()
+
+    def get_groups(self, obj):
+        groups = [group.name for group in obj.groups.all()]
+        if obj.is_superuser:
+            groups.append('admin')
+        print(groups)
+        return groups
 
     class Meta:
         model = User
@@ -65,9 +73,10 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'about',
             'city',
-            'profile_pic'
+            'profile_pic',
+            'groups',
         )
-        read_only_fields = ('username', 'email'),
+        read_only_fields = ('username', 'email', 'groups'),
         extra_kwargs = {
         "name": {
             "validators":  [
