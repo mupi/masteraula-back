@@ -214,12 +214,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.DocumentsPermission, )
 
     def get_queryset(self):
-        if self.request.user.is_superuser:
-            queryset = Document.objects.all() 
-            return queryset
-        else:
-            queryset = Document.objects.filter(owner=self.request.user)
-            return queryset
+        queryset = Document.objects.filter(owner=self.request.user, disabled=False)
+        return queryset
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -231,6 +227,11 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    def destroy(self, request, pk=None):
+        document = self.get_object()
+        document.update(disabled=True)
+        return Response(status = status.HTTP_204_NO_CONTENT)
 
     @detail_route(methods=['post'])
     def copy_document(self, request, pk=None):
@@ -274,26 +275,27 @@ class DocumentViewSet(viewsets.ModelViewSet):
         order_field = request.query_params.get('order_field', None)
         order_type = request.query_params.get('order', None)
         
+        queryset = self.get_queryset()
         if order_field == 'date':
             if order_type == 'desc':
-                queryset = Document.objects.filter(owner=self.request.user).order_by('-create_date')
+                queryset = queryset.order_by('-create_date')
             else:
-                queryset = Document.objects.filter(owner=self.request.user).order_by('create_date')
+                queryset = queryset.order_by('create_date')
 
         elif order_field == 'name':
             if order_type =='desc':
-                queryset = Document.objects.filter(owner=self.request.user).order_by('-name')
+                queryset = queryset.order_by('-name')
             else:
-                queryset = Document.objects.filter(owner=self.request.user).order_by('name')
+                queryset = queryset.order_by('name')
 
         elif order_field =='question_number':
             if order_type =='desc':
-                queryset = Document.objects.filter(owner=self.request.user).annotate(num_questions = Count('questions')).order_by('-num_questions')
+                queryset = queryset.annotate(num_questions = Count('questions')).order_by('-num_questions')
             else:
-                queryset = Document.objects.filter(owner=self.request.user).annotate(num_questions = Count('questions')).order_by('num_questions')
+                queryset = queryset.annotate(num_questions = Count('questions')).order_by('num_questions')
 
         else:
-            queryset = Document.objects.filter(owner=self.request.user).order_by('-create_date')
+            queryset = queryset.order_by('-create_date')
 
         self.pagination_class = DocumentPagination
         page = self.paginate_queryset(queryset)
