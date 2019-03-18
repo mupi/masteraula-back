@@ -132,7 +132,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions, QuestionPermission )
 
     def get_queryset(self):
-        queryset = Question.objects.all()
+        queryset = Question.objects.all().order_by('id')
         disciplines = self.request.query_params.getlist('disciplines', None)
         teaching_levels = self.request.query_params.getlist('teaching_levels', None)
         difficulties = self.request.query_params.getlist('difficulties', None)
