@@ -139,6 +139,7 @@ class Document(models.Model):
     questions = models.ManyToManyField(Question, through='DocumentQuestion', related_name='questions')
     create_date = models.DateTimeField(auto_now_add=True)
     secret = models.BooleanField()
+    disabled = models.BooleanField(null=False, blank=True, default=False)
       
     def __str__(self):
         return self.name[:50]
@@ -196,7 +197,7 @@ class Document(models.Model):
 
     def update(self, **kwargs):
         # https://www.dabapps.com/blog/django-models-and-encapsulation/
-        allowed_attributes = {'name', 'secret'}
+        allowed_attributes = {'name', 'secret', 'disabled'}
         for name, value in kwargs.items():
             assert name in allowed_attributes
             setattr(self, name, value)
