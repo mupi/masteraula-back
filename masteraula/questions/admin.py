@@ -4,7 +4,8 @@ from import_export import resources, widgets
 from import_export.fields import Field
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
-                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, Search)
+                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, Search,
+                     DocumentDownload)
 
 class SearchResource(resources.ModelResource):
     
@@ -30,6 +31,24 @@ class SearchResource(resources.ModelResource):
             list_levels.append(i.name)
 
         return(', '.join(list_levels))
+
+class DocumentResource(resources.ModelResource):
+    question_counter = Field(column_name='question_counter')
+    
+    class Meta:
+        model = DocumentDownload
+        fields = ('id','user', 'document', 'download_date', 'answers')
+        widgets = {
+                'download_date': {'format': '%H:%M:%S %d/%m/%Y'},
+                }
+                
+
+    def dehydrate_document(self, documentDownload):
+        return documentDownload.document.name
+
+    def dehydrate_question_counter(self, documentDownload):
+        return '{}'.format(documentDownload.document.questions.count())
+
 
 class LearningObjectQuestionsInline(admin.TabularInline):
     model = Question.learning_objects.through
@@ -138,6 +157,13 @@ class SearchModelAdmin(ExportMixin, admin.ModelAdmin):
     search_fields = ['id', 'user__name', 'term', 'date_search']
     list_per_page = 100
 
+class DocumentDownloadModelAdmin(ExportMixin, admin.ModelAdmin):
+    resource_class = DocumentResource
+    raw_id_fields = ('user',)
+    list_display = ('id', 'user_id', 'user', 'document')
+    search_fields = ['id', 'user__name', 'document__name']
+    list_per_page = 100
+
 admin.site.register(Discipline, DisciplineModelAdmin)
 admin.site.register(Descriptor, DescriptorModelAdmin)
 admin.site.register(TeachingLevel, TeachingLeveltModelAdmin)
@@ -150,3 +176,4 @@ admin.site.register(Question, QuestionModelAdmin)
 admin.site.register(Document, DocumentModelAdmin)
 admin.site.register(Header, HeaderModelAdmin)
 admin.site.register(Search, SearchModelAdmin)
+admin.site.register(DocumentDownload, DocumentDownloadModelAdmin)
