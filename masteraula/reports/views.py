@@ -4,7 +4,6 @@ from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib import messages
 
 from django.views.decorators.http import require_http_methods
 
@@ -70,27 +69,23 @@ class NumberDocumentsView(LoginRequiredMixin, View):
         if not request.user.is_superuser:
             return redirect('/admin/login/?next=%s' % request.path)
         
-        data = ''            
+        users = []           
         data = 'Usuário,' + 'Provas Ativas, '+ 'Provas Criadas,' + '\n'  
-            
-        if request.POST['id_users'] != '':
-            users = request.POST['id_users']
+
+        id_users =  request.POST.get('id_users', None)
+
+        if id_users:
+            for user in  id_users.split(","):
+                users += user
 
         else:
-            user_id = User.objects.all()
-            users = [i.id for i in user_id]  
-        
-        if type(users) is not list:
-            for user in users.split(","):
-                documents = Document.objects.filter(owner_id = user).count()
-                documents_active = Document.objects.filter(owner_id = user, disabled = False).count()
-                data = data + str(user) + ',' + str(documents_active) + ',' + str(documents) + '\n'    
-        
-        else:
-            for user in users:
-                documents = Document.objects.filter(owner_id = user).count()
-                documents_active = Document.objects.filter(owner_id = user, disabled = False).count()
-                data = data + str(user) + ',' + str(documents_active) + ',' + str(documents) + '\n'
+            users_all = User.objects.all()
+            users = [i.id for i in users_all] 
+    
+        for user in users:
+            documents = Document.objects.filter(owner_id = user).count()
+            documents_active = Document.objects.filter(owner_id = user, disabled = False).count()
+            data = data + str(user) + ',' + str(documents_active) + ',' + str(documents) + '\n'
     
         response = HttpResponse(data)
 
