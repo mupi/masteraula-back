@@ -1,9 +1,12 @@
+base
 {% extends "base.html" %}
 {% load static %}
 
 {% block content %}
 <h1>Relatórios</h1>
-
+<br>
 <a href="{% url 'reports:uncategorized_questions' %}">Questões não categorizadas</a>
+<br>
+<a href="{% url 'reports:number_documents' %}">Quantidade de provas do usuário</a>
 
 {% endblock %}
