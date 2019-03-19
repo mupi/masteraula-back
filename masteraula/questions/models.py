@@ -255,3 +255,10 @@ class Search(models.Model):
     class Meta:
         verbose_name = "Search"
         verbose_name_plural = "Searches"
+
+class DocumentDownload(models.Model):
+
+    user = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL)
+    document = models.ForeignKey(Document, on_delete=models.CASCADE)
+    download_date = models.DateTimeField(auto_now_add=True)
+    answers = models.BooleanField(default=False)

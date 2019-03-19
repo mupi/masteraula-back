@@ -17,7 +17,7 @@ from masteraula.users.models import User
 from masteraula.questions.templatetags.search_helpers import stripaccents
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
-                    Year, Source, Topic, LearningObject, Search)
+                    Year, Source, Topic, LearningObject, Search, DocumentDownload)
 
 from .templatetags.search_helpers import stripaccents
 from .docx_parsers import Question_Parser
@@ -348,6 +348,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if 'answers' in flags and flags['answers'] == 'True':
             document_generator.write_answers([dq.question for dq in document.documentquestion_set.all().order_by('order')])
         
+        DocumentDownload.objects.create(user=self.request.user, document=document, answers=('answers' in flags and flags['answers'] == 'True'))
+
         docx_name = document_generator.close()
         data = open(docx_name + '.docx', "rb").read()
 
