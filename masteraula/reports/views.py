@@ -20,7 +20,6 @@ class ReportsView(LoginRequiredMixin, View):
             return redirect('/admin/login/?next=%s' % request.path)
         return render(request, self.template_name)
 
-
 class UncategorizedTagsView(LoginRequiredMixin, View):
     login_url = '/admin/login/'
     template_name = 'reports/uncategorized_questions.html'
@@ -69,26 +68,26 @@ class NumberDocumentsView(LoginRequiredMixin, View):
         if not request.user.is_superuser:
             return redirect('/admin/login/?next=%s' % request.path)
         
-        users = []           
-        data = 'Usuário,' + 'Provas Ativas, '+ 'Provas Criadas,' + '\n'  
+        data = 'Usuário,Provas Ativas,Provas Criadas\n'  
 
         id_users =  request.POST.get('id_users', None)
+        try:
+            if id_users:
+                users = User.objects.filter(id__in=id_users.split(','))
+            else:
+                users = User.objects.all()
+        except:
+            return render(request, self.template_name, {'not_found' : True})
 
-        if id_users:
-            for user in  id_users.split(","):
-                users += user
+        if users.count() == 0:
+            return render(request, self.template_name, {'not_found' : True})
 
-        else:
-            users_all = User.objects.all()
-            users = [i.id for i in users_all] 
-    
         for user in users:
-            documents = Document.objects.filter(owner_id = user).count()
-            documents_active = Document.objects.filter(owner_id = user, disabled = False).count()
-            data = data + str(user) + ',' + str(documents_active) + ',' + str(documents) + '\n'
+            documents = Document.objects.filter(owner = user)
+            documents_active = documents.filter(disabled = False)
+            data = data + str(user) + ',' + str(documents_active.count()) + ',' + str(documents.count()) + '\n'
     
-        response = HttpResponse(data)
-
+        response = HttpResponse(data, 'text/csv')
         response['Content-Disposition'] = 'attachment; filename="relatorio_provas.csv"'
         return response
 

@@ -12,26 +12,13 @@
     <br> 
     <label for="user"> ID do usuário: </label>
     
-    {% if export_all.checked %} 
-        <input id="user" type="text" name="id_users" disabled="disabled" value="{{ id_users }}">
-    {% endif %}
-
-    {% if not export_all.checked %}
-        <input id="user" type="text" name="id_users" value="{{ id_users }}">
+    <input id="user" type="text" name="id_users">
+    {% if not_found %}
+        Usuário inexistente <br>
     {% endif %}
 
     <br> IDs dos usuário separados por vírgulas e sem espaço.
-    <br>
-    <br>
-    
+
     <input type="submit" value="Enviar">
-
-
-    
-   
-    
-
-   
-
 </form>
 {% endblock %}
