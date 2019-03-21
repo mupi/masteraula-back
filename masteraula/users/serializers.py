@@ -16,6 +16,7 @@ from rest_auth import serializers as auth_serializers
 from rest_framework import serializers, exceptions
 
 from .models import User, Profile, City, State
+from masteraula.questions.models import Discipline
 
 class CitySerializer(serializers.ModelSerializer):
     class Meta:
@@ -53,17 +54,33 @@ class CityEditSerializer(serializers.Field):
         except:
             raise serializers.ValidationError(_('City does not exist 2'))
 
+class DisciplineSerialzier(serializers.ModelSerializer):
+    class Meta:
+        model = Discipline
+        fields = (
+            'id',
+            'name',
+        )
+    
+    def to_internal_value(self, data):
+        try:
+            if data and data != 'null':
+                return Discipline.objects.get(id=data)
+            return None
+        except:
+            raise serializers.ValidationError(_('Id not found'))
+
 class UserSerializer(serializers.ModelSerializer):
     city = CityEditSerializer(required=False, allow_null=True)
     groups = serializers.SerializerMethodField()
+    disciplines = DisciplineSerialzier(many = True, required = False)
 
     def get_groups(self, obj):
         groups = [group.name for group in obj.groups.all()]
         if obj.is_superuser:
             groups.append('admin')
-        print(groups)
         return groups
-
+    
     class Meta:
         model = User
         fields = (
@@ -73,6 +90,7 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'about',
             'city',
+            'disciplines',
             'profile_pic',
             'groups',
         )
@@ -97,11 +115,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         city = validated_data.pop('city')
+        disciplines = validated_data.pop('disciplines')
         instance = super().update(instance, validated_data)
         instance.city = city
+        instance.disciplines = disciplines
         instance.save()
         return instance
-
+            
 # django-rest-auth custom serializers
 class RegisterSerializer(auth_register_serializers.RegisterSerializer):
     name = serializers.CharField(required=True, validators=[
