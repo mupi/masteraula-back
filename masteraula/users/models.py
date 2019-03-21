@@ -43,6 +43,7 @@ class User(AbstractUser):
     email = models.EmailField(blank=False, null=False)
     about = models.TextField(blank=True)
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
+    disciplines = models.ManyToManyField('questions.Discipline', related_name="users_discipline")
     profile_pic = models.ImageField(null=True, upload_to='profile_pics', validators=[validate_image])
 
     def __str__(self):
