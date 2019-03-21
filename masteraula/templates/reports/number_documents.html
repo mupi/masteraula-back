@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h1>Número de provas do usuário</h1>
+<br>
+
+<form method="POST">
+    {% csrf_token %}
+    <br>               
+    <b> Insira os IDs para exportar os dados de usuários específicos ou deixe em branco para exportar todos </b><br>
+    <br> 
+    <label for="user"> ID do usuário: </label>
+    
+    <input id="user" type="text" name="id_users">
+    {% if not_found %}
+        Usuário inexistente <br>
+    {% endif %}
+
+    <br> IDs dos usuário separados por vírgulas e sem espaço.
+
+    <input type="submit" value="Enviar">
+</form>
+{% endblock %}

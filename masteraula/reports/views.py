@@ -7,7 +7,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from django.views.decorators.http import require_http_methods
 
-from masteraula.questions.models import Question, Discipline
+from masteraula.questions.models import Question, Discipline, Document, User
+
 from django.views import View
 
 class ReportsView(LoginRequiredMixin, View):
@@ -18,7 +19,6 @@ class ReportsView(LoginRequiredMixin, View):
         if not request.user.is_superuser:
             return redirect('/admin/login/?next=%s' % request.path)
         return render(request, self.template_name)
-
 
 class UncategorizedTagsView(LoginRequiredMixin, View):
     login_url = '/admin/login/'
@@ -52,3 +52,42 @@ class UncategorizedTagsView(LoginRequiredMixin, View):
         )
         response['Content-Disposition'] = 'attachment; filename="relatorio.csv"'
         return response
+
+class NumberDocumentsView(LoginRequiredMixin, View):
+    login_url = '/admin/login/'
+    template_name = 'reports/number_documents.html'
+    
+
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_superuser:
+            return redirect('/admin/login/?next=%s' % request.path)
+
+        return render(request, self.template_name)
+
+    def post(self, request, *args, **kwargs):      
+        if not request.user.is_superuser:
+            return redirect('/admin/login/?next=%s' % request.path)
+        
+        data = 'Usuário,Provas Ativas,Provas Criadas\n'  
+
+        id_users =  request.POST.get('id_users', None)
+        try:
+            if id_users:
+                users = User.objects.filter(id__in=id_users.split(','))
+            else:
+                users = User.objects.all()
+        except:
+            return render(request, self.template_name, {'not_found' : True})
+
+        if users.count() == 0:
+            return render(request, self.template_name, {'not_found' : True})
+
+        for user in users:
+            documents = Document.objects.filter(owner = user)
+            documents_active = documents.filter(disabled = False)
+            data = data + str(user) + ',' + str(documents_active.count()) + ',' + str(documents.count()) + '\n'
+    
+        response = HttpResponse(data, 'text/csv')
+        response['Content-Disposition'] = 'attachment; filename="relatorio_provas.csv"'
+        return response
+

@@ -136,7 +136,7 @@ class AlternativeModelAdmin(admin.ModelAdmin):
 
 class DocumentModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner',)
-    list_display = ('id', 'name', 'create_date', 'secret', 'disabled',)
+    list_display = ('id', 'owner_id', 'name', 'create_date', 'secret', 'disabled',)
     search_fields = ['id', 'name']
 
     inlines = [DocumentQuestionsInline, ]
