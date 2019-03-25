@@ -12,12 +12,17 @@
     <br> 
     <label for="user"> ID do usuário: </label>
     
-    <input id="user" type="text" name="id_users">
+    <input id="user" type="text" name="id_users"> IDs dos usuário separados por vírgulas e sem espaço.
+    <br> 
     {% if not_found %}
-        Usuário inexistente <br>
-    {% endif %}
+    <br>
+        <div class="alert alert-danger">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            Usuário inexistente {{users}}
 
-    <br> IDs dos usuário separados por vírgulas e sem espaço.
+        </div>
+        
+    {% endif %}
 
     <input type="submit" value="Enviar">
 </form>
