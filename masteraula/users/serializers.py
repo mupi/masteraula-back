@@ -131,7 +131,15 @@ class RegisterSerializer(auth_register_serializers.RegisterSerializer):
                 ),
             ])
     city = serializers.IntegerField(required=False)
+    terms_use = serializers.BooleanField(required=True)
     
+    def validate_terms_use(self, data):
+        if data:
+            return data
+       
+        msg = _('Terms use not accept')
+        raise exceptions.ValidationError(msg)
+        
     def validate_city(self, data):
         try:
             City.objects.get(id=data)
