@@ -225,12 +225,13 @@ HAYSTACK_CONNECTIONS = {
 # -----------------------------------------------------------------------------
 import urllib
 env.read_env()
-BROKER_URL = 'sqs://{0}:{1}@'.format(
-    urllib.parse.quote(env('DJANGO_AWS_ACCESS_KEY_ID'), safe=''),
-    urllib.parse.quote(env('DJANGO_AWS_SECRET_ACCESS_KEY'), safe='')
-)
-CELERY_DEFAULT_QUEUE = env('DJANGO_AWS_CELERY_DEFAULT_QUEUE')
-broker_transport_options = {
-    'region': 'us-east-2',
-    'polling_interval': 20,
-}
+BROKER_URL = env('DJANGO_BROKER_URL') 
+# BROKER_URL = 'sqs://{0}:{1}@'.format(
+#     urllib.parse.quote(env('DJANGO_AWS_ACCESS_KEY_ID'), safe=''),
+#     urllib.parse.quote(env('DJANGO_AWS_SECRET_ACCESS_KEY'), safe='')
+# )
+# CELERY_DEFAULT_QUEUE = env('DJANGO_AWS_CELERY_DEFAULT_QUEUE')
+# broker_transport_options = {
+#     'region': 'us-east-2',
+#     'polling_interval': 20,
+# }
