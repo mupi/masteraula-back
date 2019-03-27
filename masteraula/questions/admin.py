@@ -161,7 +161,7 @@ class DocumentDownloadModelAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = DocumentResource
     raw_id_fields = ('user',)
     list_display = ('id', 'user_id', 'user', 'document')
-    search_fields = ['id', 'user__name', 'document__name']
+    search_fields = ['id', 'user__name', 'user__id', 'document__name']
     list_per_page = 100
 
 admin.site.register(Discipline, DisciplineModelAdmin)
