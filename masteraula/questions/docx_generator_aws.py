@@ -97,7 +97,7 @@ class DocxGeneratorAWS():
                         learning_objects_questions.append(i)
                         last_question_counter = last_question_counter + 1
                     
-                    self.write_learning_objects(current_learning_objects, first_question_counter, last_question_counter)
+                    self.write_learning_objects(question.learning_objects.all().order_by('id'), first_question_counter, last_question_counter)
                         
             self.write_question(question, question_counter)
 
