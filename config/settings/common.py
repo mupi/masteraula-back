@@ -15,6 +15,10 @@ import os
 
 import datetime
 
+import sys
+
+RUNNING_DEVSERVER = (len(sys.argv) > 1 and sys.argv[1] == 'runserver')
+
 ROOT_DIR = environ.Path(__file__) - 3  # (masteraula/config/settings/common.py - 3 = masteraula/)
 APPS_DIR = ROOT_DIR.path('masteraula')
 
