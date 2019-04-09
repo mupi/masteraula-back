@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse, HttpResponseBadRequest
 
 from drf_haystack.filters import HaystackAutocompleteFilter
 from drf_haystack.viewsets import HaystackViewSet
@@ -22,6 +22,7 @@ from .models import (Question, Document, Discipline, TeachingLevel, DocumentQues
 from .templatetags.search_helpers import stripaccents
 from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
+from .docx_generator_aws import DocxGeneratorAWS
 from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission
 from . import serializers as serializers
 
@@ -330,65 +331,27 @@ class DocumentViewSet(viewsets.ModelViewSet):
         """
         Generate a docx file containing all the list.
         """
+        
         document = self.get_object()
-        document_generator = Docx_Generator()
-        flags = request.query_params
+        document_generator = DocxGeneratorAWS()
 
-        if not document.questions:
-            raise exceptions.ValidationError('Can not generate an empty list')
-        
-        document_generator.write_title(document)
-        
-        if 'header' in flags:
-            header = Header.objects.get(pk=int(flags['header']))
-            document_generator.write_header(header)
+        try:
+            answers = request.query_params.get('answers', None)
+            document_generator.generate_document(document, answers)
 
-        document_generator.write_questions([dq.question for dq in document.documentquestion_set.all().order_by('order')])
+            response = FileResponse(
+                open(document_generator.docx_name + '.docx', "rb"), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            )
+            response['Content-Disposition'] = 'attachment; filename="' + document_generator.docx_name + '.docx"'
+        except:
+            response = HttpResponseBadRequest()
+        finally:
+            if os.path.exists(document_generator.docx_name + '.docx'):
+                os.remove(document_generator.docx_name + '.docx')
+            if os.path.exists(document_generator.docx_name + '.html'):
+                os.remove(document_generator.docx_name + '.html')
 
-        if 'answers' in flags and flags['answers'] == 'True':
-            document_generator.write_answers([dq.question for dq in document.documentquestion_set.all().order_by('order')])
-        
-        DocumentDownload.objects.create(user=self.request.user, document=document, answers=('answers' in flags and flags['answers'] == 'True'))
-
-        docx_name = document_generator.close()
-        data = open(docx_name + '.docx', "rb").read()
-
-        response = HttpResponse(
-            data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        )
-        response['Content-Disposition'] = 'attachment; filename="' + docx_name + '.docx"'
-        os.remove(docx_name + '.docx')
-        return response
-
-        # flags = request.query_params
-        # resolution = False
-        # # question_parents = []
-        # all_questions = []
-
-        # if not questions:
-        #     raise exceptions.ValidationError('Can not generate an empty list')
-
-        # if 'resolution' in flags and flags['resolution'] == 'True':
-        #     resolution = True
-
-        # # Nome aleatorio para nao causar problemas
-        # docx_name = pk + str(current_milli_time()) + '.docx'
-        # parser = Question_Parser(docx_name)
-        # parser.parse_heading(document)
-
-        # for q in questions:
-        # #     if q.question_parent != None:
-        # #         if q.question_parent not in question_parents:
-        # #             question_parents.append(q.question_parent)
-        # #             all_questions.append(q.question_parent)
-        #     all_questions.append(q)
-
-        # parser.parse_list_questions(all_questions, resolution)
-
-        # if 'answers' in flags and flags['answers'] == 'True':
-        #     parser.parse_alternatives_list_questions(all_questions)
-
-        # parser.end_parser()
+            return response
 
 class HeaderViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.HeaderSerializer

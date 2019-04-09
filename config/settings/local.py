@@ -14,6 +14,9 @@ import socket
 import os
 from .common import *  # noqa
 
+import sys
+RUNNING_DEVSERVER = (len(sys.argv) > 1 and sys.argv[1] == 'runserver')
+
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='-s=9j=jj#gwtm_%0&eyqz(tk!wd2pw86#kd!nyx5nu8js_!o=7')
 
 # S3 CONFIGURATION
