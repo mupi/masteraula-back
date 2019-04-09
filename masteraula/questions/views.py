@@ -336,7 +336,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
         document_generator = DocxGeneratorAWS()
 
         try:
-            answers = request.query_params.get('answers', None)
+            flags = request.query_params
+            answers = 'answers' in flags and flags['answers'] == 'True'
             document_generator.generate_document(document, answers)
 
             response = FileResponse(
