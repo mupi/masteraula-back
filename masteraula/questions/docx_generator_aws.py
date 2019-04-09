@@ -51,18 +51,18 @@ class DocxGeneratorAWS():
         self.html_file.write('<tr><th><b> Questão </b></th><th><b> Resposta </b></th></tr>')
 
         for question_counter, question in enumerate(questions):
-            self.html_file.write('<tr><td> %d </td>' % question_counter + 1)
+            self.html_file.write('<tr><td>{}</td>'.format(question_counter + 1))
 
             question_item = 'a'
             answered = False
             for answer in question.alternatives.all():
                 if answer.is_correct:
-                    self.html_file.write('<td> %s </td></tr>' % question_item)
+                    self.html_file.write('<td>{}</td></tr>'.format(question_item))
                     answered = True
                 question_item = chr(ord(question_item) + 1)
 
             if not answered:
-                self.html_file.write('<td> Sem resposta </td></tr>' % question_item)
+                self.html_file.write('<td> Sem resposta </td></tr>')
         
         self.html_file.write('</table>')
 
@@ -104,7 +104,7 @@ class DocxGeneratorAWS():
             self.write_alternatives(question)
 
         if answers:
-            self.write_answers(document.questions)
+            self.write_answers(document.questions.all())
         
         self.close_html_file()
 

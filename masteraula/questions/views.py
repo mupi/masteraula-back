@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.http import HttpResponse, FileResponse
+from django.http import HttpResponse, FileResponse, HttpResponseBadRequest
 
 from drf_haystack.filters import HaystackAutocompleteFilter
 from drf_haystack.viewsets import HaystackViewSet
@@ -331,19 +331,27 @@ class DocumentViewSet(viewsets.ModelViewSet):
         """
         Generate a docx file containing all the list.
         """
+        
         document = self.get_object()
         document_generator = DocxGeneratorAWS()
 
-        document_generator.generate_document(document)
-        flags = request.query_params
+        try:
+            answers = request.query_params.get('answers', None)
+            document_generator.generate_document(document, answers)
 
-        response = FileResponse(
-            open(document_generator.docx_name + '.docx', "rb"), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        )
-        response['Content-Disposition'] = 'attachment; filename="' + document_generator.docx_name + '.docx"'
-        os.remove(document_generator.docx_name + '.docx')
-        os.remove(document_generator.docx_name + '.html')
-        return response
+            response = FileResponse(
+                open(document_generator.docx_name + '.docx', "rb"), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            )
+            response['Content-Disposition'] = 'attachment; filename="' + document_generator.docx_name + '.docx"'
+        except:
+            response = HttpResponseBadRequest()
+        finally:
+            if os.path.exists(document_generator.docx_name + '.docx'):
+                os.remove(document_generator.docx_name + '.docx')
+            if os.path.exists(document_generator.docx_name + '.html'):
+                os.remove(document_generator.docx_name + '.html')
+
+            return response
 
 class HeaderViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.HeaderSerializer
