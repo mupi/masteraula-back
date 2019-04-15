@@ -136,12 +136,18 @@ class AlternativeModelAdmin(admin.ModelAdmin):
 
 class DocumentModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner',)
-    list_display = ('id', 'owner_id', 'name', 'create_date', 'secret', 'disabled',)
-    search_fields = ['id', 'name']
+    list_display = ('id', 'owner_id', 'owner_name', 'owner_email', 'name', 'create_date', 'secret', 'disabled',)
+    search_fields = ['id', 'owner__id', 'owner__name', 'owner__email', 'name', 'create_date']
 
     inlines = [DocumentQuestionsInline, ]
 
     list_per_page = 100
+
+    def owner_name(self, obj):
+        return obj.owner.name
+
+    def owner_email(self, obj):
+        return obj.owner.email
 
 class HeaderModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner',)
@@ -163,6 +169,7 @@ class DocumentDownloadModelAdmin(ExportMixin, admin.ModelAdmin):
     list_display = ('id', 'user_id', 'user', 'document')
     search_fields = ['id', 'user__name', 'user__id', 'document__name']
     list_per_page = 100
+
 
 admin.site.register(Discipline, DisciplineModelAdmin)
 admin.site.register(Descriptor, DescriptorModelAdmin)
