@@ -43,10 +43,10 @@ class Command(BaseCommand):
                 clean2.append(stm)
 
             html = ''
-            for i in range(len(clean3)):
+            for i in range(len(clean2)):
                 soup = bs(statements[i][0], "html.parser")
                 stmt = soup.prettify()
-                soup = bs(clean3[i], "html.parser")
+                soup = bs(clean2[i], "html.parser")
                 clean_stmt = soup.prettify()
                 html += '<hr><h1>Alternativa {}</h1>'.format(statements[i][1])
                 html += '''<table style='width: 100%'><tr>
