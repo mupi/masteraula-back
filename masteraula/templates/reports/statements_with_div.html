@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h1>Questões com tag div</h1>
+
+
+
+<form method="POST">
+    {% csrf_token %}
+    {% for discipline in disciplines %}
+        <input type="checkbox" name="disciplines" value="{{discipline.id}}">
+            {{discipline.name}}
+        </input><br>
+    {% endfor %}
+    <input type="submit" value="Enviar">
+</form>
+{% for results in data %}
+    <div id="questao{{results.0}}">
+    <hr>
+    <h1>Questao {{ results.0 }}</h1>
+    <table style='width: 100%' border="">
+        <tr>
+            <td>
+                <textarea id='txtstmt{{results.0}}' onchange="replacestmt({{results.0}})" style='width: 100%; height: 300px'>{{ results.1 }}</textarea>
+            </td>
+            <td>
+                <textarea id='txtclean{{results.0}}' onchange="replaceclean({{results.0}})" style='width: 100%; height: 300px'>{{ results.2 }}</textarea>
+            </td>
+        </tr>
+        <tr>
+            <td id='stmt{{results.0}}'>
+                {{ results.1 |safe}}
+            </td>
+            <td id='clean{{results.0}}'>
+                {{ results.2 |safe}}
+            </td>
+        </tr>
+    </table>
+    <button onclick="update({{results.0}})">Modificar</button>
+    </div>
+{% endfor %}
+
+<script>
+function replacestmt(id) {
+    const stmt = document.getElementById("txtstmt" + id).value;
+    document.getElementById("stmt"+id).innerHTML = stmt;
+}
+
+function replaceclean(id) {
+    const clean = document.getElementById("txtclean" + id).value;
+    document.getElementById("clean"+id).innerHTML = clean;
+}
+
+function update(id) {
+    const  token = "{{ csrf_token }}";
+    $.ajax({
+        type: "POST",
+        url: "/reports/statement_update/",
+        dataType: "json",
+        data: { questionId: id, statement: document.getElementById("txtclean" + id).value },
+        headers: { "X-CSRFToken": token },
+    }).done(function() {
+        document.getElementById('questao' + id).remove()
+    })
+    .fail(function() {
+        alert( "error" );
+    });
+}
+</script>
+
+{% endblock %}
