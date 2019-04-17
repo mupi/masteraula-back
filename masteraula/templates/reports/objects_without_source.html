@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h1>Objetos sem source</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    {% for discipline in disciplines %}
+        <input type="checkbox" name="disciplines" value="{{discipline.id}}">
+            {{discipline.name}}
+        </input><br>
+    {% endfor %}
+    <input type="submit" value="Enviar">
+</form>
+{% for lo in data %}
+    <div id="lo{{lo.id}}">
+    <hr>
+    <h1>Objeto {{lo.id}}</h1>
+    {% if lo.image %}
+    <img src="{{lo.image.url}}">
+    {% else %}
+    <textarea id='text{{lo.id}}' onchange="replacestmt({{lo.id}})" style='width: 100%; height: 300px'>{{ lo.text }}</textarea>
+    {% endif %}
+
+    <h2>Perguntas</h2>
+    <table border>
+        <tr><td>ID</td><td>Pergunta</td></tr>
+        {% for question in lo.question_set.all %}
+            <tr><td>{{question.id}}</td><td>{{question.statement|safe}}</td></tr>
+        {% endfor %}
+    </table>
+
+    Fonte : <input id='source{{lo.id}}'>
+    <button onclick="update({{lo.id}})">Modificar</button>
+    </div>
+{% endfor %}
+
+<script>
+function update(id) {
+    const  token = "{{ csrf_token }}";
+    const new_text = document.getElementById("text" + id)
+    $.ajax({
+        type: "POST",
+        url: "/reports/learning_object_update/",
+        dataType: "json",
+        data: { 
+            learningObjectId: id,
+            text: new_text ? new_text.value : null,
+            is_image: !new_text,
+            source: document.getElementById("source" + id).value 
+        },
+        headers: { "X-CSRFToken": token },
+    }).done(function() {
+        document.getElementById('lo' + id).remove()
+    })
+    .fail(function() {
+        alert( "error" );
+    });
+}
+</script>
+
+{% endblock %}
