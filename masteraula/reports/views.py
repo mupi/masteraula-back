@@ -108,24 +108,16 @@ class StatemensWithDivView(SuperuserMixin, TemplateView):
         program2 = re.compile('<div[^<]*>') 
 
         clean = []
-        removed = []
         clean2 = []
-        removed2 = []
 
         for _, stm in statements:
-            curr_removed = []
             while(program.search(stm)):
-                curr_removed.append(program.findall(stm))
                 stm = program.sub('<p>\\1</p>', stm)
-            removed.append(curr_removed)
             clean.append(stm)
 
         for stm in clean:
-            curr_removed = []
             while(program2.search(stm)):
-                curr_removed.append(program.findall(stm))
                 stm = program2.sub('', stm)
-            removed2.append(curr_removed)
             soup = bs(stm, "html.parser")
             clean2.append(soup.prettify())
 
@@ -185,7 +177,7 @@ class ObjectsWithBrInsideP(SuperuserMixin, TemplateView):
         disciplines = request.POST.getlist('disciplines',[])
         
         if disciplines:
-            learning_objects = LearningObject.objects.filter(Q(source__isnull=True) | Q(source='')).order_by('id')
+            learning_objects = LearningObject.objects.filter(text__isnull=False).filter(text__contains='br').order_by('id')
             clean = []
             for lo in learning_objects:
                 if lo.question_set.filter(disciplines__in=disciplines).count() > 0:
@@ -193,9 +185,26 @@ class ObjectsWithBrInsideP(SuperuserMixin, TemplateView):
         else:
             return super().render_to_response(context)
 
+        program = re.compile('(<p>((?!</p>)[\s\S])*)(<[\/\s]*?br[\/\s]*?>)([\s\S]*?<\/p>)')             
+        clean = []
+        statements = []
+
+        all_texts = [(q.id, q.text) for q in learning_objects]
+
+        for qid, stmt in all_texts:
+            has = False
+            stm = stmt
+
+            while(program.search(stm)):
+                stm = program.sub('\\1 </p><p> \\4', stm)
+                has = True
+            if has:
+                statements.append((qid, stmt))
+                clean.append(stm)
+
         data = []
-        for lo in clean:
-            data.append(lo)
+        for i in range(len(clean)):
+            data.append((statements[i][0], statements[i][1], clean[i]))
         
         context['data'] = data
 
