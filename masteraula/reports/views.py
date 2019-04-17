@@ -171,34 +171,68 @@ class ObjectsWithoutSource(SuperuserMixin, TemplateView):
         return super().render_to_response(context)
 
 
+class ObjectsWithBrInsideP(SuperuserMixin, TemplateView):
+    template_name = 'reports/objects_with_br.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['disciplines'] = Discipline.objects.all()
+        return context
+
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        disciplines = request.POST.getlist('disciplines',[])
+        
+        if disciplines:
+            learning_objects = LearningObject.objects.filter(Q(source__isnull=True) | Q(source='')).order_by('id')
+            clean = []
+            for lo in learning_objects:
+                if lo.question_set.filter(disciplines__in=disciplines).count() > 0:
+                    clean.append(lo)
+        else:
+            return super().render_to_response(context)
+
+        data = []
+        for lo in clean:
+            data.append(lo)
+        
+        context['data'] = data
+
+        return super().render_to_response(context)
+
+
+
 class StatemensUpdateView(SuperuserMixin, View):
     def post(self, request, *args, **kwargs):
-        question_id = request.POST.get('questionId', None)
-        new_statament = request.POST.get('statement', None)
+        pass
+        # question_id = request.POST.get('questionId', None)
+        # new_statament = request.POST.get('statement', None)
 
-        if question_id == None or new_statament == None:
-            return HttpResponseBadRequest()
+        # if question_id == None or new_statament == None:
+        #     return HttpResponseBadRequest()
 
-        question = Question.objects.get(id=question_id)
-        question.statement = new_statament
-        question.save()
+        # question = Question.objects.get(id=question_id)
+        # question.statement = new_statament
+        # question.save()
 
-        return JsonResponse( {"success": "true"}, status=200)
+        # return JsonResponse( {"success": "true"}, status=200)
 
 class LearningObjectUpdateView(SuperuserMixin, View):
     def post(self, request, *args, **kwargs):
-        lo_id = request.POST.get('learningObjectId', None)
-        source = request.POST.get('source', None)
-        is_image = request.POST.get('is_image')
-        new_text = request.POST.get('text', None)
+        pass
+        # lo_id = request.POST.get('learningObjectId', None)
+        # source = request.POST.get('source', None)
+        # is_image = request.POST.get('is_image')
+        # new_text = request.POST.get('text', None)
 
-        if lo_id == None or source == None:
-            return HttpResponseBadRequest()
+        # if lo_id == None or source == None:
+        #     return HttpResponseBadRequest()
 
-        learning_object = LearningObject.objects.get(id=lo_id)
-        if is_image == 'false':
-            learning_object.text = new_text
-        learning_object.source = source
-        learning_object.save()
+        # learning_object = LearningObject.objects.get(id=lo_id)
+        # if is_image == 'false':
+        #     learning_object.text = new_text
+        # learning_object.source = source
+        # learning_object.save()
 
-        return JsonResponse( {"success": "true"}, status=200)
+        # return JsonResponse( {"success": "true"}, status=200)
