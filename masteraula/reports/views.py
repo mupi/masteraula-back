@@ -23,38 +23,19 @@ class SuperuserMixin(UserPassesTestMixin):
         return self.request.user.is_superuser
 
 
+class DisciplineReportsBaseView(SuperuserMixin, TemplateView):
+    login_url = '/admin/login/'
+
+
 class ReportsView(SuperuserMixin, TemplateView):
     login_url = '/admin/login/'
     template_name = 'reports/base.html'
 
-
-class UncategorizedTagsView(SuperuserMixin, TemplateView):
-    login_url = '/admin/login/'
-    template_name = 'reports/uncategorized_questions.html'
-    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['disciplines'] = Discipline.objects.all()
         return context
 
-    def post(self, request, *args, **kwargs):
-        disciplines = request.POST.getlist('disciplines',[])
-        
-        if disciplines:
-            questions = Question.objects.filter(disciplines__in=disciplines).order_by('id')
-        else:
-            questions = Question.objects.all().order_by('id')
-        
-        data = ''
-        for question in questions:
-            if question.tags.count() == 0:
-                data = data + '%d, https://masteraula.com.br/#/edit-question/%d\n' % (question.id, question.id)
-    
-        response = HttpResponse(
-            data, 'text/csv'
-        )
-        response['Content-Disposition'] = 'attachment; filename="relatorio.csv"'
-        return response
 
 class NumberDocumentsView(SuperuserMixin, TemplateView):
     login_url = '/admin/login/'
@@ -84,14 +65,33 @@ class NumberDocumentsView(SuperuserMixin, TemplateView):
         response['Content-Disposition'] = 'attachment; filename="relatorio_provas.csv"'
         return response
 
-
-class StatemensWithDivView(SuperuserMixin, TemplateView):
-    template_name = 'reports/statements_with_div.html'
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['disciplines'] = Discipline.objects.all()
-        return context
+class UncategorizedTagsView(DisciplineReportsBaseView):
+    template_name = 'reports/uncategorized_questions.html'
+
+
+    def post(self, request, *args, **kwargs):
+        disciplines = request.POST.getlist('disciplines',[])
+        
+        if disciplines:
+            questions = Question.objects.filter(disciplines__in=disciplines).order_by('id')
+        else:
+            questions = Question.objects.all().order_by('id')
+        
+        data = ''
+        for question in questions:
+            if question.tags.count() == 0:
+                data = data + '%d, https://masteraula.com.br/#/edit-question/%d\n' % (question.id, question.id)
+    
+        response = HttpResponse(
+            data, 'text/csv'
+        )
+        response['Content-Disposition'] = 'attachment; filename="relatorio.csv"'
+        return response
+
+
+class StatemensWithDivView(DisciplineReportsBaseView):
+    template_name = 'reports/statements_with_div.html'
 
 
     def post(self, request, *args, **kwargs):
@@ -132,14 +132,9 @@ class StatemensWithDivView(SuperuserMixin, TemplateView):
         return super().render_to_response(context)
 
 
-class StatemensWithTextoAssociado(SuperuserMixin, TemplateView):
+class StatemensWithTextoAssociado(DisciplineReportsBaseView):
     template_name = 'reports/statements_with_texto_associado.html'
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['disciplines'] = Discipline.objects.all()
-        return context
-
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
@@ -176,13 +171,8 @@ class StatemensWithTextoAssociado(SuperuserMixin, TemplateView):
         return super().render_to_response(context)
 
 
-class ObjectsWithoutSource(SuperuserMixin, TemplateView):
+class ObjectsWithoutSource(DisciplineReportsBaseView):
     template_name = 'reports/objects_without_source.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['disciplines'] = Discipline.objects.all()
-        return context
 
 
     def post(self, request, *args, **kwargs):
@@ -207,14 +197,9 @@ class ObjectsWithoutSource(SuperuserMixin, TemplateView):
         return super().render_to_response(context)
 
 
-class ObjectsWithBrInsideP(SuperuserMixin, TemplateView):
+class ObjectsWithBrInsideP(DisciplineReportsBaseView):
     template_name = 'reports/objects_with_br.html'
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['disciplines'] = Discipline.objects.all()
-        return context
-
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
