@@ -151,13 +151,13 @@ class StatemensWithTextoAssociado(SuperuserMixin, TemplateView):
         else:
             return super().render_to_response(context)
         
-        program = re.compile('<p[^<]*texto_associado_questao[^<]*>(.*?)<\/p>')
+        program = re.compile('<p[^<]*texto_associado_questao[^<]*>([\s\S]*?)<\/p>')
 
         clean = []
 
         for _, stm in statements:
             while(program.search(stm)):
-                if program.match(stm).groups()[0] != '':
+                if program.match(stm).groups()[0].strip() != '':
                     stm = program.sub('<p>\\1</p>', stm)
                 else:
                     stm = program.sub('', stm)
