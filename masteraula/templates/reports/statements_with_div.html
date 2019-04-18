@@ -54,11 +54,18 @@ function replaceclean(id) {
 
 function update(id) {
     const  token = "{{ csrf_token }}";
+
+    const data = {
+        id, 
+        statement: document.getElementById("txtclean" + id).value
+    }
+
     $.ajax({
         type: "POST",
         url: "/reports/statement_update/",
-        dataType: "json",
-        data: { questionId: id, statement: document.getElementById("txtclean" + id).value },
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
         headers: { "X-CSRFToken": token },
     }).done(function() {
         document.getElementById('questao' + id).remove()

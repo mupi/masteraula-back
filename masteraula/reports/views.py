@@ -2,20 +2,23 @@
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.db.models import Q
 from django.shortcuts import redirect, render
+
+from django.views import View
+from django.views.generic import TemplateView
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+
 from django.utils.decorators import method_decorator
 
 from django.contrib.auth.mixins import UserPassesTestMixin
 
-from django.views.decorators.http import require_http_methods
-
 from masteraula.questions.models import Question, Discipline, Document, LearningObject, User
 
-from django.views import View
-from django.views.generic import TemplateView
+from .serializers import QuestionStatementEditSerializer
 
 from bs4 import BeautifulSoup as bs
 
+import json
 import re
 
 class SuperuserMixin(UserPassesTestMixin):
@@ -243,18 +246,21 @@ class ObjectsWithBrInsideP(DisciplineReportsBaseView):
 
 class StatemensUpdateView(SuperuserMixin, View):
     def post(self, request, *args, **kwargs):
-        pass
-        # question_id = request.POST.get('questionId', None)
-        # new_statament = request.POST.get('statement', None)
+        body_unicode = request.body.decode('utf-8')
+        data = data=json.loads(body_unicode)
 
-        # if question_id == None or new_statament == None:
-        #     return HttpResponseBadRequest()
+        try:
+            question = Question.objects.get(id=data['id'])
+        except:
+            return HttpResponseBadRequest('Does not exist')
 
-        # question = Question.objects.get(id=question_id)
-        # question.statement = new_statament
-        # question.save()
+        serializer = QuestionStatementEditSerializer(question, data=data)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse( {"success": "true"}, status=200)
 
-        # return JsonResponse( {"success": "true"}, status=200)
+        return HttpResponseBadRequest('Invalid data')
 
 class LearningObjectUpdateView(SuperuserMixin, View):
     def post(self, request, *args, **kwargs):
