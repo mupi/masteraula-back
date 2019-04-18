@@ -29,16 +29,15 @@ class SuperuserMixin(UserPassesTestMixin):
 class DisciplineReportsBaseView(SuperuserMixin, TemplateView):
     login_url = '/admin/login/'
 
-
-class ReportsView(SuperuserMixin, TemplateView):
-    login_url = '/admin/login/'
-    template_name = 'reports/base.html'
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['disciplines'] = Discipline.objects.all()
         return context
 
+
+class ReportsView(SuperuserMixin, TemplateView):
+    login_url = '/admin/login/'
+    template_name = 'reports/base.html'
 
 class NumberDocumentsView(SuperuserMixin, TemplateView):
     login_url = '/admin/login/'
@@ -91,7 +90,6 @@ class UncategorizedTagsView(DisciplineReportsBaseView):
         )
         response['Content-Disposition'] = 'attachment; filename="relatorio.csv"'
         return response
-
 
 class StatemensWithDivView(DisciplineReportsBaseView):
     template_name = 'reports/statements_with_div.html'
@@ -172,6 +170,47 @@ class StatemensWithTextoAssociado(DisciplineReportsBaseView):
         context['data'] = data
 
         return super().render_to_response(context)
+
+
+class StatemensWithBrInsideP(DisciplineReportsBaseView):
+    template_name = 'reports/statements_with_br.html'
+    
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        disciplines = request.POST.getlist('disciplines',[])
+        
+        if disciplines:
+            questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='br').order_by('id')
+        else:
+            return super().render_to_response(context)
+        
+        program = re.compile('(<p>((?!</p>)[\s\S])*)(<[\/\s]*?br[\/\s]*?>)([\s\S]*?<\/p>)')             
+        clean = []
+        statements = []
+
+        all_texts = [(q.id, q.statement) for q in questions]
+
+        for qid, stmt in all_texts:
+            has = False
+            stm = stmt
+
+            while(program.search(stm)):
+                stm = program.sub('\\1 </p><p> \\4', stm)
+                has = True
+            if has:
+                statements.append((qid, stmt))
+                clean.append(stm)
+
+        data = []
+        for i in range(len(clean)):
+            data.append((statements[i][0], statements[i][1], clean[i]))
+        
+        context['data'] = data
+
+        return super().render_to_response(context)
+
+
 
 
 class ObjectsWithoutSource(DisciplineReportsBaseView):
