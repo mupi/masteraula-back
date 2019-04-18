@@ -132,6 +132,50 @@ class StatemensWithDivView(SuperuserMixin, TemplateView):
         return super().render_to_response(context)
 
 
+class StatemensWithTextoAssociado(SuperuserMixin, TemplateView):
+    template_name = 'reports/statements_with_texto_associado.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['disciplines'] = Discipline.objects.all()
+        return context
+
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        disciplines = request.POST.getlist('disciplines',[])
+        
+        if disciplines:
+            questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='texto_associado_questao').order_by('id')
+            statements = [(q.id, q.statement) for q in questions]
+        else:
+            return super().render_to_response(context)
+        
+        program = re.compile('<p[^<]*texto_associado_questao[^<]*>(.*?)<\/p>')
+
+        clean = []
+
+        for _, stm in statements:
+            while(program.search(stm)):
+                if program.match(stm).groups()[0] != '':
+                    stm = program.sub('<p>\\1</p>', stm)
+                else:
+                    stm = program.sub('', stm)
+            clean.append(stm)
+
+        data = []
+        for i in range(len(clean)):
+            soup = bs(statements[i][1], "html.parser")
+            stmt = soup.prettify()
+            soup = bs(clean[i], "html.parser")
+            clean_stmt = soup.prettify()
+            data.append((statements[i][0], stmt, clean_stmt))
+        
+        context['data'] = data
+
+        return super().render_to_response(context)
+
+
 class ObjectsWithoutSource(SuperuserMixin, TemplateView):
     template_name = 'reports/objects_without_source.html'
     
