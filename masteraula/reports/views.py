@@ -34,6 +34,12 @@ class DisciplineReportsBaseView(SuperuserMixin, TemplateView):
         context['disciplines'] = Discipline.objects.all()
         return context
 
+def process_tags_br(text):
+    program = re.compile('(<[\/\s]*?br[\s]*?>)')
+
+    while(program.search(text)):
+        text = program.sub('<br/>', text)
+    return text
 
 class ReportsView(SuperuserMixin, TemplateView):
     login_url = '/admin/login/'
@@ -101,7 +107,7 @@ class StatemensWithDivView(DisciplineReportsBaseView):
         
         if disciplines:
             questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='<div').order_by('id')
-            statements = [(q.id, q.statement) for q in questions]
+            statements = [(q.id, process_tags_br(q.statement)) for q in questions]
         else:
             return super().render_to_response(context)
         
@@ -126,6 +132,9 @@ class StatemensWithDivView(DisciplineReportsBaseView):
         for i in range(len(clean2)):
             soup = bs(statements[i][1], "html.parser")
             stmt = soup.prettify()
+            soup = bs(clean2[i], "html.parser")
+            clean_stmt = soup.prettify()
+            data.append((statements[i][0], stmt, clean_stmt))
             data.append((statements[i][0], stmt, clean2[i]))
         
         context['data'] = data
@@ -143,7 +152,7 @@ class StatemensWithTextoAssociado(DisciplineReportsBaseView):
         
         if disciplines:
             questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='texto_associado_questao').order_by('id')
-            statements = [(q.id, q.statement) for q in questions]
+            statements = [(q.id, process_tags_br(q.statement)) for q in questions]
         else:
             return super().render_to_response(context)
         
@@ -182,14 +191,14 @@ class StatemensWithBrInsideP(DisciplineReportsBaseView):
         
         if disciplines:
             questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='br').order_by('id')
+            all_texts = [(q.id, process_tags_br(q.statement)) for q in questions]
         else:
             return super().render_to_response(context)
-        
+
         program = re.compile('(<p>((?!</p>)[\s\S])*)(<[\/\s]*?br[\/\s]*?>)([\s\S]*?<\/p>)')             
         clean = []
         statements = []
 
-        all_texts = [(q.id, q.statement) for q in questions]
 
         for qid, stmt in all_texts:
             has = False
@@ -204,7 +213,12 @@ class StatemensWithBrInsideP(DisciplineReportsBaseView):
 
         data = []
         for i in range(len(clean)):
-            data.append((statements[i][0], statements[i][1], clean[i]))
+            soup = bs(statements[i][1], "html.parser")
+            stmt = soup.prettify()
+            soup = bs(clean[i], "html.parser")
+            clean_stmt = soup.prettify()
+            
+            data.append((statements[i][0], stmt, clean_stmt))
         
         context['data'] = data
 
@@ -253,6 +267,7 @@ class ObjectsWithBrInsideP(DisciplineReportsBaseView):
             for lo in learning_objects:
                 if lo.question_set.filter(disciplines__in=disciplines).count() > 0:
                     clean.append(lo)
+            all_texts = [(q.id, process_tags_br(q.text)) for q in learning_objects]
         else:
             return super().render_to_response(context)
 
@@ -260,7 +275,6 @@ class ObjectsWithBrInsideP(DisciplineReportsBaseView):
         clean = []
         statements = []
 
-        all_texts = [(q.id, q.text) for q in learning_objects]
 
         for qid, stmt in all_texts:
             has = False
@@ -275,7 +289,11 @@ class ObjectsWithBrInsideP(DisciplineReportsBaseView):
 
         data = []
         for i in range(len(clean)):
-            data.append((statements[i][0], statements[i][1], clean[i]))
+            soup = bs(clean[i], "html.parser")
+            stmt = soup.prettify()
+            soup = bs(statements[i][1], "html.parser")
+            clean_stmt = soup.prettify()
+            data.append((statements[i][0], stmt, clean_stmt))
         
         context['data'] = data
 
