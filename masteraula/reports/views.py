@@ -14,7 +14,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 
 from masteraula.questions.models import Question, Discipline, Document, LearningObject, User
 
-from .serializers import QuestionStatementEditSerializer
+from .serializers import QuestionStatementEditSerializer, LearningObjectEditSerializer
 
 from bs4 import BeautifulSoup as bs
 
@@ -125,8 +125,7 @@ class StatemensWithDivView(DisciplineReportsBaseView):
         for stm in clean:
             while(program2.search(stm)):
                 stm = program2.sub('', stm)
-            soup = bs(stm, "html.parser")
-            clean2.append(soup.prettify())
+            clean2.append(stm)
 
         data = []
         for i in range(len(clean2)):
@@ -236,19 +235,12 @@ class ObjectsWithoutSource(DisciplineReportsBaseView):
         disciplines = request.POST.getlist('disciplines',[])
         
         if disciplines:
-            learning_objects = LearningObject.objects.filter(Q(source__isnull=True) | Q(source='')).order_by('id')
-            clean = []
-            for lo in learning_objects:
-                if lo.question_set.filter(disciplines__in=disciplines).count() > 0:
-                    clean.append(lo)
+            learning_objects = LearningObject.objects.filter(Q(source__isnull=True) | Q(source='')).distinct() \
+                    .filter(question__disciplines__in=disciplines).order_by('id')
         else:
             return super().render_to_response(context)
-
-        data = []
-        for lo in clean:
-            data.append(lo)
         
-        context['data'] = data
+        context['data'] = learning_objects
 
         return super().render_to_response(context)
 
@@ -290,9 +282,9 @@ class ObjectsWithBrInsideP(DisciplineReportsBaseView):
         data = []
         for i in range(len(clean)):
             soup = bs(clean[i], "html.parser")
-            stmt = soup.prettify()
-            soup = bs(statements[i][1], "html.parser")
             clean_stmt = soup.prettify()
+            soup = bs(statements[i][1], "html.parser")
+            stmt = soup.prettify()
             data.append((statements[i][0], stmt, clean_stmt))
         
         context['data'] = data
@@ -321,19 +313,18 @@ class StatemensUpdateView(SuperuserMixin, View):
 
 class LearningObjectUpdateView(SuperuserMixin, View):
     def post(self, request, *args, **kwargs):
-        pass
-        # lo_id = request.POST.get('learningObjectId', None)
-        # source = request.POST.get('source', None)
-        # is_image = request.POST.get('is_image')
-        # new_text = request.POST.get('text', None)
+        body_unicode = request.body.decode('utf-8')
+        data = data=json.loads(body_unicode)
 
-        # if lo_id == None or source == None:
-        #     return HttpResponseBadRequest()
+        try:
+            lo = LearningObject.objects.get(id=data['id'])
+        except:
+            return HttpResponseBadRequest('Does not exist')
 
-        # learning_object = LearningObject.objects.get(id=lo_id)
-        # if is_image == 'false':
-        #     learning_object.text = new_text
-        # learning_object.source = source
-        # learning_object.save()
+        serializer = LearningObjectEditSerializer(lo, data=data)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse( {"success": "true"}, status=200)
 
-        # return JsonResponse( {"success": "true"}, status=200)
+        return HttpResponseBadRequest('Invalid data')

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from masteraula.questions.models import Question
+from masteraula.questions.models import Question, LearningObject
 
 class QuestionStatementEditSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,3 +14,18 @@ class QuestionStatementEditSerializer(serializers.ModelSerializer):
         if value.strip() != '':
             return value
         raise serializers.ValidationError("Question does not exist")
+
+class LearningObjectEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LearningObject
+        fields = (
+            'id',
+            'text',
+            'source',
+        )
+
+    def validate(self, data):
+        if data['source'] == None:
+            data.pop('source')
+
+        return data

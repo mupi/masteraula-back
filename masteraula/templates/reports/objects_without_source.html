@@ -40,16 +40,19 @@
 function update(id) {
     const  token = "{{ csrf_token }}";
     const new_text = document.getElementById("text" + id)
+
+    const data = { 
+        id,
+        text: new_text ? new_text.value : null,
+        source: document.getElementById("source" + id).value 
+    }
+
     $.ajax({
         type: "POST",
         url: "/reports/learning_object_update/",
-        dataType: "json",
-        data: { 
-            learningObjectId: id,
-            text: new_text ? new_text.value : null,
-            is_image: !new_text,
-            source: document.getElementById("source" + id).value 
-        },
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
         headers: { "X-CSRFToken": token },
     }).done(function() {
         document.getElementById('lo' + id).remove()
