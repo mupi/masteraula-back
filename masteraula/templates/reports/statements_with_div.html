@@ -38,6 +38,7 @@
         </tr>
     </table>
     <button onclick="update({{results.0}})">Modificar</button>
+    <span id="status{{results.0}}"></span>
     </div>
 {% endfor %}
 
@@ -68,7 +69,7 @@ function update(id) {
         data: JSON.stringify(data),
         headers: { "X-CSRFToken": token },
     }).done(function() {
-        document.getElementById('questao' + id).remove()
+        document.getElementById('status' + id).innerHTML = "Modificado"
     })
     .fail(function() {
         alert( "error" );

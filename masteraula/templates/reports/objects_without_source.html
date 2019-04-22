@@ -33,6 +33,7 @@
 
     Fonte : <input id='source{{lo.id}}'>
     <button onclick="update({{lo.id}})">Modificar</button>
+    <span id="status{{results.0}}"></span>
     </div>
 {% endfor %}
 
@@ -55,7 +56,7 @@ function update(id) {
         data: JSON.stringify(data),
         headers: { "X-CSRFToken": token },
     }).done(function() {
-        document.getElementById('lo' + id).remove()
+        document.getElementById('status' + id).innerHTML = "Modificado"
     })
     .fail(function() {
         alert( "error" );
