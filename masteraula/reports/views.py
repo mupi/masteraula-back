@@ -108,17 +108,55 @@ def process_tags_texto_associado_inside_p(all_ids, all_texts, force_stay=False, 
         has = False
         clean_text = text
 
-        while(program.search(clean_text)):
+        match = program.search(clean_text)
+        while match:
             has = True
-            if program.search(clean_text).groups()[0].strip() != '':
+            if match.groups()[0].strip() != '':
                 clean_text = program.sub('<p>\\1</p>', clean_text)
             else:
                 clean_text = program.sub('', clean_text)
+            match = program.search(clean_text)
         if has or force_stay:
             ids.append(_id)
             texts.append(text)
             clean.append(clean_text)
             status.append('Replace texto_associado_questao' if has else '')
+    if get_status:
+        return ids, texts, clean, status
+    return ids, texts, clean
+
+def process_bold_italic(all_ids, all_texts, force_stay=False, get_status=False):
+    program_bold = re.compile('<span[^<]*font-weight: ?bold[^<]*>([\s\S]*?)<\/span>')
+    program_italic = re.compile('<span[^<]*font-style: ?italic[^<]*>([\s\S]*?)<\/span>')
+
+    clean = []
+    texts = []
+    ids = []
+    status = []
+
+    for _id, text in zip(all_ids, all_texts):
+        has = False
+        clean_text = text
+
+        # bold first
+        match = program_bold.search(clean_text)
+        while match:
+            has = True
+            if program_italic.search(match.group(0)):
+                clean_text = program_bold.sub('<strong><em>\\1</em></strong>', clean_text)
+            else:
+                clean_text = program_bold.sub('<strong>\\1</strong>', clean_text)
+            match = program_bold.search(clean_text)
+
+        while program_italic.search(clean_text):
+            has = True
+            clean_text = program_italic.sub('<em>\\1</em>', clean_text)
+        
+        if has or force_stay:
+            ids.append(_id)
+            texts.append(text)
+            clean.append(clean_text)
+            status.append('Got Strong or Em' if has else '')
     if get_status:
         return ids, texts, clean, status
     return ids, texts, clean
@@ -211,8 +249,9 @@ class StatementsAllFilter(DisciplineReportsBaseView):
         ids1, _, _ = process_tags_div(ids, texts)
         ids2, _, _ = process_tags_br_inside_p(ids, texts)
         ids3, _, _ = process_tags_texto_associado_inside_p(ids, texts)
+        ids4, _, _ = process_bold_italic(ids, texts)
 
-        ids = list(set(ids1 + ids2 + ids3))
+        ids = list(set(ids1 + ids2 + ids3 + ids4))
         
         if not ids:
             return super().render_to_response(context)
@@ -224,7 +263,8 @@ class StatementsAllFilter(DisciplineReportsBaseView):
         _, _, clean, status1 = process_tags_div(ids, texts, True, True)
         _, _, clean, status2 = process_tags_br_inside_p(ids, clean, True, True)
         _, _, clean, status3 = process_tags_texto_associado_inside_p(ids, clean, True, True)
-        context['data'] = prepare_texts_data(ids, texts, clean, list(zip(status1, status2, status3)))
+        _, _, clean, status4 = process_bold_italic(ids, clean, True, True)
+        context['data'] = prepare_texts_data(ids, texts, clean, list(zip(status1, status2, status3, status4)))
 
         return super().render_to_response(context)
 
@@ -287,6 +327,27 @@ class StatemensWithBrInsideP(DisciplineReportsBaseView):
             return super().render_to_response(context)
 
         ids, texts, clean = process_tags_br_inside_p(ids, texts)
+        context['data'] = prepare_texts_data(ids, texts, clean)
+
+        return super().render_to_response(context)
+
+
+class StatementsWithBoldItalic(DisciplineReportsBaseView):
+    template_name = 'reports/edit_question_statement.html'
+    header = 'Questões com tag <strong> ou <em>'
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        disciplines = request.POST.getlist('disciplines',[])
+        
+        if disciplines:
+            questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='br').order_by('id')
+        if disciplines and questions.count() > 0:
+            ids, texts = zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
+        else:
+            return super().render_to_response(context)
+
+        ids, texts, clean = process_bold_italic(ids, texts)
         context['data'] = prepare_texts_data(ids, texts, clean)
 
         return super().render_to_response(context)

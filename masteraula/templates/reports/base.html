@@ -1,4 +1,3 @@
-base
 {% extends "base.html" %}
 {% load static %}
 
@@ -15,6 +14,8 @@ base
 <a href="{% url 'reports:statements_with_texto_associado' %}">Questões com texto associado</a>
 <br>
 <a href="{% url 'reports:statements_with_br' %}">Questões com tag br</a>
+<br>
+<a href="{% url 'reports:statements_with_strong_em' %}">Questões com tag strong ou em</a>
 <br>
 <a href="{% url 'reports:statements_all' %}">Questões com todos os filtros</a>
 <br>
