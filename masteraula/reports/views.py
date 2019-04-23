@@ -75,7 +75,7 @@ def process_tags_div(all_ids, all_texts, force_stay=False, get_status=False):
     return ids, texts, clean2
 
 def process_tags_br_inside_p(all_ids, all_texts, force_stay=False, get_status=False):
-    program = re.compile('(<p>((?!</p>)[\s\S])*)(<[\/\s]*?br[\/\s]*?>)([\s\S]*?<\/p>)')             
+    program = re.compile('(<p[\s\S]*>((?!</p>)[\s\S])*)(<[\/\s]*?br[\/\s]*?>)([\s\S]*?<\/p>)')
     clean = []
     texts = []
     ids = []
@@ -110,7 +110,7 @@ def process_tags_texto_associado_inside_p(all_ids, all_texts, force_stay=False, 
 
         while(program.search(clean_text)):
             has = True
-            if program.match(clean_text).groups()[0].strip() != '':
+            if program.search(clean_text).groups()[0].strip() != '':
                 clean_text = program.sub('<p>\\1</p>', clean_text)
             else:
                 clean_text = program.sub('', clean_text)
