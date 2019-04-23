@@ -32,6 +32,7 @@ class DisciplineReportsBaseView(SuperuserMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['disciplines'] = Discipline.objects.all()
+        context['header'] =  self.header if hasattr(self, 'header') else 'Relatório'
         return context
 
 def process_tags_br(text):
@@ -40,6 +41,87 @@ def process_tags_br(text):
     while(program.search(text)):
         text = program.sub('<br/>', text)
     return text
+
+def process_tags_div(all_ids, all_texts):
+    program = re.compile('<div[^<]*>(.*?)<\/div>')             
+    program2 = re.compile('<div[^<]*>') 
+
+    clean = []
+    clean2 = []
+    texts = []
+    ids = []
+
+    for _id, text in zip(all_ids, all_texts):
+        has = False
+        clean_text = text
+
+        while(program.search(clean_text)):
+            has = True
+            clean_text = program.sub('<p>\\1</p>', clean_text)
+        if has:
+            ids.append(_id)
+            texts.append(text)
+            clean.append(clean_text)
+
+    for text in clean:
+        while(program2.search(text)):
+            text = program2.sub('', text)
+        clean2.append(text)
+
+    return ids, texts, clean2
+
+def process_tags_br_inside_p(all_ids, all_texts):
+    program = re.compile('(<p>((?!</p>)[\s\S])*)(<[\/\s]*?br[\/\s]*?>)([\s\S]*?<\/p>)')             
+    clean = []
+    texts = []
+    ids = []
+
+    for _id, text in zip(all_ids, all_texts):
+        has = False
+        clean_text = text
+
+        while(program.search(clean_text)):
+            clean_text = program.sub('\\1 </p><p> \\4', clean_text)
+            has = True
+        if has:
+            ids.append(_id)
+            texts.append(text)
+            clean.append(clean_text)
+    return ids, texts, clean
+
+def process_tags_texto_associado_inside_p(all_ids, all_texts):
+    program = re.compile('<p[^<]*texto_associado_questao[^<]*>([\s\S]*?)<\/p>')
+    clean = []
+    texts = []
+    ids = []
+
+    for _id, text in zip(all_ids, all_texts):
+        has = False
+        clean_text = text
+
+        while(program.search(clean_text)):
+            has = True
+            if program.match(clean_text).groups()[0].strip() != '':
+                clean_text = program.sub('<p>\\1</p>', clean_text)
+            else:
+                clean_text = program.sub('', clean_text)
+        if has:
+            ids.append(_id)
+            texts.append(text)
+            clean.append(clean_text)
+    return ids, texts, clean
+
+def prepare_texts_data(ids, texts, clean):
+    data = []
+    for _id, text, clean_text in zip(ids, texts, clean):
+        soup = bs(text, "html.parser")
+        text = soup.prettify()
+
+        soup = bs(clean_text, "html.parser")
+        clean_text = soup.prettify()
+
+        data.append((_id, text, clean_text))
+    return data
 
 class ReportsView(SuperuserMixin, TemplateView):
     login_url = '/admin/login/'
@@ -97,9 +179,11 @@ class UncategorizedTagsView(DisciplineReportsBaseView):
         response['Content-Disposition'] = 'attachment; filename="relatorio.csv"'
         return response
 
-class StatemensWithDivView(DisciplineReportsBaseView):
-    template_name = 'reports/statements_with_div.html'
 
+
+class StatemensWithDivView(DisciplineReportsBaseView):
+    template_name = 'reports/edit_question_statement.html'
+    header = 'Questões com <div>'
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
@@ -107,43 +191,20 @@ class StatemensWithDivView(DisciplineReportsBaseView):
         
         if disciplines:
             questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='<div').order_by('id')
-            statements = [(q.id, process_tags_br(q.statement)) for q in questions]
+        if disciplines and questions.count() > 0:
+            ids, texts = zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
         else:
             return super().render_to_response(context)
         
-        program = re.compile('<div[^<]*>(.*?)<\/div>')             
-        program2 = re.compile('<div[^<]*>') 
-
-        clean = []
-        clean2 = []
-
-        for _, stm in statements:
-            while(program.search(stm)):
-                stm = program.sub('<p>\\1</p>', stm)
-            clean.append(stm)
-
-        for stm in clean:
-            while(program2.search(stm)):
-                stm = program2.sub('', stm)
-            clean2.append(stm)
-
-        data = []
-        for i in range(len(clean2)):
-            soup = bs(statements[i][1], "html.parser")
-            stmt = soup.prettify()
-            soup = bs(clean2[i], "html.parser")
-            clean_stmt = soup.prettify()
-            data.append((statements[i][0], stmt, clean_stmt))
-            data.append((statements[i][0], stmt, clean2[i]))
-        
-        context['data'] = data
+        ids, texts, clean = process_tags_div(ids, texts)
+        context['data'] = prepare_texts_data(ids, texts, clean)
 
         return super().render_to_response(context)
 
 
 class StatemensWithTextoAssociado(DisciplineReportsBaseView):
-    template_name = 'reports/statements_with_texto_associado.html'
-    
+    template_name = 'reports/edit_question_statement.html'
+    header = 'Questões com texto associado'
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
@@ -151,38 +212,21 @@ class StatemensWithTextoAssociado(DisciplineReportsBaseView):
         
         if disciplines:
             questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='texto_associado_questao').order_by('id')
-            statements = [(q.id, process_tags_br(q.statement)) for q in questions]
+        if disciplines and questions.count() > 0:
+            ids, texts = zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
         else:
             return super().render_to_response(context)
-        
-        program = re.compile('<p[^<]*texto_associado_questao[^<]*>([\s\S]*?)<\/p>')
 
-        clean = []
-
-        for _, stm in statements:
-            while(program.search(stm)):
-                if program.match(stm).groups()[0].strip() != '':
-                    stm = program.sub('<p>\\1</p>', stm)
-                else:
-                    stm = program.sub('', stm)
-            clean.append(stm)
-
-        data = []
-        for i in range(len(clean)):
-            soup = bs(statements[i][1], "html.parser")
-            stmt = soup.prettify()
-            soup = bs(clean[i], "html.parser")
-            clean_stmt = soup.prettify()
-            data.append((statements[i][0], stmt, clean_stmt))
-        
-        context['data'] = data
+        ids, texts, clean = process_tags_texto_associado_inside_p(ids, texts)
+        context['data'] = prepare_texts_data(ids, texts, clean)
+        context['header'] = 'Questões com texto associado'
 
         return super().render_to_response(context)
 
 
 class StatemensWithBrInsideP(DisciplineReportsBaseView):
-    template_name = 'reports/statements_with_br.html'
-    
+    template_name = 'reports/edit_question_statement.html'
+    header = 'Questões com tag <br> dentro de <p>'
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
@@ -190,45 +234,19 @@ class StatemensWithBrInsideP(DisciplineReportsBaseView):
         
         if disciplines:
             questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='br').order_by('id')
-            all_texts = [(q.id, process_tags_br(q.statement)) for q in questions]
+        if disciplines and questions.count() > 0:
+            ids, texts = zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
         else:
             return super().render_to_response(context)
 
-        program = re.compile('(<p>((?!</p>)[\s\S])*)(<[\/\s]*?br[\/\s]*?>)([\s\S]*?<\/p>)')             
-        clean = []
-        statements = []
-
-
-        for qid, stmt in all_texts:
-            has = False
-            stm = stmt
-
-            while(program.search(stm)):
-                stm = program.sub('\\1 </p><p> \\4', stm)
-                has = True
-            if has:
-                statements.append((qid, stmt))
-                clean.append(stm)
-
-        data = []
-        for i in range(len(clean)):
-            soup = bs(statements[i][1], "html.parser")
-            stmt = soup.prettify()
-            soup = bs(clean[i], "html.parser")
-            clean_stmt = soup.prettify()
-            
-            data.append((statements[i][0], stmt, clean_stmt))
-        
-        context['data'] = data
+        ids, texts, clean = process_tags_br_inside_p(ids, texts)
+        context['data'] = prepare_texts_data(ids, texts, clean)
 
         return super().render_to_response(context)
 
 
-
-
 class ObjectsWithoutSource(DisciplineReportsBaseView):
     template_name = 'reports/objects_without_source.html'
-
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
@@ -246,48 +264,23 @@ class ObjectsWithoutSource(DisciplineReportsBaseView):
 
 
 class ObjectsWithBrInsideP(DisciplineReportsBaseView):
-    template_name = 'reports/objects_with_br.html'
+    template_name = 'reports/edit_object_text.html'
+    header = 'Objetos com <br> dentro de <p>'
     
-
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         disciplines = request.POST.getlist('disciplines',[])
         
         if disciplines:
-            learning_objects = LearningObject.objects.filter(text__isnull=False).filter(text__contains='br').order_by('id')
-            clean = []
-            for lo in learning_objects:
-                if lo.question_set.filter(disciplines__in=disciplines).count() > 0:
-                    clean.append(lo)
-            all_texts = [(q.id, process_tags_br(q.text)) for q in learning_objects]
+            learning_objects = LearningObject.objects.filter(text__isnull=False).filter(text__contains='br') \
+                    .filter(question__disciplines__in=disciplines).distinct().order_by('id')
+        if learning_objects and learning_objects.count() > 0:
+            ids, texts = zip(*[(lo.id, process_tags_br(lo.text)) for lo in learning_objects])
         else:
             return super().render_to_response(context)
 
-        program = re.compile('(<p>((?!</p>)[\s\S])*)(<[\/\s]*?br[\/\s]*?>)([\s\S]*?<\/p>)')             
-        clean = []
-        statements = []
-
-
-        for qid, stmt in all_texts:
-            has = False
-            stm = stmt
-
-            while(program.search(stm)):
-                stm = program.sub('\\1 </p><p> \\4', stm)
-                has = True
-            if has:
-                statements.append((qid, stmt))
-                clean.append(stm)
-
-        data = []
-        for i in range(len(clean)):
-            soup = bs(clean[i], "html.parser")
-            clean_stmt = soup.prettify()
-            soup = bs(statements[i][1], "html.parser")
-            stmt = soup.prettify()
-            data.append((statements[i][0], stmt, clean_stmt))
-        
-        context['data'] = data
+        ids, texts, clean = process_tags_br_inside_p(ids, texts)
+        context['data'] = prepare_texts_data(ids, texts, clean)
 
         return super().render_to_response(context)
 
