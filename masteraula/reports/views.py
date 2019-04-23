@@ -126,8 +126,8 @@ def process_tags_texto_associado_inside_p(all_ids, all_texts, force_stay=False, 
     return ids, texts, clean
 
 def process_bold_italic(all_ids, all_texts, force_stay=False, get_status=False):
-    program_bold = re.compile('<span[^<]*font-weight: ?bold[^<]*>([\s\S]*?)<\/span>')
-    program_italic = re.compile('<span[^<]*font-style: ?italic[^<]*>([\s\S]*?)<\/span>')
+    program_bold = re.compile('<span[^<]*font-weight ?: ?bold[^<]*>([\s\S]*?)<\/span>')
+    program_italic = re.compile('<span[^<]*font-style ?: ?italic[^<]*>([\s\S]*?)<\/span>')
 
     clean = []
     texts = []
@@ -157,6 +157,36 @@ def process_bold_italic(all_ids, all_texts, force_stay=False, get_status=False):
             texts.append(text)
             clean.append(clean_text)
             status.append('Got Strong or Em' if has else '')
+    if get_status:
+        return ids, texts, clean, status
+    return ids, texts, clean
+
+def process_super_sub(all_ids, all_texts, force_stay=False, get_status=False):
+    program_super = re.compile('<span[^<]*vertical-align ?: ?super[^<]*>([\s\S]*?)<\/span>')
+    program_sub = re.compile('<span[^<]*vertical-align ?: ?sub[^<]*>([\s\S]*?)<\/span>')
+
+    clean = []
+    texts = []
+    ids = []
+    status = []
+
+    for _id, text in zip(all_ids, all_texts):
+        has = False
+        clean_text = text
+
+        while program_super.search(clean_text):
+            has = True
+            clean_text = program_super.sub('<sup>\\1</sup>', clean_text)
+
+        while program_sub.search(clean_text):
+            has = True
+            clean_text = program_sub.sub('<sub>\\1</sub>', clean_text)
+        
+        if has or force_stay:
+            ids.append(_id)
+            texts.append(text)
+            clean.append(clean_text)
+            status.append('Got Sup or Sub' if has else '')
     if get_status:
         return ids, texts, clean, status
     return ids, texts, clean
@@ -246,12 +276,14 @@ class StatementsAllFilter(DisciplineReportsBaseView):
         else:
             return super().render_to_response(context)
         
-        ids1, _, _ = process_tags_div(ids, texts)
-        ids2, _, _ = process_tags_br_inside_p(ids, texts)
-        ids3, _, _ = process_tags_texto_associado_inside_p(ids, texts)
-        ids4, _, _ = process_bold_italic(ids, texts)
-
-        ids = list(set(ids1 + ids2 + ids3 + ids4))
+        all_res = [
+            process_tags_div(ids, texts),
+            process_tags_br_inside_p(ids, texts),
+            process_tags_texto_associado_inside_p(ids, texts),
+            process_bold_italic(ids, texts),
+            process_super_sub(ids, texts)
+        ]
+        ids = list(set([item for sublist, _, _ in all_res for item in sublist]))
         
         if not ids:
             return super().render_to_response(context)
@@ -260,11 +292,21 @@ class StatementsAllFilter(DisciplineReportsBaseView):
         if questions.count() > 0:
             ids, texts = zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
 
-        _, _, clean, status1 = process_tags_div(ids, texts, True, True)
-        _, _, clean, status2 = process_tags_br_inside_p(ids, clean, True, True)
-        _, _, clean, status3 = process_tags_texto_associado_inside_p(ids, clean, True, True)
-        _, _, clean, status4 = process_bold_italic(ids, clean, True, True)
-        context['data'] = prepare_texts_data(ids, texts, clean, list(zip(status1, status2, status3, status4)))
+        functions = [
+            process_tags_div,
+            process_tags_br_inside_p, 
+            process_tags_texto_associado_inside_p,
+            process_bold_italic,
+            process_super_sub
+        ]
+
+        clean = texts
+        all_status = []
+        for f in functions:
+            _, _, clean, status = f(ids, clean, True, True)
+            all_status.append(status)
+
+        context['data'] = prepare_texts_data(ids, texts, clean, list(zip(*all_status)))
 
         return super().render_to_response(context)
 
@@ -341,13 +383,33 @@ class StatementsWithBoldItalic(DisciplineReportsBaseView):
         disciplines = request.POST.getlist('disciplines',[])
         
         if disciplines:
-            questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='br').order_by('id')
+            questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='font').order_by('id')
         if disciplines and questions.count() > 0:
             ids, texts = zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
         else:
             return super().render_to_response(context)
 
         ids, texts, clean = process_bold_italic(ids, texts)
+        context['data'] = prepare_texts_data(ids, texts, clean)
+
+        return super().render_to_response(context)
+
+class StatementsWithSupSub(DisciplineReportsBaseView):
+    template_name = 'reports/edit_question_statement.html'
+    header = 'Questões com tag <sup> ou <sub>'
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        disciplines = request.POST.getlist('disciplines',[])
+        
+        if disciplines:
+            questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='vertical-align').order_by('id')
+        if disciplines and questions.count() > 0:
+            ids, texts = zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
+        else:
+            return super().render_to_response(context)
+
+        ids, texts, clean = process_super_sub(ids, texts)
         context['data'] = prepare_texts_data(ids, texts, clean)
 
         return super().render_to_response(context)
