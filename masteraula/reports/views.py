@@ -86,7 +86,7 @@ def process_tags_br_inside_p(all_ids, all_texts, force_stay=False, get_status=Fa
         clean_text = text
 
         while(program.search(clean_text)):
-            clean_text = program.sub('\\1 </p><p> \\4', clean_text)
+            clean_text = program.sub('\\1 </p><p> \\5', clean_text)
             has = True
         if has or force_stay:
             ids.append(_id)
