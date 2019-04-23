@@ -9,6 +9,7 @@ Production Configurations
 
 """
 from __future__ import absolute_import, unicode_literals
+from email.utils import parseaddr 
 
 from boto.s3.connection import OrdinaryCallingFormat
 from django.utils import six
@@ -160,9 +161,7 @@ DATABASES = {
 # the site admins on every HTTP 500 error when DEBUG=False.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
-ADMINS = (
-    env('DJANGO_ADMINS')
-)
+ADMINS = tuple(parseaddr(email) for email in env('DJANGO_ADMINS').split(','))
 
 LOGGING = {
     'version': 1,
