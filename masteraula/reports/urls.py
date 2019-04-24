@@ -11,6 +11,7 @@ urlpatterns = [
     url(r'^statements_with_div/$', views.StatemensWithDivView.as_view(), name='statements_with_div'),
     url(r'^statements_with_texto_associado/$', views.StatemensWithTextoAssociado.as_view(), name='statements_with_texto_associado'),
     url(r'^statements_with_br/$', views.StatemensWithBrInsideP.as_view(), name='statements_with_br'),
+    url(r'^statements_with_empty_p/$', views.StatemensWithEmptyP.as_view(), name='statements_with_empty_p'),
     url(r'^statements_with_strong_em/$', views.StatementsWithBoldItalic.as_view(), name='statements_with_strong_em'),
     url(r'^statements_with_sup_sub/$', views.StatementsWithSupSub.as_view(), name='statements_with_sup_sub'),
     url(r'^statements_all/$', views.StatementsAllFilter.as_view(), name='statements_all'),

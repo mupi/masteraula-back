@@ -113,6 +113,30 @@ def process_tags_br_inside_p(all_ids, all_texts, force_stay=False, get_status=Fa
         return ids, texts, clean, status
     return ids, texts, clean
 
+
+def process_empty_p_tags(all_ids, all_texts, force_stay=False, get_status=False):
+    program = re.compile('<p>\s*</p>')
+    clean = []
+    texts = []
+    ids = []
+    status = []
+
+    for _id, text in zip(all_ids, all_texts):
+        has = False
+        clean_text = text
+
+        while(program.search(clean_text)):
+            clean_text = program.sub('', clean_text)
+            has = True
+        if has or force_stay:
+            ids.append(_id)
+            texts.append(text)
+            clean.append(clean_text)
+            status.append('Removed empty <p>' if has else '')
+    if get_status:
+        return ids, texts, clean, status
+    return ids, texts, clean
+
 def process_tags_texto_associado_inside_p(all_ids, all_texts, force_stay=False, get_status=False):
     program = re.compile('<p[^<]*texto_associado_questao[^<]*>([\s\S]*?)<\/p>')
     clean = []
@@ -293,12 +317,14 @@ class StatementsAllFilter(DisciplineReportsBaseView):
             return super().render_to_response(context)
         
         all_res = [
-            process_tags_div(ids, texts),
-            process_tags_br_inside_p(ids, texts),
-            process_tags_texto_associado_inside_p(ids, texts),
-            process_bold_italic(ids, texts),
-            process_super_sub(ids, texts)
+            process_tags_div,
+            process_tags_br_inside_p,
+            process_tags_texto_associado_inside_p,
+            process_bold_italic,
+            process_super_sub,
+            process_empty_p_tags
         ]
+        all_res = [func(ids, texts) for func in all_res]
         ids = list(set([item for sublist, _, _ in all_res for item in sublist]))
         
         if not ids:
@@ -313,7 +339,8 @@ class StatementsAllFilter(DisciplineReportsBaseView):
             process_tags_br_inside_p, 
             process_tags_texto_associado_inside_p,
             process_bold_italic,
-            process_super_sub
+            process_super_sub,
+            process_empty_p_tags
         ]
 
         clean = texts
@@ -364,6 +391,20 @@ class StatemensWithBrInsideP(DisciplineReportsBaseView):
 
     def report_function(self, *args, **kwargs):
         return process_tags_br_inside_p(*args, **kwargs)
+
+class StatemensWithEmptyP(DisciplineReportsBaseView):
+    template_name = 'reports/edit_question_statement.html'
+    header = 'Questões com tags <p> vazias'
+
+    def queryset(self, disciplines):
+        questions = Question.objects.filter(disciplines__in=disciplines).order_by('id')
+        if questions.count() > 0:
+            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
+        return None
+
+    def report_function(self, *args, **kwargs):
+        return process_empty_p_tags(*args, **kwargs)
+
 
 
 class StatementsWithBoldItalic(DisciplineReportsBaseView):
