@@ -114,7 +114,7 @@ def process_tags_br_inside_p(all_ids, all_texts, force_stay=False, get_status=Fa
     return ids, texts, clean
 
 def process_tags_p_inside_p(all_ids, all_texts, force_stay=False, get_status=False):
-    program = re.compile('(<p>((?!<\/p>)[\s\S])*?)<p>([\s\S]*?)<\/p>')
+    program = re.compile('(<p[^>]*?>((?!<\/p>)[\s\S])*?)<p[^>]*?>([\s\S]*?)<\/p>')
     clean = []
     texts = []
     ids = []
