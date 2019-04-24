@@ -113,9 +113,32 @@ def process_tags_br_inside_p(all_ids, all_texts, force_stay=False, get_status=Fa
         return ids, texts, clean, status
     return ids, texts, clean
 
+def process_tags_p_inside_p(all_ids, all_texts, force_stay=False, get_status=False):
+    program = re.compile('(<p>((?!<\/p>)[\s\S])*?)<p>([\s\S]*?)<\/p>')
+    clean = []
+    texts = []
+    ids = []
+    status = []
+
+    for _id, text in zip(all_ids, all_texts):
+        has = False
+        clean_text = text
+
+        while(program.search(clean_text)):
+            clean_text = program.sub('\\1 </p><p> \\3', clean_text)
+            has = True
+        if has or force_stay:
+            ids.append(_id)
+            texts.append(text)
+            clean.append(clean_text)
+            status.append('Removed <p> inside <p>' if has else '')
+    if get_status:
+        return ids, texts, clean, status
+    return ids, texts, clean
+
 
 def process_empty_p_tags(all_ids, all_texts, force_stay=False, get_status=False):
-    program = re.compile('<p>\s*</p>')
+    program = re.compile('<p[^>]*?>\s*</p>')
     clean = []
     texts = []
     ids = []
@@ -231,6 +254,31 @@ def process_super_sub(all_ids, all_texts, force_stay=False, get_status=False):
         return ids, texts, clean, status
     return ids, texts, clean
 
+def process_line_heigth(all_ids, all_texts, force_stay=False, get_status=False):
+    program = re.compile('<span[^<]*line-height ?:[^<]*>([\s\S]*?)<\/span>')
+
+    clean = []
+    texts = []
+    ids = []
+    status = []
+
+    for _id, text in zip(all_ids, all_texts):
+        has = False
+        clean_text = text
+
+        while program.search(clean_text):
+            has = True
+            clean_text = program.sub('<p>\\1</p>', clean_text)
+
+        if has or force_stay:
+            ids.append(_id)
+            texts.append(text)
+            clean.append(clean_text)
+            status.append('Remove line heigth' if has else '')
+    if get_status:
+        return ids, texts, clean, status
+    return ids, texts, clean
+
 def prepare_texts_data(ids, texts, clean, all_status=None):
     data = []
     if all_status is None:
@@ -322,11 +370,13 @@ class StatementsAllFilter(DisciplineReportsBaseView):
             process_tags_texto_associado_inside_p,
             process_bold_italic,
             process_super_sub,
+            process_line_heigth,
+            process_tags_p_inside_p,
             process_empty_p_tags
         ]
         all_res = [func(ids, texts) for func in all_res]
         ids = list(set([item for sublist, _, _ in all_res for item in sublist]))
-        
+
         if not ids:
             return super().render_to_response(context)
 
@@ -340,6 +390,8 @@ class StatementsAllFilter(DisciplineReportsBaseView):
             process_tags_texto_associado_inside_p,
             process_bold_italic,
             process_super_sub,
+            process_line_heigth,
+            process_tags_p_inside_p,
             process_empty_p_tags
         ]
 
@@ -406,7 +458,6 @@ class StatemensWithEmptyP(DisciplineReportsBaseView):
         return process_empty_p_tags(*args, **kwargs)
 
 
-
 class StatementsWithBoldItalic(DisciplineReportsBaseView):
     template_name = 'reports/edit_question_statement.html'
     header = 'Questões com tag <strong> ou <em>'
@@ -435,6 +486,31 @@ class StatementsWithSupSub(DisciplineReportsBaseView):
         return process_super_sub(*args, **kwargs)
 
 
+class StatementsWithLineHeight(DisciplineReportsBaseView):
+    template_name = 'reports/edit_question_statement.html'
+    header = 'Questões com tag <sup> ou <sub>'
+
+    def queryset(self, disciplines):
+        questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='line-heigth').order_by('id')
+        if questions.count() > 0:
+            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
+        return None
+
+    def report_function(self, *args, **kwargs):
+        return process_line_heigth(*args, **kwargs)
+
+class StatementsWithPInsideP(DisciplineReportsBaseView):
+    template_name = 'reports/edit_question_statement.html'
+    header = 'Questões com tag <p> dentro de <p>'
+
+    def queryset(self, disciplines):
+        questions = Question.objects.filter(disciplines__in=disciplines).order_by('id')
+        if questions.count() > 0:
+            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
+        return None
+
+    def report_function(self, *args, **kwargs):
+        return process_tags_p_inside_p(*args, **kwargs)
 
 class ObjectsWithBrInsideP(DisciplineReportsBaseView):
     template_name = 'reports/edit_object_text.html'
