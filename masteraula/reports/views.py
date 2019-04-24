@@ -35,12 +35,28 @@ class DisciplineReportsBaseView(SuperuserMixin, TemplateView):
         context['header'] =  self.header if hasattr(self, 'header') else 'Relatório'
         return context
 
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        disciplines = request.POST.getlist('disciplines',[])
+        
+        if disciplines:
+            results = self.queryset(disciplines)
+        if disciplines and results:
+            ids, texts = results
+        else:
+            return super().render_to_response(context)
+        
+        ids, texts, clean = self.report_function(ids, texts)
+        context['data'] = prepare_texts_data(ids, texts, clean)
+        return super().render_to_response(context)
+
 def process_tags_br(text):
     program = re.compile('(<[\/\s]*?br[\s]*?>)')
 
     while(program.search(text)):
         text = program.sub('<br/>', text)
     return text
+    
 
 def process_tags_div(all_ids, all_texts, force_stay=False, get_status=False):
     program = re.compile('<div[^<]*>(.*?)<\/div>')             
@@ -314,105 +330,84 @@ class StatemensWithDivView(DisciplineReportsBaseView):
     template_name = 'reports/edit_question_statement.html'
     header = 'Questões com <div>'
 
-    def post(self, request, *args, **kwargs):
-        context = self.get_context_data(**kwargs)
-        disciplines = request.POST.getlist('disciplines',[])
-        
-        if disciplines:
-            questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='<div').order_by('id')
-        if disciplines and questions.count() > 0:
-            ids, texts = zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
-        else:
-            return super().render_to_response(context)
-        
-        ids, texts, clean = process_tags_div(ids, texts)
-        context['data'] = prepare_texts_data(ids, texts, clean)
+    def queryset(self, disciplines):
+        questions =  Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='<div').order_by('id')
+        if questions.count() > 0:
+            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
+        return None
 
-        return super().render_to_response(context)
-
+    def report_function(self, *args, **kwargs):
+        return process_tags_div(*args, **kwargs)
 
 class StatemensWithTextoAssociado(DisciplineReportsBaseView):
     template_name = 'reports/edit_question_statement.html'
     header = 'Questões com texto associado'
 
-    def post(self, request, *args, **kwargs):
-        context = self.get_context_data(**kwargs)
-        disciplines = request.POST.getlist('disciplines',[])
-        
-        if disciplines:
-            questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='texto_associado_questao').order_by('id')
-        if disciplines and questions.count() > 0:
-            ids, texts = zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
-        else:
-            return super().render_to_response(context)
+    def queryset(self, disciplines):
+        questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='texto_associado_questao').order_by('id')
+        if questions.count() > 0:
+            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
+        return None
 
-        ids, texts, clean = process_tags_texto_associado_inside_p(ids, texts)
-        context['data'] = prepare_texts_data(ids, texts, clean)
-        context['header'] = 'Questões com texto associado'
-
-        return super().render_to_response(context)
-
+    def report_function(self, *args, **kwargs):
+        return process_tags_texto_associado_inside_p(*args, **kwargs)
 
 class StatemensWithBrInsideP(DisciplineReportsBaseView):
     template_name = 'reports/edit_question_statement.html'
     header = 'Questões com tag <br> dentro de <p>'
 
-    def post(self, request, *args, **kwargs):
-        context = self.get_context_data(**kwargs)
-        disciplines = request.POST.getlist('disciplines',[])
-        
-        if disciplines:
-            questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='br').order_by('id')
-        if disciplines and questions.count() > 0:
-            ids, texts = zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
-        else:
-            return super().render_to_response(context)
+    def queryset(self, disciplines):
+        questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='br').order_by('id')
+        if questions.count() > 0:
+            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
+        return None
 
-        ids, texts, clean = process_tags_br_inside_p(ids, texts)
-        context['data'] = prepare_texts_data(ids, texts, clean)
-
-        return super().render_to_response(context)
+    def report_function(self, *args, **kwargs):
+        return process_tags_br_inside_p(*args, **kwargs)
 
 
 class StatementsWithBoldItalic(DisciplineReportsBaseView):
     template_name = 'reports/edit_question_statement.html'
     header = 'Questões com tag <strong> ou <em>'
 
-    def post(self, request, *args, **kwargs):
-        context = self.get_context_data(**kwargs)
-        disciplines = request.POST.getlist('disciplines',[])
-        
-        if disciplines:
-            questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='font').order_by('id')
-        if disciplines and questions.count() > 0:
-            ids, texts = zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
-        else:
-            return super().render_to_response(context)
+    def queryset(self, disciplines):
+        questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='font').order_by('id')
+        if questions.count() > 0:
+            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
+        return None
 
-        ids, texts, clean = process_bold_italic(ids, texts)
-        context['data'] = prepare_texts_data(ids, texts, clean)
+    def report_function(self, *args, **kwargs):
+        return process_bold_italic(*args, **kwargs)
 
-        return super().render_to_response(context)
 
 class StatementsWithSupSub(DisciplineReportsBaseView):
     template_name = 'reports/edit_question_statement.html'
     header = 'Questões com tag <sup> ou <sub>'
 
-    def post(self, request, *args, **kwargs):
-        context = self.get_context_data(**kwargs)
-        disciplines = request.POST.getlist('disciplines',[])
-        
-        if disciplines:
-            questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='vertical-align').order_by('id')
-        if disciplines and questions.count() > 0:
-            ids, texts = zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
-        else:
-            return super().render_to_response(context)
+    def queryset(self, disciplines):
+        questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='vertical-align').order_by('id')
+        if questions.count() > 0:
+            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
+        return None
 
-        ids, texts, clean = process_super_sub(ids, texts)
-        context['data'] = prepare_texts_data(ids, texts, clean)
+    def report_function(self, *args, **kwargs):
+        return process_super_sub(*args, **kwargs)
 
-        return super().render_to_response(context)
+
+
+class ObjectsWithBrInsideP(DisciplineReportsBaseView):
+    template_name = 'reports/edit_object_text.html'
+    header = 'Objetos com <br> dentro de <p>'
+    
+    def queryset(self, disciplines):
+        learning_objects = LearningObject.objects.filter(text__isnull=False).filter(text__contains='br') \
+                    .filter(question__disciplines__in=disciplines).distinct().order_by('id')
+        if learning_objects.count() > 0:
+            return zip(*[(lo.id, process_tags_br(lo.text)) for lo in learning_objects])
+        return None
+
+    def report_function(self, *args, **kwargs):
+        return process_tags_br_inside_p(*args, **kwargs)
 
 
 class ObjectsWithoutSource(DisciplineReportsBaseView):
@@ -429,28 +424,6 @@ class ObjectsWithoutSource(DisciplineReportsBaseView):
             return super().render_to_response(context)
         
         context['data'] = learning_objects
-
-        return super().render_to_response(context)
-
-
-class ObjectsWithBrInsideP(DisciplineReportsBaseView):
-    template_name = 'reports/edit_object_text.html'
-    header = 'Objetos com <br> dentro de <p>'
-    
-    def post(self, request, *args, **kwargs):
-        context = self.get_context_data(**kwargs)
-        disciplines = request.POST.getlist('disciplines',[])
-        
-        if disciplines:
-            learning_objects = LearningObject.objects.filter(text__isnull=False).filter(text__contains='br') \
-                    .filter(question__disciplines__in=disciplines).distinct().order_by('id')
-        if learning_objects and learning_objects.count() > 0:
-            ids, texts = zip(*[(lo.id, process_tags_br(lo.text)) for lo in learning_objects])
-        else:
-            return super().render_to_response(context)
-
-        ids, texts, clean = process_tags_br_inside_p(ids, texts)
-        context['data'] = prepare_texts_data(ids, texts, clean)
 
         return super().render_to_response(context)
 
