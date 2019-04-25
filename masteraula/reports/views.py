@@ -127,21 +127,6 @@ class UncategorizedTagsView(DisciplineReportsBaseView):
         response['Content-Disposition'] = 'attachment; filename="relatorio.csv"'
         return response
 
-class ObjectsWithBrInsideP(DisciplineReportsBaseView):
-    template_name = 'reports/edit_object_text.html'
-    header = 'Objetos com <br> dentro de <p>'
-    
-    def queryset(self, disciplines):
-        learning_objects = LearningObject.objects.filter(text__isnull=False).filter(text__contains='br') \
-                    .filter(question__disciplines__in=disciplines).distinct().order_by('id')
-        if learning_objects.count() > 0:
-            return zip(*[(lo.id, lo.text) for lo in learning_objects])
-        return None
-
-    def report_function(self, *args, **kwargs):
-        return report_functions.process_tags_br_inside_p(*args, **kwargs)
-
-
 class ObjectsWithoutSource(DisciplineReportsBaseView):
     template_name = 'reports/objects_without_source.html'
 

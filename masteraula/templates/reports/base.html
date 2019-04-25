@@ -28,9 +28,27 @@
 <a href="{% url 'reports:statements_all' %}">Questões com todos os filtros</a>
 <br>
 <h1>Objetos de aprendizagem</h1>
-<a href="{% url 'reports:objects_without_source' %}">Objetos sem fonte</a>
 <br>
-<a href="{% url 'reports:objects_with_br' %}">Objetos com tag br em p</a>
-
+<a href="{% url 'reports:objects_with_div' %}">Objetos de aprendizagem  com tag div</a>
+<br>
+<a href="{% url 'reports:objects_with_texto_associado' %}">Objetos de aprendizagem com texto associado</a>
+<br>
+<a href="{% url 'reports:objects_with_br' %}">Objetos de aprendizagem com tag br</a>
+<br>
+<a href="{% url 'reports:objects_with_p_inside_p' %}">Objetos de aprendizagem com tag p dentro de p</a>
+<br>
+<a href="{% url 'reports:objects_with_empty_p' %}">Objetos de aprendizagem com tags p vazias</a>
+<br>
+<a href="{% url 'reports:objects_with_strong_em' %}">Objetos de aprendizagem com tag strong ou em</a>
+<br>
+<a href="{% url 'reports:objects_with_sup_sub' %}">Objetos de aprendizagem com tag sup ou sub</a>
+<br>
+<a href="{% url 'reports:objects_with_line_height' %}">Objetos de aprendizagem com line height</a>
+<br>
+<a href="{% url 'reports:objects_all' %}">Objetos de aprendizagem com todos os filtros</a>
+<br>
+<h1>Objetos de aprendizagem sem source</h1>
+<br>
+<a href="{% url 'reports:objects_without_source' %}">Objetos sem fonte</a>
 
 {% endblock %}
