@@ -1,4 +1,4 @@
-from .views import DisciplineReportsBaseView
+from .views import DisciplineReportsBaseView, prepare_texts_data
 from . import report_functions
 
 from masteraula.questions.models import Question, Discipline
@@ -59,7 +59,7 @@ class StatementsAllFilter(DisciplineReportsBaseView):
 
         return super().render_to_response(context)
 
-class StatemensWithDivView(DisciplineReportsBaseView):
+class StatementsWithDivView(DisciplineReportsBaseView):
     template_name = 'reports/edit_question_statement.html'
     header = 'Questões com <div>'
 
@@ -72,7 +72,7 @@ class StatemensWithDivView(DisciplineReportsBaseView):
     def report_function(self, *args, **kwargs):
         return report_functions.process_tags_div(*args, **kwargs)
 
-class StatemensWithTextoAssociado(DisciplineReportsBaseView):
+class StatementsWithTextoAssociado(DisciplineReportsBaseView):
     template_name = 'reports/edit_question_statement.html'
     header = 'Questões com texto associado'
 
@@ -85,7 +85,7 @@ class StatemensWithTextoAssociado(DisciplineReportsBaseView):
     def report_function(self, *args, **kwargs):
         return report_functions.process_tags_texto_associado_inside_p(*args, **kwargs)
 
-class StatemensWithBrInsideP(DisciplineReportsBaseView):
+class StatementsWithBrInsideP(DisciplineReportsBaseView):
     template_name = 'reports/edit_question_statement.html'
     header = 'Questões com tag <br> dentro de <p>'
 
@@ -98,7 +98,7 @@ class StatemensWithBrInsideP(DisciplineReportsBaseView):
     def report_function(self, *args, **kwargs):
         return report_functions.process_tags_br_inside_p(*args, **kwargs)
 
-class StatemensWithEmptyP(DisciplineReportsBaseView):
+class StatementsWithEmptyP(DisciplineReportsBaseView):
     template_name = 'reports/edit_question_statement.html'
     header = 'Questões com tags <p> vazias'
 
