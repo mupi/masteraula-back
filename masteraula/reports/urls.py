@@ -2,21 +2,22 @@ from django.conf import settings
 from django.conf.urls import url, include
 
 from . import views
+from . import statements_views
 
 urlpatterns = [
     url(r'^$', views.ReportsView.as_view(), name='reports_home'),
     url(r'^uncategorized_questions/$', views.UncategorizedTagsView.as_view(), name='uncategorized_questions'),
     url(r'^number_documents/$', views.NumberDocumentsView.as_view(), name='number_documents'),
 
-    url(r'^statements_with_div/$', views.StatemensWithDivView.as_view(), name='statements_with_div'),
-    url(r'^statements_with_texto_associado/$', views.StatemensWithTextoAssociado.as_view(), name='statements_with_texto_associado'),
-    url(r'^statements_with_br/$', views.StatemensWithBrInsideP.as_view(), name='statements_with_br'),
-    url(r'^statements_with_p_inside_p/$', views.StatementsWithPInsideP.as_view(), name='statements_with_p_inside_p'),
-    url(r'^statements_with_empty_p/$', views.StatemensWithEmptyP.as_view(), name='statements_with_empty_p'),
-    url(r'^statements_with_strong_em/$', views.StatementsWithBoldItalic.as_view(), name='statements_with_strong_em'),
-    url(r'^statements_with_sup_sub/$', views.StatementsWithSupSub.as_view(), name='statements_with_sup_sub'),
-    url(r'^statements_with_line_height/$', views.StatementsWithLineHeight.as_view(), name='statements_with_line_height'),
-    url(r'^statements_all/$', views.StatementsAllFilter.as_view(), name='statements_all'),
+    url(r'^statements_with_div/$', statements_views.StatemensWithDivView.as_view(), name='statements_with_div'),
+    url(r'^statements_with_texto_associado/$', statements_views.StatemensWithTextoAssociado.as_view(), name='statements_with_texto_associado'),
+    url(r'^statements_with_br/$', statements_views.StatemensWithBrInsideP.as_view(), name='statements_with_br'),
+    url(r'^statements_with_p_inside_p/$', statements_views.StatementsWithPInsideP.as_view(), name='statements_with_p_inside_p'),
+    url(r'^statements_with_empty_p/$', statements_views.StatemensWithEmptyP.as_view(), name='statements_with_empty_p'),
+    url(r'^statements_with_strong_em/$', statements_views.StatementsWithBoldItalic.as_view(), name='statements_with_strong_em'),
+    url(r'^statements_with_sup_sub/$', statements_views.StatementsWithSupSub.as_view(), name='statements_with_sup_sub'),
+    url(r'^statements_with_line_height/$', statements_views.StatementsWithLineHeight.as_view(), name='statements_with_line_height'),
+    url(r'^statements_all/$', statements_views.StatementsAllFilter.as_view(), name='statements_all'),
 
     url(r'^objects_without_source/$', views.ObjectsWithoutSource.as_view(), name='objects_without_source'),
     url(r'^objects_with_br_inside/$', views.ObjectsWithBrInsideP.as_view(), name='objects_with_br'),

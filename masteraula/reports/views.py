@@ -25,6 +25,12 @@ class SuperuserMixin(UserPassesTestMixin):
     def test_func(self):
         return self.request.user.is_superuser
 
+def process_tags_br(text):
+    program = re.compile('(<[\/\s]*?br[\s]*?>)')
+
+    while(program.search(text)):
+        text = program.sub('<br/>', text)
+    return text
 
 class DisciplineReportsBaseView(SuperuserMixin, TemplateView):
     login_url = '/admin/login/'
@@ -43,241 +49,13 @@ class DisciplineReportsBaseView(SuperuserMixin, TemplateView):
             results = self.queryset(disciplines)
         if disciplines and results:
             ids, texts = results
+            texts = [process_tags_br(t) for t in texts]
         else:
             return super().render_to_response(context)
         
         ids, texts, clean = self.report_function(ids, texts)
         context['data'] = prepare_texts_data(ids, texts, clean)
         return super().render_to_response(context)
-
-def process_tags_br(text):
-    program = re.compile('(<[\/\s]*?br[\s]*?>)')
-
-    while(program.search(text)):
-        text = program.sub('<br/>', text)
-    return text
-    
-
-def process_tags_div(all_ids, all_texts, force_stay=False, get_status=False):
-    program = re.compile('<div[^<]*>(.*?)<\/div>')             
-    program2 = re.compile('<div[^<]*>') 
-
-    clean = []
-    clean2 = []
-    texts = []
-    ids = []
-    status = []
-
-    for _id, text in zip(all_ids, all_texts):
-        has = False
-        clean_text = text
-
-        while(program.search(clean_text)):
-            has = True
-            clean_text = program.sub('<p>\\1</p>', clean_text)
-        if has or force_stay:
-            ids.append(_id)
-            texts.append(text)
-            clean.append(clean_text)
-            status.append('Removed <div>' if has else '')
-    
-    for text in clean:
-        while(program2.search(text)):
-            text = program2.sub('', text)
-        clean2.append(text)
-
-    if get_status:
-        return (ids, texts, clean2, status)
-    return ids, texts, clean2
-
-def process_tags_br_inside_p(all_ids, all_texts, force_stay=False, get_status=False):
-    program = re.compile('(<p((?!</p>)[\s\S])*>((?!</p>)[\s\S])*)(<[\/\s]*?br[\/\s]*?>)([\s\S]*?<\/p>)')
-    clean = []
-    texts = []
-    ids = []
-    status = []
-
-    for _id, text in zip(all_ids, all_texts):
-        has = False
-        clean_text = text
-
-        while(program.search(clean_text)):
-            clean_text = program.sub('\\1 </p><p> \\5', clean_text)
-            has = True
-        if has or force_stay:
-            ids.append(_id)
-            texts.append(text)
-            clean.append(clean_text)
-            status.append('Removed <br> inside <p>' if has else '')
-    if get_status:
-        return ids, texts, clean, status
-    return ids, texts, clean
-
-def process_tags_p_inside_p(all_ids, all_texts, force_stay=False, get_status=False):
-    program = re.compile('(<p[^>]*?>((?!<\/p>)[\s\S])*?)<p[^>]*?>([\s\S]*?)<\/p>')
-    clean = []
-    texts = []
-    ids = []
-    status = []
-
-    for _id, text in zip(all_ids, all_texts):
-        has = False
-        clean_text = text
-
-        while(program.search(clean_text)):
-            clean_text = program.sub('\\1 </p><p> \\3', clean_text)
-            has = True
-        if has or force_stay:
-            ids.append(_id)
-            texts.append(text)
-            clean.append(clean_text)
-            status.append('Removed <p> inside <p>' if has else '')
-    if get_status:
-        return ids, texts, clean, status
-    return ids, texts, clean
-
-
-def process_empty_p_tags(all_ids, all_texts, force_stay=False, get_status=False):
-    program = re.compile('<p[^>]*?>\s*</p>')
-    clean = []
-    texts = []
-    ids = []
-    status = []
-
-    for _id, text in zip(all_ids, all_texts):
-        has = False
-        clean_text = text
-
-        while(program.search(clean_text)):
-            clean_text = program.sub('', clean_text)
-            has = True
-        if has or force_stay:
-            ids.append(_id)
-            texts.append(text)
-            clean.append(clean_text)
-            status.append('Removed empty <p>' if has else '')
-    if get_status:
-        return ids, texts, clean, status
-    return ids, texts, clean
-
-def process_tags_texto_associado_inside_p(all_ids, all_texts, force_stay=False, get_status=False):
-    program = re.compile('<p[^<]*texto_associado_questao[^<]*>([\s\S]*?)<\/p>')
-    clean = []
-    texts = []
-    ids = []
-    status = []
-
-    for _id, text in zip(all_ids, all_texts):
-        has = False
-        clean_text = text
-
-        match = program.search(clean_text)
-        while match:
-            has = True
-            if match.groups()[0].strip() != '':
-                clean_text = program.sub('<p>\\1</p>', clean_text)
-            else:
-                clean_text = program.sub('', clean_text)
-            match = program.search(clean_text)
-        if has or force_stay:
-            ids.append(_id)
-            texts.append(text)
-            clean.append(clean_text)
-            status.append('Replace texto_associado_questao' if has else '')
-    if get_status:
-        return ids, texts, clean, status
-    return ids, texts, clean
-
-def process_bold_italic(all_ids, all_texts, force_stay=False, get_status=False):
-    program_bold = re.compile('<span[^<]*font-weight ?: ?bold[^<]*>([\s\S]*?)<\/span>')
-    program_italic = re.compile('<span[^<]*font-style ?: ?italic[^<]*>([\s\S]*?)<\/span>')
-
-    clean = []
-    texts = []
-    ids = []
-    status = []
-
-    for _id, text in zip(all_ids, all_texts):
-        has = False
-        clean_text = text
-
-        # bold first
-        match = program_bold.search(clean_text)
-        while match:
-            has = True
-            if program_italic.search(match.group(0)):
-                clean_text = program_bold.sub('<strong><em>\\1</em></strong>', clean_text)
-            else:
-                clean_text = program_bold.sub('<strong>\\1</strong>', clean_text)
-            match = program_bold.search(clean_text)
-
-        while program_italic.search(clean_text):
-            has = True
-            clean_text = program_italic.sub('<em>\\1</em>', clean_text)
-        
-        if has or force_stay:
-            ids.append(_id)
-            texts.append(text)
-            clean.append(clean_text)
-            status.append('Got Strong or Em' if has else '')
-    if get_status:
-        return ids, texts, clean, status
-    return ids, texts, clean
-
-def process_super_sub(all_ids, all_texts, force_stay=False, get_status=False):
-    program_super = re.compile('<span[^<]*vertical-align ?: ?super[^<]*>([\s\S]*?)<\/span>')
-    program_sub = re.compile('<span[^<]*vertical-align ?: ?sub[^<]*>([\s\S]*?)<\/span>')
-
-    clean = []
-    texts = []
-    ids = []
-    status = []
-
-    for _id, text in zip(all_ids, all_texts):
-        has = False
-        clean_text = text
-
-        while program_super.search(clean_text):
-            has = True
-            clean_text = program_super.sub('<sup>\\1</sup>', clean_text)
-
-        while program_sub.search(clean_text):
-            has = True
-            clean_text = program_sub.sub('<sub>\\1</sub>', clean_text)
-        
-        if has or force_stay:
-            ids.append(_id)
-            texts.append(text)
-            clean.append(clean_text)
-            status.append('Got Sup or Sub' if has else '')
-    if get_status:
-        return ids, texts, clean, status
-    return ids, texts, clean
-
-def process_line_heigth(all_ids, all_texts, force_stay=False, get_status=False):
-    program = re.compile('<span[^<]*line-height ?:[^<]*>([\s\S]*?)<\/span>')
-
-    clean = []
-    texts = []
-    ids = []
-    status = []
-
-    for _id, text in zip(all_ids, all_texts):
-        has = False
-        clean_text = text
-
-        while program.search(clean_text):
-            has = True
-            clean_text = program.sub('<p>\\1</p>', clean_text)
-
-        if has or force_stay:
-            ids.append(_id)
-            texts.append(text)
-            clean.append(clean_text)
-            status.append('Remove line heigth' if has else '')
-    if get_status:
-        return ids, texts, clean, status
-    return ids, texts, clean
 
 def prepare_texts_data(ids, texts, clean, all_status=None):
     data = []
@@ -292,7 +70,7 @@ def prepare_texts_data(ids, texts, clean, all_status=None):
 
         data.append((_id, text, clean_text, status))
     return data
-
+    
 class ReportsView(SuperuserMixin, TemplateView):
     login_url = '/admin/login/'
     template_name = 'reports/base.html'
@@ -349,169 +127,6 @@ class UncategorizedTagsView(DisciplineReportsBaseView):
         response['Content-Disposition'] = 'attachment; filename="relatorio.csv"'
         return response
 
-class StatementsAllFilter(DisciplineReportsBaseView):
-    template_name = 'reports/edit_question_statement.html'
-    header = 'Todas as detecções'
-
-    def post(self, request, *args, **kwargs):
-        context = self.get_context_data(**kwargs)
-        disciplines = request.POST.getlist('disciplines',[])
-        
-        if disciplines:
-            questions = Question.objects.filter(disciplines__in=disciplines).order_by('id')
-        if disciplines and questions.count() > 0:
-            ids, texts = zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
-        else:
-            return super().render_to_response(context)
-        
-        all_res = [
-            process_tags_div,
-            process_tags_br_inside_p,
-            process_tags_texto_associado_inside_p,
-            process_bold_italic,
-            process_super_sub,
-            process_line_heigth,
-            process_tags_p_inside_p,
-            process_empty_p_tags
-        ]
-        all_res = [func(ids, texts) for func in all_res]
-        ids = list(set([item for sublist, _, _ in all_res for item in sublist]))
-
-        if not ids:
-            return super().render_to_response(context)
-
-        questions = Question.objects.filter(id__in=ids).order_by('id')
-        if questions.count() > 0:
-            ids, texts = zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
-
-        functions = [
-            process_tags_div,
-            process_tags_br_inside_p, 
-            process_tags_texto_associado_inside_p,
-            process_bold_italic,
-            process_super_sub,
-            process_line_heigth,
-            process_tags_p_inside_p,
-            process_empty_p_tags
-        ]
-
-        clean = texts
-        all_status = []
-        for f in functions:
-            _, _, clean, status = f(ids, clean, True, True)
-            all_status.append(status)
-
-        context['data'] = prepare_texts_data(ids, texts, clean, list(zip(*all_status)))
-
-        return super().render_to_response(context)
-
-class StatemensWithDivView(DisciplineReportsBaseView):
-    template_name = 'reports/edit_question_statement.html'
-    header = 'Questões com <div>'
-
-    def queryset(self, disciplines):
-        questions =  Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='<div').order_by('id')
-        if questions.count() > 0:
-            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
-        return None
-
-    def report_function(self, *args, **kwargs):
-        return process_tags_div(*args, **kwargs)
-
-class StatemensWithTextoAssociado(DisciplineReportsBaseView):
-    template_name = 'reports/edit_question_statement.html'
-    header = 'Questões com texto associado'
-
-    def queryset(self, disciplines):
-        questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='texto_associado_questao').order_by('id')
-        if questions.count() > 0:
-            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
-        return None
-
-    def report_function(self, *args, **kwargs):
-        return process_tags_texto_associado_inside_p(*args, **kwargs)
-
-class StatemensWithBrInsideP(DisciplineReportsBaseView):
-    template_name = 'reports/edit_question_statement.html'
-    header = 'Questões com tag <br> dentro de <p>'
-
-    def queryset(self, disciplines):
-        questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='br').order_by('id')
-        if questions.count() > 0:
-            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
-        return None
-
-    def report_function(self, *args, **kwargs):
-        return process_tags_br_inside_p(*args, **kwargs)
-
-class StatemensWithEmptyP(DisciplineReportsBaseView):
-    template_name = 'reports/edit_question_statement.html'
-    header = 'Questões com tags <p> vazias'
-
-    def queryset(self, disciplines):
-        questions = Question.objects.filter(disciplines__in=disciplines).order_by('id')
-        if questions.count() > 0:
-            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
-        return None
-
-    def report_function(self, *args, **kwargs):
-        return process_empty_p_tags(*args, **kwargs)
-
-
-class StatementsWithBoldItalic(DisciplineReportsBaseView):
-    template_name = 'reports/edit_question_statement.html'
-    header = 'Questões com tag <strong> ou <em>'
-
-    def queryset(self, disciplines):
-        questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='font').order_by('id')
-        if questions.count() > 0:
-            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
-        return None
-
-    def report_function(self, *args, **kwargs):
-        return process_bold_italic(*args, **kwargs)
-
-
-class StatementsWithSupSub(DisciplineReportsBaseView):
-    template_name = 'reports/edit_question_statement.html'
-    header = 'Questões com tag <sup> ou <sub>'
-
-    def queryset(self, disciplines):
-        questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='vertical-align').order_by('id')
-        if questions.count() > 0:
-            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
-        return None
-
-    def report_function(self, *args, **kwargs):
-        return process_super_sub(*args, **kwargs)
-
-
-class StatementsWithLineHeight(DisciplineReportsBaseView):
-    template_name = 'reports/edit_question_statement.html'
-    header = 'Questões com tag <sup> ou <sub>'
-
-    def queryset(self, disciplines):
-        questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='line-heigth').order_by('id')
-        if questions.count() > 0:
-            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
-        return None
-
-    def report_function(self, *args, **kwargs):
-        return process_line_heigth(*args, **kwargs)
-
-class StatementsWithPInsideP(DisciplineReportsBaseView):
-    template_name = 'reports/edit_question_statement.html'
-    header = 'Questões com tag <p> dentro de <p>'
-
-    def queryset(self, disciplines):
-        questions = Question.objects.filter(disciplines__in=disciplines).order_by('id')
-        if questions.count() > 0:
-            return zip(*[(q.id, process_tags_br(q.statement)) for q in questions])
-        return None
-
-    def report_function(self, *args, **kwargs):
-        return process_tags_p_inside_p(*args, **kwargs)
-
 class ObjectsWithBrInsideP(DisciplineReportsBaseView):
     template_name = 'reports/edit_object_text.html'
     header = 'Objetos com <br> dentro de <p>'
@@ -520,11 +135,11 @@ class ObjectsWithBrInsideP(DisciplineReportsBaseView):
         learning_objects = LearningObject.objects.filter(text__isnull=False).filter(text__contains='br') \
                     .filter(question__disciplines__in=disciplines).distinct().order_by('id')
         if learning_objects.count() > 0:
-            return zip(*[(lo.id, process_tags_br(lo.text)) for lo in learning_objects])
+            return zip(*[(lo.id, lo.text) for lo in learning_objects])
         return None
 
     def report_function(self, *args, **kwargs):
-        return process_tags_br_inside_p(*args, **kwargs)
+        return report_functions.process_tags_br_inside_p(*args, **kwargs)
 
 
 class ObjectsWithoutSource(DisciplineReportsBaseView):
