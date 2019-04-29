@@ -12,9 +12,9 @@ from django.utils.decorators import method_decorator
 
 from django.contrib.auth.mixins import UserPassesTestMixin
 
-from masteraula.questions.models import Question, Discipline, Document, LearningObject, User
+from masteraula.questions.models import Question, Discipline, Document, LearningObject, User, Alternative
 
-from .serializers import QuestionStatementEditSerializer, LearningObjectEditSerializer
+from .serializers import QuestionStatementEditSerializer, LearningObjectEditSerializer, AlternativeEditSerializer
 
 from bs4 import BeautifulSoup as bs
 
@@ -175,6 +175,24 @@ class LearningObjectUpdateView(SuperuserMixin, View):
             return HttpResponseBadRequest('Does not exist')
 
         serializer = LearningObjectEditSerializer(lo, data=data)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse( {"success": "true"}, status=200)
+
+        return HttpResponseBadRequest('Invalid data')
+
+class AlternativeUpdateView(SuperuserMixin, View):
+    def post(self, request, *args, **kwargs):
+        body_unicode = request.body.decode('utf-8')
+        data = data=json.loads(body_unicode)
+
+        try:
+            lo = Alternative.objects.get(id=data['id'])
+        except:
+            return HttpResponseBadRequest('Does not exist')
+
+        serializer = AlternativeEditSerializer(lo, data=data)
         
         if serializer.is_valid():
             serializer.save()
