@@ -144,6 +144,35 @@ class ObjectsWithoutSource(DisciplineReportsBaseView):
 
         return super().render_to_response(context)
 
+class StatementLearningObject(DisciplineReportsBaseView):
+    template_name = 'reports/has_learning_object.html'
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        disciplines = request.POST.getlist('disciplines',[])
+        
+        if disciplines:
+            questions = Question.objects.filter(disciplines__in=disciplines).order_by('id')
+        else:
+            return super().render_to_response(context)
+        
+        program_list = [
+            'Adaptado',
+            'Disponível( em)?',
+            'Acesso( em)?',
+            'In:',
+            'http(s)?://',
+        ]
+        possible_objects = set()
+        for program in program_list:
+            for question in questions:
+                if re.search(program, question.statement):
+                    possible_objects.add(question.id)
+            questions = questions.filter(~Q(id__in=list(possible_objects)))
+
+        context['data'] = Question.objects.filter(id__in=list(possible_objects))
+
+        return super().render_to_response(context)
 
 
 class StatemensUpdateView(SuperuserMixin, View):

@@ -21,6 +21,7 @@ urlpatterns = [
     url(r'^statements_with_line_height/$', statements_views.StatementsWithLineHeight.as_view(), name='statements_with_line_height'),
     url(r'^statements_all/$', statements_views.StatementsAllFilter.as_view(), name='statements_all'),
 
+    url(r'^has_learning_object/$', views.StatementLearningObject.as_view(), name='has_learning_object'),
     url(r'^objects_without_source/$', views.ObjectsWithoutSource.as_view(), name='objects_without_source'),
 
     url(r'^objects_with_div/$', objects_views.ObjectsWithDivView.as_view(), name='objects_with_div'),
