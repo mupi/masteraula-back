@@ -1,3 +1,4 @@
+from django.db.models import Q
 from .views import DisciplineReportsBaseView, prepare_texts_data
 from . import report_functions
 
@@ -14,7 +15,7 @@ class ObjectsAllFilter(DisciplineReportsBaseView):
         if disciplines:
             learning_objects = LearningObject.objects.filter(text__isnull=False) \
                 .filter(question__disciplines__in=disciplines).distinct().order_by('id')
-        if learning_objects.count() > 0:
+        if disciplines and learning_objects.count() > 0:
             ids, texts = zip(*[(lo.id, lo.text) for lo in learning_objects])
         else:
             return super().render_to_response(context)
