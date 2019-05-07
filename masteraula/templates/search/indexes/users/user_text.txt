@@ -1,3 +1,0 @@
-{{ object.name }}
-{{ object.email }}
-{{ object.about }}
