@@ -271,10 +271,10 @@ class QuestionSerializer(serializers.ModelSerializer):
 
         return question
 
-class QuestionSearchSerializer(HaystackSerializerMixin, QuestionSerializer):
-
-    class Meta(QuestionSerializer.Meta):
-        search_fields = ('text',)
+# class QuestionSearchSerializer(HaystackSerializerMixin, QuestionSerializer):
+# 
+#    class Meta(QuestionSerializer.Meta):
+#       search_fields = ('text',)
 
 class DocumentQuestionSerializer(serializers.ModelSerializer):
 
