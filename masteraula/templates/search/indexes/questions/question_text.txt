@@ -1,28 +1,14 @@
 {% load search_helpers %}
 
-{{ object.statement|stripaccents }}
-
-{% for learning_objects in object.learning_objects.all %}
-    {{ learning_objects.source|stripaccents }}
-    {{ learning_objects.text|stripaccents }}
-    {% for tag in learning_objects.tags.all %}
-        {{ tag.name|stripaccents }}
-    {% endfor %}
-{% endfor %}
-
-{{ object.resolution|stripaccents }}
-
-{% for topic in object.get_all_topics %}
-    {{ topic.name|stripaccents }}
-{% endfor %}
+{{ object.statement|prepare_document }}
 
 {% for tag in object.tags.all %}
     {{ tag.name|stripaccents }}
 {% endfor %}
 
-{% for alternative in object.alternatives.all %}
-    {{ alternative.text|stripaccents }}
+{% for topic in object.topica.all %}
+    {{ topic.name|stripaccents }}
 {% endfor %}
 
 {{ object.year }}
-{{ object.source|stripaccents }}
+{{ object.source|prepare_document }}
