@@ -6,35 +6,35 @@ from taggit.models import Tag
 from haystack import indexes
 
 from .models import Question
-from masteraula.questions.templatetags.search_helpers import stripaccents
+from masteraula.questions.templatetags.search_helpers import stripaccents, prepare_document
 
 import re
 import unicodedata
 
 class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
-    text = indexes.CharField(document=True,use_template=True, boost=0.1)
-
-    topics = indexes.CharField(boost=100)
-    tags = indexes.CharField(boost=50)
-    learning_objects_tags = indexes.CharField(boost=30)
+    text = indexes.CharField(document=True,use_template=True, boost=0.01)
+    
+    topics = indexes.CharField(boost=1000)
+    tags = indexes.CharField(boost=100)
+    statement = indexes.CharField()
 
     disciplines = indexes.MultiValueField()
     teaching_levels = indexes.MultiValueField()
-    year = indexes.CharField(model_attr='year')
-    source = indexes.CharField(model_attr='source')
+    year = indexes.CharField(model_attr='year', null=True)
+    source = indexes.CharField(model_attr='source', null=True)
     difficulty = indexes.CharField()
 
     def get_model(self):
         return Question
-    
+
+    def prepare_statement(self, obj):
+        return prepare_document(obj.statement)
+
     def prepare_topics(self, obj):
-        return ' '.join([ topic.name for topic in obj.topics.only('name') ])
+        return ' '.join([ stripaccents(topic.name) for topic in obj.topics.only('name') ])
 
     def prepare_tags(self, obj):
-        return ' '.join([ tag.name for tag in obj.tags.only('name') ])
-
-    def prepare_learning_objects_tags(self, obj):
-        return ' '.join([ tag.name for lo in obj.learning_objects.all() for tag in lo.tags.only('name') ])
+        return ' '.join([ stripaccents(tag.name) for tag in obj.tags.only('name') ])
 
     def prepare_difficulty(self, obj):
         if obj.difficulty == 'E':
