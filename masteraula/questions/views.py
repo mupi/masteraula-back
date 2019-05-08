@@ -60,14 +60,15 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.IsAuthenticated, QuestionPermission, )
      
     def gen_queryset(self, search_qs, page_start):
+        search_qs = search_qs.load_all()
+        queryset = [None] * len(search_qs)
+
         results = search_qs[page_start:page_start+16]
-        queryset = []
-        for i in range(len(search_qs)):
-            if i in range(page_start, page_start + 16):
-                a = results.pop(0)
-                queryset.append(a.object)
-            else:
-                queryset.append(None)
+        for i in range(page_start, min(page_start + 16, len(queryset))):
+            res = results.pop(0)
+            print(res.score)
+            print(res.text)
+            queryset[i] = res.object
         return queryset
     
     def get_queryset(self):
@@ -89,6 +90,10 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
 
         if not text:
             raise FieldError("Invalid search text")
+        text = stripaccents(text)
+        text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
+        if not text:
+            raise FieldError("Invalid search text")   
 
         start_offset = (page_no - 1) * 16
 
@@ -106,16 +111,29 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
                 difficulties_texts.append('Medio')
             if 'H' in difficulties:
                 difficulties_texts.append('Dificil')
-            print(difficulties_texts)
             params['difficulty__in'] = difficulties_texts
         if years is not None and years:
             params['year__in'] = years
         if sources is not None and sources:
-            params['source__in'] = sources 
+            params['source__in'] = sources
 
-        search_queryset = SearchQuerySet().models(Question).filter_and(**params).filter( \
-            SQ(content=AutoQuery(text)) | SQ(tags=AutoQuery(text)) | SQ(topics=AutoQuery(text)) | SQ(learning_objects_tags=AutoQuery(text)))
-        
+        # The following queries are to apply the weights of haystack boost
+        queries = [SQ(tags=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        query = queries.pop()
+        for item in queries:
+            query |= item
+        queries = [SQ(tags=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        for item in queries:
+            query |= item
+        queries = [SQ(statement=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        for item in queries:
+            query |= item
+
+        search_queryset = SearchQuerySet().models(Question).filter_and(**params)
+        search_queryset = search_queryset.filter(SQ(content=AutoQuery(text)) | (
+            SQ(content=AutoQuery(text)) & query
+        ))
+
         return self.gen_queryset(search_queryset, start_offset)
     
 class QuestionViewSet(viewsets.ModelViewSet):
