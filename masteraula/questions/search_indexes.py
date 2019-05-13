@@ -12,7 +12,7 @@ import re
 import unicodedata
 
 class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
-    text = indexes.CharField(document=True,use_template=True, boost=0.01)
+    text = indexes.CharField(document=True, use_template=True, boost=0.01)
     
     topics = indexes.CharField(boost=1000)
     tags = indexes.CharField(boost=100)

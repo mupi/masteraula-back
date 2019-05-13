@@ -2,13 +2,20 @@
 
 {{ object.statement|prepare_document }}
 
+{{ object.year }}
+{{ object.source|prepare_document }}
+
 {% for tag in object.tags.all %}
     {{ tag.name|stripaccents }}
 {% endfor %}
 
-{% for topic in object.topica.all %}
+{% for topic in object.topics.all %}
     {{ topic.name|stripaccents }}
 {% endfor %}
 
-{{ object.year }}
-{{ object.source|prepare_document }}
+{% for lo in object.learning_objects.all %}
+    {{ lo.source|stripaccents }}
+    {% for tag in lo.tags.all %}
+        {{ tag.name|stripaccents }}
+    {% endfor %}
+{% endfor %}

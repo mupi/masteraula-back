@@ -66,7 +66,6 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         results = search_qs[page_start:page_start+16]
         for i in range(page_start, min(page_start + 16, len(queryset))):
             res = results.pop(0)
-            print(res.score)
             print(res.text)
             queryset[i] = res.object
         return queryset
@@ -103,7 +102,6 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         if teaching_levels is not None and teaching_levels:
             params['teaching_levels__in'] = teaching_levels
         if difficulties is not None and difficulties:
-            print(difficulties)
             difficulties_texts = []
             if 'E' in difficulties:
                 difficulties_texts.append('Facil')
@@ -122,7 +120,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         query = queries.pop()
         for item in queries:
             query |= item
-        queries = [SQ(tags=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        queries = [SQ(topics=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         for item in queries:
             query |= item
         queries = [SQ(statement=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
