@@ -173,10 +173,11 @@ class StatementLearningObject(DisciplineReportsBaseView):
         
         program_list = [
             'Adaptado',
-            'Disponível( em)?',
-            'Acesso( em)?',
+            'Disponível',
+            'Acesso',
             'In:',
             'http(s)?://',
+            'Adapted'
         ]
         possible_objects = set()
         for program in program_list:
