@@ -68,24 +68,6 @@ def process_tags_texto_associado_inside_p(all_ids, all_texts, force_stay=False, 
         return ids, texts, clean, status
     return ids, texts, clean
 
-def process_tags_texto_associado_inside_p(all_ids, all_texts, force_stay=False, get_status=False):
-    program = '<span[^<]*vertical-align ?: ?super[^<]*>([\s\S]*?)<\/span>'
-    
-    ids, texts, clean, status = apply_regex_program(program, '<sup>\\1</sup>', 'Got sup', all_ids, all_texts, force_stay)
-
-    if get_status:
-        return ids, texts, clean, status
-    return ids, texts, clean
-
-def process_tags_texto_associado_inside_p(all_ids, all_texts, force_stay=False, get_status=False):
-    program = '<span[^<]*vertical-align ?: ?sub[^<]*>([\s\S]*?)<\/span>'
-    
-    ids, texts, clean, status = apply_regex_program(program, '<sub>\\1</sub>', 'Got sub', all_ids, all_texts, force_stay)
-
-    if get_status:
-        return ids, texts, clean, status
-    return ids, texts, clean
-
 def process_line_heigth(all_ids, all_texts, force_stay=False, get_status=False):
     program = '<span[^<]*line-height ?:[^<]*>([\s\S]*?)<\/span>'
     
