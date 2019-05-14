@@ -30,6 +30,8 @@ class DocxGeneratorAWS():
                 self.html_file.write('<img src="%s" />\n' % learning_object.image.url)
             else:
                 self.html_file.write(learning_object.text)
+            if learning_object.source:
+                self.html_file.write('<p>%s</p>' % learning_object.source)
 
 
     def write_question(self, question, question_counter):
