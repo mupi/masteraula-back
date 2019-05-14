@@ -1,4 +1,3 @@
-base
 {% extends "base.html" %}
 {% load static %}
 
@@ -8,5 +7,55 @@ base
 <a href="{% url 'reports:uncategorized_questions' %}">Questões não categorizadas</a>
 <br>
 <a href="{% url 'reports:number_documents' %}">Quantidade de provas do usuário</a>
+<br>
+<h1>Questoes</h1>
+<a href="{% url 'reports:statements_with_div' %}">Questões com tag div</a>
+<br>
+<a href="{% url 'reports:statements_with_texto_associado' %}">Questões com texto associado</a>
+<br>
+<a href="{% url 'reports:statements_with_br' %}">Questões com tag br</a>
+<br>
+<a href="{% url 'reports:statements_with_p_inside_p' %}">Questões com tag p dentro de p</a>
+<br>
+<a href="{% url 'reports:statements_with_empty_p' %}">Questões com tags p vazias</a>
+<br>
+<a href="{% url 'reports:statements_with_strong_em' %}">Questões com tag strong ou em</a>
+<br>
+<a href="{% url 'reports:statements_with_sup_sub' %}">Questões com tag sup ou sub</a>
+<br>
+<a href="{% url 'reports:statements_with_line_height' %}">Questões com line height</a>
+<br>
+<a href="{% url 'reports:statements_all' %}">Questões com todos os filtros</a>
+<br>
+<h1>Objetos de aprendizagem</h1>
+<br>
+<a href="{% url 'reports:objects_with_div' %}">Objetos de aprendizagem  com tag div</a>
+<br>
+<a href="{% url 'reports:objects_with_texto_associado' %}">Objetos de aprendizagem com texto associado</a>
+<br>
+<a href="{% url 'reports:objects_with_br' %}">Objetos de aprendizagem com tag br</a>
+<br>
+<a href="{% url 'reports:objects_with_p_inside_p' %}">Objetos de aprendizagem com tag p dentro de p</a>
+<br>
+<a href="{% url 'reports:objects_with_empty_p' %}">Objetos de aprendizagem com tags p vazias</a>
+<br>
+<a href="{% url 'reports:objects_with_strong_em' %}">Objetos de aprendizagem com tag strong ou em</a>
+<br>
+<a href="{% url 'reports:objects_with_sup_sub' %}">Objetos de aprendizagem com tag sup ou sub</a>
+<br>
+<a href="{% url 'reports:objects_with_line_height' %}">Objetos de aprendizagem com line height</a>
+<br>
+<a href="{% url 'reports:objects_all' %}">Objetos de aprendizagem com todos os filtros</a>
+<br>
+<h1>Alterntivas</h1>
+<br>
+<a href="{% url 'reports:alternatives_all' %}">Alternativas com todos os filtros</a>
+<br>
+<h1>Objetos de aprendizagem sem source</h1>
+<br>
+<a href="{% url 'reports:objects_without_source' %}">Objetos sem fonte</a>
+<br>
+<h1>Possiveis objetos de aprendizagem</h1>
+<a href="{% url 'reports:has_learning_object' %}">Possiveis objetos</a>
 
 {% endblock %}
