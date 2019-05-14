@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h1>Possiveis objetos de aprendizagem</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    {% for discipline in disciplines %}
+        <input type="checkbox" name="disciplines" value="{{discipline.id}}">
+            {{discipline.name}}
+        </input><br>
+    {% endfor %}
+    <input type="submit" value="Enviar">
+</form>
+{% for question in data %}
+    <div id="lo{{question.id}}">
+    <hr>
+    <h1>Questao {{question.id}}</h1>
+    {{ question.statement | safe}}
+
+    </div>
+{% endfor %}
+
+<script>
+function update(id) {
+    const  token = "{{ csrf_token }}";
+    const new_text = document.getElementById("text" + id)
+
+    const data = { 
+        id,
+        text: new_text ? new_text.value : null,
+        source: document.getElementById("source" + id).value 
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "/reports/learning_object_update/",
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        headers: { "X-CSRFToken": token },
+    }).done(function() {
+        document.getElementById('status' + id).innerHTML = "Modificado"
+    })
+    .fail(function() {
+        alert( "error" );
+    });
+}
+</script>
+
+{% endblock %}
