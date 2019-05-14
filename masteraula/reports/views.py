@@ -32,6 +32,24 @@ def process_tags_br(text):
         text = program.sub('<br/>', text)
     return text
 
+def prettify(html_text):
+
+    # Double curly brackets to avoid problems with .format()
+    stripped_markup = html_text.replace('{','{{').replace('}','}}')
+    stripped_markup = bs(stripped_markup, 'html.parser')
+
+    unformatted_tag_list = []
+    unformatted_tag_types = [
+        'strong', 'em', 'sup', 'sub', 'b', 'i', 'a', 'img', 'p'
+    ]
+
+    for i, tag in enumerate(stripped_markup.find_all(unformatted_tag_types)):
+        unformatted_tag_list.append(str(tag))
+        tag.replace_with('{' + 'unformatted_tag_list[{0}]'.format(i) + '}')
+
+    return stripped_markup.prettify().format(unformatted_tag_list=unformatted_tag_list)
+
+
 class DisciplineReportsBaseView(SuperuserMixin, TemplateView):
     login_url = '/admin/login/'
 
@@ -62,11 +80,8 @@ def prepare_texts_data(ids, texts, clean, all_status=None):
     if all_status is None:
         all_status = [None] * len(ids)
     for _id, text, clean_text, status in zip(ids, texts, clean, all_status):
-        soup = bs(text, "html.parser")
-        text = soup.prettify()
-
-        soup = bs(clean_text, "html.parser")
-        clean_text = soup.prettify()
+        text = prettify(text)
+        clean_text = prettify(clean_text)
 
         data.append((_id, text, clean_text, status))
     return data
