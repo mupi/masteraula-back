@@ -28,25 +28,26 @@ class Command(BaseCommand):
             with open('json-questions/' + filename) as data_file:
                 data = json.load(data_file)
             
-                try:
-                    for index, question_data in enumerate(data):
+                for index, question_data in enumerate(data):
+                    try:
                         statement = ""
                         statement_image = ""
                         object_text = ""
                         image = ""
                         check = False
                         count = 0
+                        count_obj = 0
 
                         #Check if statement p1 has image  
                         for data in question_data["statement_p1"]:
                             data = find_src(data)
                             if len(data) > 0:
                                 for i in data:
-                                    image = name_image(i)       
+                                    image = name_image(i).split("/")[-1]      
                                 exists = os.path.exists(img_dir + '/' + image)
 
                                 if exists == False:
-                                    print("Não existe imagem da Questão " + question_data["id_enem"])
+                                    print("Não existe imagem no Enunciado P1" + question_data["id_enem"])
                                     check = True                                           
                         
                         #Check if statement p2 has image  
@@ -54,26 +55,38 @@ class Command(BaseCommand):
                             data = find_src(data)
                             if len(data) > 0:
                                 for i in data:
-                                    image = name_image(i)
+                                    image = name_image(i).split("/")[-1]
                                 exists = os.path.isfile(img_dir + '/' + image)
-                                    
+                                   
                                 if exists == False:
-                                    print("Não existe imagem da Questão " + question_data["id_enem"])
-                                    check = True                                        
+                                    print("Não existe imagem no Enunciado P2" + question_data["id_enem"])
+                                    check = True                                                           
 
                         #Check if alternatives has images  
                         for data in question_data["alternatives"]:
                             data = find_src(data)
                             if len(data) > 0:
                                 for i in data:
-                                    image = name_image(i)
+                                    image = name_image(i).split("/")[-1]
                                 exists = os.path.isfile(img_dir + '/' + image)
                                
                                 if exists == False:
-                                    print("Não existe imagem da Questão " + question_data["id_enem"])
+                                    print("Não existe imagem nas alternativas " + question_data["id_enem"])
                                     check = True                                        
                         
-                        #Check if object has images 
+                        #Check if object_text has images  
+                        for data in question_data["object_text"]:
+                            data = find_src(data)
+                            if len(data) > 0:
+                                for i in data:
+                                    image = name_image(i).split("/")[-1]
+                                exists = os.path.isfile(img_dir + '/' + image)
+                               
+                                if exists == False:
+                                    print("Não existe imagem no objeto texto " + question_data["id_enem"])
+                                    check = True   
+                        
+                        #Check if object_image has images 
                         if "<img" in question_data["object_image"]:
                             object_image = question_data["object_image"].replace("\"", "").split("/")[-1]
                             if "?" in object_image:
@@ -81,7 +94,7 @@ class Command(BaseCommand):
                             exists = os.path.isfile(img_dir + '/' + object_image)
 
                             if exists == False:
-                                print("Não existe imagem da Questão " + question_data["id_enem"])
+                                print("Não existe imagem no objeto imagem " + question_data["id_enem"])
                                 check = True  
 
                         if check:
@@ -144,35 +157,6 @@ class Command(BaseCommand):
                                                             difficulty=difficulty,
                                                             author_id=1)
                                 
-                        if "alternatives" in question_data and len(question_data[ "alternatives"]) > 0:
-                            for answer_data in question_data[ "alternatives"]:
-                                if answer_correct == answer_data:
-                                    is_correct = True
-                                else:
-                                    is_correct = False
-                                               
-                        
-                                data = find_src(answer_data)
-                                if len(data) > 0:
-                                    for i in data:
-                                        image = name_image(i)
-
-                                        if count > 0:
-                                            new_name = str(question.id) + '_' + str(count) + '.' + image.split('.')[-1]
-                                            count = count + 1
-                                                        
-                                        else:
-                                            count = count + 1
-                                            new_name = str(question.id) + '.' + image.split('.')[-1]
-
-                                        os.rename(img_dir + '/' + image, img_dir + '/' + new_name)
-                                        answer_data = answer_data.replace(i, 'src="https://s3.us-east-2.amazonaws.com/masteraula/images/question_images/new_questions/' + new_name + '" ')
-                         
-                                answer = Alternative.objects.create(text=answer_data,
-                                                                    is_correct=is_correct,
-                                                                    question_id=question.id)
-
-
                         question.disciplines.add(discipline)
                         question.teaching_levels.add(teaching_level)                      
 
@@ -184,10 +168,38 @@ class Command(BaseCommand):
                         print ("Questao " + question_data["id_enem"] + " Salva")
                     
                         if  len(question_data["object_text"]) > 0:
-                            for data in question_data["object_text"]:
-                                object_text = object_text + data
-        
                             learning_object = LearningObject.objects.create(owner_id=1, text=object_text)
+                            len_object = sum('<img' in s for s in question_data["object_text"]) 
+                            for obj in question_data["object_text"]:
+                                img = find_img(obj)
+                                if len(img) > 0:
+                                    for text in img:
+                                        data = find_src(text)
+                                        for i in data:
+                                            image = name_image(i).split("/")[-1]
+
+                                            if count_obj > 0:
+                                                new_name = str(learning_object.id) + '_' + str(count_obj) + '.' + image.split('.')[-1]
+                                                count_obj = count_obj + 1           
+                                            else:
+                                                count_obj = count_obj + 1
+                                                new_name = str(learning_object.id) + '.' + image.split('.')[-1]
+
+                                            os.rename(img_dir + '/' + image, img_dir + '/' + new_name)
+                                           
+                                            if len_object == 1 and len(question_data["object_image"]) == 0:
+                                                object_image = image
+                                                learning_object.image.save(new_name, File(open(img_dir + '/' +  new_name, 'rb'))) 
+                                                obj = obj.replace(text, ' ')   
+
+                                            if len_object > 1 or question_data["object_image"] != "":
+                                                obj = obj.replace(text, '<img src="https://s3.us-east-2.amazonaws.com/masteraula/images/question_images/new_questions/' + new_name + '"> ')    
+
+
+                                object_text = object_text + obj
+                                learning_object.text = object_text
+                                learning_object.save()
+                                                           
                             question.learning_objects.add(learning_object.id)
                             print ("Objeto texto da questão Salvo")
                        
@@ -203,42 +215,80 @@ class Command(BaseCommand):
                             question.learning_objects.add(learning_object.id)
 
                         #Rename Image Statement
-                        data = find_src(question.statement)
-                        if len(data) > 0:
-                            for i in data:
-                                image = name_image(i)
+                        img = find_img(question.statement)
+                        if len(img) > 0:
+                            for text in img:
+                                data = find_src(text)
+                                for i in data:
+                                    image = name_image(i).split("/")[-1]
 
-                                if count > 0:
-                                    new_name = str(question.id) + '_' + str(count) + '.' + image.split('.')[-1]
-                                    count = count + 1
-                                            
+                                    if count > 0:
+                                        new_name = str(question.id) + '_' + str(count) + '.' + image.split('.')[-1]
+                                        count = count + 1           
+                                    else:
+                                        count = count + 1
+                                        new_name = str(question.id) + '.' + image.split('.')[-1]
+
+                                    os.rename(img_dir + '/' + image, img_dir + '/' + new_name)
+                                    question.statement = question.statement.replace(text, '<img src="https://s3.us-east-2.amazonaws.com/masteraula/images/question_images/new_questions/' + new_name + '"> ')
+                                    question.save()    
+                        
+                        #Create alternatives and rename Image 
+                        if "alternatives" in question_data and len(question_data["alternatives"]) > 0:
+                            for answer_data in question_data["alternatives"]:
+                                if answer_correct == answer_data:
+                                    is_correct = True
                                 else:
-                                    count = count + 1
-                                    new_name = str(question.id) + '.' + image.split('.')[-1]
+                                    is_correct = False
+                                
+                                img = find_img(answer_data)
+                                if len(img) > 0:
+                                    for text in img:
+                                        data = find_src(text)
+                                        for i in data:
+                                            image = name_image(i).split("/")[-1]
 
-                                os.rename(img_dir + '/' + image, img_dir + '/' + new_name)
-                                question.statement = question.statement.replace(i, 'src="https://s3.us-east-2.amazonaws.com/masteraula/images/question_images/new_questions/' + new_name + '" ')
-                                question.save()    
-                    
-                except Exception as e:
-                    print('ERROR adding question Enem ' + question_data["id_enem"])
-                    print(e)
-                    errors_list.append([question_data["id_enem"]]) 
-                    
-                    with open('errors_questions.csv', mode='w') as errors_questions:
-                        errors_questions = csv.writer(errors_questions, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                        errors_questions.writerows(errors_list)
+                                            if count > 0:
+                                                new_name = str(question.id) + '_' + str(count) + '.' + image.split('.')[-1]
+                                                count = count + 1           
+                                            else:
+                                                count = count + 1
+                                                new_name = str(question.id) + '.' + image.split('.')[-1]
+
+                                            os.rename(img_dir + '/' + image, img_dir + '/' + new_name)
+                                            answer_data = answer_data.replace(text, '<img src="https://s3.us-east-2.amazonaws.com/masteraula/images/question_images/new_questions/' + new_name + '"> ')
+                                answer = Alternative.objects.create(text=answer_data,
+                                                                    is_correct=is_correct,
+                                                                    question_id=question.id)
+
+                    except Exception as e:
+                        print('ERROR adding question Enem ' + question_data["id_enem"])
+                        print(e)
+                        errors_list.append([question_data["id_enem"]]) 
+                        
+                        with open('errors_questions.csv', mode='w') as errors_questions:
+                            errors_questions = csv.writer(errors_questions, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                            errors_questions.writerows(errors_list)
+                            continue
 
         with open('errors_imagens.csv', mode='w') as errors_imagens:
             errors_imagens = csv.writer(errors_imagens, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             errors_imagens.writerows(errors)
-            
+
 def find_src(text):
-    text = re.findall(r'src=.*?" ', text)
+    if "latex" in text:
+        text = re.findall(r'src=".*?"', text)
+        return text
+    text = re.findall(r'src=".*?" ', text)
+    return text
+
+def find_img(text):
+    text = re.findall(r'<img.*?>', text)
     return text
 
 def name_image(text):
     image = text.replace("\"", "").split("/")[-1]
+
     if "?" in text:
         image = text.split("?")[0]
     image = image.strip()
