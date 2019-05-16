@@ -12,7 +12,6 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('file_name', nargs='+')
         parser.add_argument('img_dir')
-        parser.add_argument('discipline')
 
     def handle(self, *args, **options):
         img_dir = options['img_dir']
@@ -24,10 +23,10 @@ class Command(BaseCommand):
             print ('Salvando questoes do arquivo ' + filename)
             errors = []
             errors_list = []
-
+        
             with open('json-questions/' + filename) as data_file:
                 data = json.load(data_file)
-            
+                discipline = filename.split(".")[0]
                 for index, question_data in enumerate(data):
                     try:
                         statement = ""
@@ -51,7 +50,7 @@ class Command(BaseCommand):
                             exists = check_exists(data, img_dir)
                                    
                             if exists == False:
-                                print("Não existe imagem no Enunciado P2" + question_data["id_enem"])
+                                print("Não existe imagem no Enunciado P2 " + question_data["id_enem"])
                                 check = True                                                           
 
                         #Check if alternatives has images  
@@ -106,11 +105,9 @@ class Command(BaseCommand):
                             if message != '':
                                 print(message)
                                 continue
-                            
-                        discipline = options['discipline']
                        
                         try:
-                            discipline = Discipline.objects.get(id=discipline)
+                            discipline = Discipline.objects.get(name=discipline)
                         except Discipline.DoesNotExist:
                             raise CommandError('Disciplina "%s" nao existe' % discipline)
                                             
@@ -205,6 +202,7 @@ class Command(BaseCommand):
                             question.learning_objects.add(learning_object.id)
                             if "object_source" in question_data:
                                 learning_object.source = question_data["object_source"]
+                            os.remove(img_dir + '/' + object_image)
 
                         #Rename Image Statement
                         img = find_img(question.statement)
@@ -258,15 +256,15 @@ class Command(BaseCommand):
                         print('ERROR adding question Enem ' + question_data["id_enem"])
                         print(e)
                         errors_list.append([question_data["id_enem"]]) 
-                        
-                        with open('errors_questions.csv', mode='w') as errors_questions:
-                            errors_questions = csv.writer(errors_questions, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                            errors_questions.writerows(errors_list)
-                            continue
+                        continue
 
         with open('errors_imagens.csv', mode='w') as errors_imagens:
             errors_imagens = csv.writer(errors_imagens, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             errors_imagens.writerows(errors)
+
+        with open('errors_questions.csv', mode='w') as errors_questions:
+                            errors_questions = csv.writer(errors_questions, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                            errors_questions.writerows(errors_list)
 
 def clean_div(text):
     div = re.findall(r'<div.*?>', text)
