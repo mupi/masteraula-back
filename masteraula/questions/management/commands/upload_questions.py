@@ -128,10 +128,12 @@ class Command(BaseCommand):
                         
                         if question_data["statement_p1"]:
                             for data in question_data["statement_p1"]:
+                                data = clean_div(data)
                                 statement = statement + data
 
                         if question_data["statement_p2"]:
                             for data in question_data["statement_p2"]:
+                                data = clean_div(data)
                                 statement = statement + data
                                         
                         question = Question.objects.create(statement = statement,
@@ -153,9 +155,11 @@ class Command(BaseCommand):
                     
                         if  len(question_data["object_text"]) > 0:
                             learning_object = LearningObject.objects.create(owner_id=1, text=object_text)
+                            
                             if "object_source" in question_data:
                                 learning_object.source = question_data["object_source"]
                             len_object = sum('<img' in s for s in question_data["object_text"]) 
+                            
                             for obj in question_data["object_text"]:
                                 img = find_img(obj)
                                 if len(img) > 0:
@@ -181,7 +185,7 @@ class Command(BaseCommand):
 
                                             if len_object > 1 or question_data["object_image"] != "":
                                                 obj = obj.replace(text, '<img src="https://s3.us-east-2.amazonaws.com/masteraula/images/question_images/new_questions/' + new_name + '"> ')
-
+                                obj = clean_div(obj)
                                 object_text = object_text + obj
                                 learning_object.text = object_text
                                 learning_object.save()
@@ -224,6 +228,7 @@ class Command(BaseCommand):
                         #Create alternatives and rename Image 
                         if "alternatives" in question_data and len(question_data["alternatives"]) > 0:
                             for answer_data in question_data["alternatives"]:
+                                answer_data = clean_div(answer_data)
                                 if answer_correct == answer_data:
                                     is_correct = True
                                 else:
@@ -262,6 +267,14 @@ class Command(BaseCommand):
         with open('errors_imagens.csv', mode='w') as errors_imagens:
             errors_imagens = csv.writer(errors_imagens, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             errors_imagens.writerows(errors)
+
+def clean_div(text):
+    div = re.findall(r'<div.*?>', text)
+    if len(div) > 0:
+        for i in div:
+            text = text.replace(i, "")
+    text = text.replace("</div>", "")
+    return text
 
 def find_src(text):
     if "latex" in text:
