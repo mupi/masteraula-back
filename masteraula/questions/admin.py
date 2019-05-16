@@ -101,7 +101,7 @@ class LearningObjectModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', )
     search_fields = ['id', 'name', 'source', 'tags__name']
     list_display = ('id', 'source', 'image', 'text', 'tag_list')
-    search_fields = ['id',]
+    search_fields = ['id','source', 'text']
     list_per_page = 100
 
     inlines = [LearningObjectQuestionsInline,]
