@@ -40,51 +40,35 @@ class Command(BaseCommand):
 
                         #Check if statement p1 has image  
                         for data in question_data["statement_p1"]:
-                            data = find_src(data)
-                            if len(data) > 0:
-                                for i in data:
-                                    image = name_image(i).split("/")[-1]      
-                                exists = os.path.exists(img_dir + '/' + image)
+                            exists = check_exists(data, img_dir)
 
-                                if exists == False:
-                                    print("Não existe imagem no Enunciado P1" + question_data["id_enem"])
-                                    check = True                                           
+                            if exists == False:
+                                print("Não existe imagem no Enunciado P1 " + question_data["id_enem"])
+                                check = True                                           
                         
                         #Check if statement p2 has image  
                         for data in question_data["statement_p2"]:
-                            data = find_src(data)
-                            if len(data) > 0:
-                                for i in data:
-                                    image = name_image(i).split("/")[-1]
-                                exists = os.path.isfile(img_dir + '/' + image)
+                            exists = check_exists(data, img_dir)
                                    
-                                if exists == False:
-                                    print("Não existe imagem no Enunciado P2" + question_data["id_enem"])
-                                    check = True                                                           
+                            if exists == False:
+                                print("Não existe imagem no Enunciado P2" + question_data["id_enem"])
+                                check = True                                                           
 
                         #Check if alternatives has images  
                         for data in question_data["alternatives"]:
-                            data = find_src(data)
-                            if len(data) > 0:
-                                for i in data:
-                                    image = name_image(i).split("/")[-1]
-                                exists = os.path.isfile(img_dir + '/' + image)
-                               
-                                if exists == False:
-                                    print("Não existe imagem nas alternativas " + question_data["id_enem"])
-                                    check = True                                        
+                            exists = check_exists(data, img_dir)
+
+                            if exists == False:
+                                print("Não existe imagem nas alternativas " + question_data["id_enem"])
+                                check = True                                        
                         
                         #Check if object_text has images  
                         for data in question_data["object_text"]:
-                            data = find_src(data)
-                            if len(data) > 0:
-                                for i in data:
-                                    image = name_image(i).split("/")[-1]
-                                exists = os.path.isfile(img_dir + '/' + image)
+                            exists = check_exists(data, img_dir)
                                
-                                if exists == False:
-                                    print("Não existe imagem no objeto texto " + question_data["id_enem"])
-                                    check = True   
+                            if exists == False:
+                                print("Não existe imagem no objeto texto " + question_data["id_enem"])
+                                check = True   
                         
                         #Check if object_image has images 
                         if "<img" in question_data["object_image"]:
@@ -169,6 +153,8 @@ class Command(BaseCommand):
                     
                         if  len(question_data["object_text"]) > 0:
                             learning_object = LearningObject.objects.create(owner_id=1, text=object_text)
+                            if "object_source" in question_data:
+                                learning_object.source = question_data["object_source"]
                             len_object = sum('<img' in s for s in question_data["object_text"]) 
                             for obj in question_data["object_text"]:
                                 img = find_img(obj)
@@ -189,12 +175,12 @@ class Command(BaseCommand):
                                            
                                             if len_object == 1 and len(question_data["object_image"]) == 0:
                                                 object_image = image
+                                                learning_object.folder_name = question_data["source"] + "-" + question_data["year"]
                                                 learning_object.image.save(new_name, File(open(img_dir + '/' +  new_name, 'rb'))) 
                                                 obj = obj.replace(text, ' ')   
 
                                             if len_object > 1 or question_data["object_image"] != "":
-                                                obj = obj.replace(text, '<img src="https://s3.us-east-2.amazonaws.com/masteraula/images/question_images/new_questions/' + new_name + '"> ')    
-
+                                                obj = obj.replace(text, '<img src="https://s3.us-east-2.amazonaws.com/masteraula/images/question_images/new_questions/' + new_name + '"> ')
 
                                 object_text = object_text + obj
                                 learning_object.text = object_text
@@ -213,6 +199,8 @@ class Command(BaseCommand):
                             rename = str(learning_object.id) + '.' + object_image.split(".")[-1]
                             learning_object.image.save(rename, File(open(img_dir + '/' + object_image, 'rb')))
                             question.learning_objects.add(learning_object.id)
+                            if "object_source" in question_data:
+                                learning_object.source = question_data["object_source"]
 
                         #Rename Image Statement
                         img = find_img(question.statement)
@@ -293,3 +281,11 @@ def name_image(text):
         image = text.split("?")[0]
     image = image.strip()
     return image
+
+def check_exists(data, img_dir):
+    data = find_src(data)
+    if len(data) > 0:
+        for i in data:
+            image = name_image(i).split("/")[-1]      
+        exists = os.path.exists(img_dir + '/' + image)
+        return exists
