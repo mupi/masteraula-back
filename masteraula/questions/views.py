@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 from django.http import HttpResponse, FileResponse, HttpResponseBadRequest
-
-from drf_haystack.filters import HaystackAutocompleteFilter
-from drf_haystack.viewsets import HaystackViewSet
+from haystack.query import SearchQuerySet, SQ, AutoQuery
 
 from rest_framework import (generics, response, viewsets, status, mixins, 
                     exceptions, pagination, permissions)
+
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response
+
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
+from django.core.exceptions import FieldError
 
 from taggit.models import Tag
 
@@ -53,33 +54,53 @@ class HeaderPagination(pagination.PageNumberPagination):
     page_size = 10
     max_page_size = 50
 
-class QuestionSearchView(HaystackViewSet):   
-    index_models = [Question]
+class QuestionSearchView(viewsets.ReadOnlyModelViewSet):   
     pagination_class = QuestionPagination
-    serializer_class = serializers.QuestionSearchSerializer
+    serializer_class = serializers.QuestionSerializer
     permission_classes = (permissions.IsAuthenticated, QuestionPermission, )
      
-    def get_queryset(self, *args, **kwargs):
+    def gen_queryset(self, search_qs, page_start):
+        search_qs = search_qs.load_all()
+        queryset = [None] * len(search_qs)
+
+        results = search_qs[page_start:page_start+16]
+        for i in range(page_start, min(page_start + 16, len(queryset))):
+            res = results.pop(0)
+            print(res.text)
+            queryset[i] = res.object
+        return queryset
+    
+    def get_queryset(self):
         disciplines = self.request.query_params.getlist('disciplines', None)
         teaching_levels = self.request.query_params.getlist('teaching_levels', None)
         difficulties = self.request.query_params.getlist('difficulties', None)
         years = self.request.query_params.getlist('years', None)
         sources = self.request.query_params.getlist('sources', None)
-        
-        self.request.query_params._mutable = True
-        for key in self.request.query_params:
-            if key == 'text' or key=='page':
-                self.request.query_params.setlist(key, [stripaccents(qp_value) for qp_value in self.request.query_params.getlist(key)])
-            else:
-                self.request.query_params.setlist(key, [])
-        self.request.query_params._mutable = False
+        page = self.request.GET.get('page', None)
+        text = self.request.GET.get('text', None)
 
-        queryset = super().get_queryset()
+        try:
+            page_no = int(self.request.GET.get('page', 1))
+        except (TypeError, ValueError):
+            raise FieldError("Not a valid number for page.")
 
+        if page_no < 1:
+            raise FieldError("Pages should be 1 or greater.")
+
+        if not text:
+            raise FieldError("Invalid search text")
+        text = stripaccents(text)
+        text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
+        if not text:
+            raise FieldError("Invalid search text")   
+
+        start_offset = (page_no - 1) * 16
+
+        params = {}
         if disciplines is not None and disciplines:
-            queryset = queryset.filter(disciplines__id__in=disciplines)
+            params['disciplines__id__in'] = disciplines
         if teaching_levels is not None and teaching_levels:
-            queryset = queryset.filter(teaching_levels__in=teaching_levels)
+            params['teaching_levels__in'] = teaching_levels
         if difficulties is not None and difficulties:
             difficulties_texts = []
             if 'E' in difficulties:
@@ -88,44 +109,30 @@ class QuestionSearchView(HaystackViewSet):
                 difficulties_texts.append('Medio')
             if 'H' in difficulties:
                 difficulties_texts.append('Dificil')
-            queryset = queryset.filter(difficulty__in=difficulties_texts)
+            params['difficulty__in'] = difficulties_texts
         if years is not None and years:
-            queryset = queryset.filter(year__in=years)
+            params['year__in'] = years
         if sources is not None and sources:
-            # query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
-            # queryset = queryset.filter(query)
-            queryset = queryset.filter(source__in=sources)   
-        
-        #Salvar os dados de busca
-        obj = Search.objects.create(user=self.request.user, term=self.request.query_params['text'])
-        
-        if disciplines is not None:
-            obj.disciplines = disciplines
-        if teaching_levels is not None:
-            obj.teaching_levels = teaching_levels
-        if difficulties is not None:
-            difficulties_text = []
+            params['source__in'] = sources
 
-            for d in difficulties:
-                if 'E' in d:
-                    difficulties_text.append('Easy')     
-                if 'M' in d:
-                    difficulties_text.append('Medium')
-                if 'H' in d:
-                    difficulties_text.append('Hard')
-           
-            dif = ', '.join(difficulties_text)
-            obj.difficulty = dif
+        # The following queries are to apply the weights of haystack boost
+        queries = [SQ(tags=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        query = queries.pop()
+        for item in queries:
+            query |= item
+        queries = [SQ(topics=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        for item in queries:
+            query |= item
+        queries = [SQ(statement=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        for item in queries:
+            query |= item
 
-        if sources is not None:
-            s = ', '.join(sources)
-            obj.source = s
-        if years is not None:
-            y = ', '.join(years)
-            obj.year = y
-  
-        obj.save()
-        return queryset
+        search_queryset = SearchQuerySet().models(Question).filter_and(**params)
+        search_queryset = search_queryset.filter(SQ(content=AutoQuery(text)) | (
+            SQ(content=AutoQuery(text)) & query
+        ))
+
+        return self.gen_queryset(search_queryset, start_offset)
     
 class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.QuestionSerializer

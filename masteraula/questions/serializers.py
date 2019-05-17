@@ -18,9 +18,6 @@ from rest_framework_recursive.fields import RecursiveField
 
 from taggit.models import Tag
 
-from django.db.models.signals import post_save
-from .signals import save_tag
-
 from masteraula.users.models import User, Profile
 from masteraula.users.serializers import UserDetailsSerializer
 
@@ -125,7 +122,6 @@ class LearningObjectSerializer(serializers.ModelSerializer):
             learning_object.tags.clear()
             for t in [tag for tag in tags if tag.strip() != '']:
                 learning_object.tags.add(t)
-        post_save.connect(save_tag, sender=Tag)
 
         return learning_object
 
@@ -271,10 +267,10 @@ class QuestionSerializer(serializers.ModelSerializer):
 
         return question
 
-class QuestionSearchSerializer(HaystackSerializerMixin, QuestionSerializer):
-
-    class Meta(QuestionSerializer.Meta):
-        search_fields = ('text',)
+# class QuestionSearchSerializer(HaystackSerializerMixin, QuestionSerializer):
+# 
+#    class Meta(QuestionSerializer.Meta):
+#       search_fields = ('text',)
 
 class DocumentQuestionSerializer(serializers.ModelSerializer):
 
