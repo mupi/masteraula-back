@@ -1,6 +1,9 @@
 from django.core.management.base import BaseCommand, CommandError
 from masteraula.questions.models import Question, Alternative, TeachingLevel, Discipline, LearningObject
 from django.core.files import File
+
+from .check_duplicates import check_duplicates
+
 import json
 import os
 import re
@@ -10,7 +13,6 @@ class Command(BaseCommand):
     help = 'populate data from json-questions directory (data extracted from enem estuda)'
 
     def add_arguments(self, parser):
-        parser.add_argument('file_name', nargs='+')
         parser.add_argument('img_dir')
 
     def handle(self, *args, **options):
@@ -23,11 +25,27 @@ class Command(BaseCommand):
             print ('Salvando questoes do arquivo ' + filename)
             errors = []
             errors_list = []
+            alternatives = []
+            no_alternatives = []
+            two_alternatives = []
+            more_alternatives = []
+
+            question_with_objects = []
+
+            success = []
         
             with open('json-questions/' + filename) as data_file:
                 data = json.load(data_file)
+
+                # duplicate_ids = []
+                duplicate_ids = check_duplicates(data, 'História')
+
                 discipline = filename.split(".")[0]
+
                 for index, question_data in enumerate(data):
+                    if question_data['id_enem'] in duplicate_ids:
+                        print("Questão {} provavelmente duplicada".format(question_data['id_enem']))
+                        continue
                     try:
                         statement = ""
                         statement_image = ""
@@ -39,33 +57,29 @@ class Command(BaseCommand):
 
                         #Check if statement p1 has image  
                         for data in question_data["statement_p1"]:
-                            exists = check_exists(data, img_dir)
 
-                            if exists == False:
+                            if check_exists(data, img_dir) == False:
                                 print("Não existe imagem no Enunciado P1 " + question_data["id_enem"])
                                 check = True                                           
                         
                         #Check if statement p2 has image  
                         for data in question_data["statement_p2"]:
-                            exists = check_exists(data, img_dir)
                                    
-                            if exists == False:
+                            if check_exists(data, img_dir) == False:
                                 print("Não existe imagem no Enunciado P2 " + question_data["id_enem"])
                                 check = True                                                           
 
                         #Check if alternatives has images  
                         for data in question_data["alternatives"]:
-                            exists = check_exists(data, img_dir)
 
-                            if exists == False:
+                            if check_exists(data, img_dir) == False:
                                 print("Não existe imagem nas alternativas " + question_data["id_enem"])
                                 check = True                                        
                         
                         #Check if object_text has images  
                         for data in question_data["object_text"]:
-                            exists = check_exists(data, img_dir)
                                
-                            if exists == False:
+                            if check_exists(data, img_dir) == False:
                                 print("Não existe imagem no objeto texto " + question_data["id_enem"])
                                 check = True   
                         
@@ -90,21 +104,34 @@ class Command(BaseCommand):
 
                         # verify if the question has one and just one right answer
                         right_answer = False
-                        message = ''
+                    
+                        if "alternatives" in question_data:
+                            if len(question_data["alternatives"])  == 0:
+                                print('Question ' + str(index + 1) + ' dont have alternatives')
+                                no_alternatives.append(question_data['id_enem'])
+                                continue
+                            elif len(question_data["alternatives"])  == 2:
+                                print('Question ' + str(index + 1) + ' have only 2 alternatives')
+                                two_alternatives.append(question_data['id_enem'])
+                                continue
+                            elif len(question_data["alternatives"]) > 5:
+                                print('Question ' + str(index + 1) + ' has lots of alternatives')
+                                more_alternatives.append(question_data['id_enem'])
+                                continue
+                            else:
+                                alternatives.append(len(question_data["alternatives"]))
+                                for i, answer_data in enumerate(question_data["alternatives"]):
+                                
+                                    if i == int(question_data["resposta"]): 
+                                        right_answer = True
+                                        answer_correct = answer_data
+                                
+                                if not right_answer:
+                                    print('Question ' + str(index + 1) + ' dont have right answer')
                         
-                        if "alternatives" in question_data and len(question_data["alternatives"]) > 0:
-                            for i, answer_data in enumerate(question_data["alternatives"]):
-                            
-                                if i == int(question_data["resposta"]): 
-                                    right_answer = True
-                                    answer_correct = answer_data
-                            
-                            if not right_answer:
-                                print('Question ' + str(index + 1) + ' dont have right answer')
-                                continue
-                            if message != '':
-                                print(message)
-                                continue
+                        if  len(question_data["object_text"]) > 0 or len(question_data["object_image"]) > 0:
+                            question_with_objects.append(question_data['id_enem'])
+                            continue
                        
                         try:
                             discipline = Discipline.objects.get(name=discipline)
@@ -132,6 +159,9 @@ class Command(BaseCommand):
                             for data in question_data["statement_p2"]:
                                 data = clean_div(data)
                                 statement = statement + data
+
+                        
+                        # continue
                                         
                         question = Question.objects.create(statement = statement,
                                                             year=question_data["year"],
@@ -149,60 +179,60 @@ class Command(BaseCommand):
                                 question.save()
 
                         print ("Questao " + question_data["id_enem"] + " Salva")
-                    
-                        if  len(question_data["object_text"]) > 0:
-                            learning_object = LearningObject.objects.create(owner_id=1, text=object_text)
-                            
-                            if "object_source" in question_data:
-                                learning_object.source = question_data["object_source"]
-                            len_object = sum('<img' in s for s in question_data["object_text"]) 
-                            
-                            for obj in question_data["object_text"]:
-                                img = find_img(obj)
-                                if len(img) > 0:
-                                    for text in img:
-                                        data = find_src(text)
-                                        for i in data:
-                                            image = name_image(i).split("/")[-1]
 
-                                            if count_obj > 0:
-                                                new_name = str(learning_object.id) + '_' + str(count_obj) + '.' + image.split('.')[-1]
-                                                count_obj = count_obj + 1           
-                                            else:
-                                                count_obj = count_obj + 1
-                                                new_name = str(learning_object.id) + '.' + image.split('.')[-1]
+                        # if  len(question_data["object_text"]) > 0:
+                        #     learning_object = LearningObject.objects.create(owner_id=1, text=object_text)
+                            
+                        #     if "object_source" in question_data:
+                        #         learning_object.source = question_data["object_source"]
+                        #     len_object = sum('<img' in s for s in question_data["object_text"]) 
+                            
+                        #     for obj in question_data["object_text"]:
+                        #         img = find_img(obj)
+                        #         if len(img) > 0:
+                        #             for text in img:
+                        #                 data = find_src(text)
+                        #                 for i in data:
+                        #                     image = name_image(i).split("/")[-1]
 
-                                            os.rename(img_dir + '/' + image, img_dir + '/' + new_name)
+                        #                     if count_obj > 0:
+                        #                         new_name = str(learning_object.id) + '_' + str(count_obj) + '.' + image.split('.')[-1]
+                        #                         count_obj = count_obj + 1           
+                        #                     else:
+                        #                         count_obj = count_obj + 1
+                        #                         new_name = str(learning_object.id) + '.' + image.split('.')[-1]
+
+                        #                     os.rename(img_dir + '/' + image, img_dir + '/' + new_name)
                                            
-                                            if len_object == 1 and len(question_data["object_image"]) == 0:
-                                                object_image = image
-                                                learning_object.folder_name = question_data["source"] + "-" + question_data["year"]
-                                                learning_object.image.save(new_name, File(open(img_dir + '/' +  new_name, 'rb'))) 
-                                                obj = obj.replace(text, ' ')   
+                        #                     if len_object == 1 and len(question_data["object_image"]) == 0:
+                        #                         object_image = image
+                        #                         learning_object.folder_name = question_data["source"] + "-" + question_data["year"]
+                        #                         learning_object.image.save(new_name, File(open(img_dir + '/' +  new_name, 'rb'))) 
+                        #                         obj = obj.replace(text, ' ')   
 
-                                            if len_object > 1 or question_data["object_image"] != "":
-                                                obj = obj.replace(text, '<img src="https://s3.us-east-2.amazonaws.com/masteraula/images/question_images/new_questions/' + new_name + '"> ')
-                                obj = clean_div(obj)
-                                object_text = object_text + obj
-                                learning_object.text = object_text
-                                learning_object.save()
+                        #                     if len_object > 1 or question_data["object_image"] != "":
+                        #                         obj = obj.replace(text, '<img src="https://s3.us-east-2.amazonaws.com/masteraula/images/question_images/new_questions/' + new_name + '"> ')
+                        #         obj = clean_div(obj)
+                        #         object_text = object_text + obj
+                        #         learning_object.text = object_text
+                        #         learning_object.save()
                                                            
-                            question.learning_objects.add(learning_object.id)
-                            print ("Objeto texto da questão Salvo")
+                        #     question.learning_objects.add(learning_object.id)
+                        #     print ("Objeto texto da questão Salvo")
                        
-                        if  len(question_data["object_image"]) > 0:
-                            object_image = question_data["object_image"].replace("\"", "").split("/")[-1]
-                            if "?" in object_image:
-                                object_image = object_image.split("?")[0]
-                            print ("Objeto imagem da questão Salvo")
+                        # if  len(question_data["object_image"]) > 0:
+                        #     object_image = question_data["object_image"].replace("\"", "").split("/")[-1]
+                        #     if "?" in object_image:
+                        #         object_image = object_image.split("?")[0]
+                        #     print ("Objeto imagem da questão Salvo")
                             
-                            learning_object = LearningObject.objects.create(owner_id=1, folder_name=question_data["source"] + "-" + question_data["year"])
-                            rename = str(learning_object.id) + '.' + object_image.split(".")[-1]
-                            learning_object.image.save(rename, File(open(img_dir + '/' + object_image, 'rb')))
-                            question.learning_objects.add(learning_object.id)
-                            if "object_source" in question_data:
-                                learning_object.source = question_data["object_source"]
-                            os.remove(img_dir + '/' + object_image)
+                        #     learning_object = LearningObject.objects.create(owner_id=1, folder_name=question_data["source"] + "-" + question_data["year"])
+                        #     rename = str(learning_object.id) + '.' + object_image.split(".")[-1]
+                        #     learning_object.image.save(rename, File(open(img_dir + '/' + object_image, 'rb')))
+                        #     question.learning_objects.add(learning_object.id)
+                        #     if "object_source" in question_data:
+                        #         learning_object.source = question_data["object_source"]
+                        #     os.remove(img_dir + '/' + object_image)
 
                         #Rename Image Statement
                         img = find_img(question.statement)
@@ -251,6 +281,8 @@ class Command(BaseCommand):
                                 answer = Alternative.objects.create(text=answer_data,
                                                                     is_correct=is_correct,
                                                                     question_id=question.id)
+                                                                    
+                        success.append(question_data['id_enem'])
 
                     except Exception as e:
                         print('ERROR adding question Enem ' + question_data["id_enem"])
@@ -258,13 +290,20 @@ class Command(BaseCommand):
                         errors_list.append([question_data["id_enem"]]) 
                         continue
 
-        with open('errors_imagens.csv', mode='w') as errors_imagens:
-            errors_imagens = csv.writer(errors_imagens, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            errors_imagens.writerows(errors)
+        errors_lists = [('no_alternatives', no_alternatives),
+            ('two_alternatives', two_alternatives),
+            ('question_with_objects', question_with_objects),
+            ('errors', errors),
+            ('errors_list', errors_list),
+        ]
 
-        with open('errors_questions.csv', mode='w') as errors_questions:
-                            errors_questions = csv.writer(errors_questions, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                            errors_questions.writerows(errors_list)
+        for erro_name, error_list in errors_lists:
+            if error_list:
+                with open('error_{}.csv'.format(erro_name), mode='w') as error_file:
+                    error_file = csv.writer(error_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    error_file.writerows(error_list)
+
+        print('Foram adicionadas {} questoes: {}'.format(len(success), success))
 
 def clean_div(text):
     div = re.findall(r'<div.*?>', text)
@@ -297,6 +336,6 @@ def check_exists(data, img_dir):
     data = find_src(data)
     if len(data) > 0:
         for i in data:
-            image = name_image(i).split("/")[-1]      
+            image = name_image(i).split("/")[-1]
         exists = os.path.exists(img_dir + '/' + image)
         return exists
