@@ -13,10 +13,13 @@ class Command(BaseCommand):
     help = 'populate data from json-questions directory (data extracted from enem estuda)'
 
     def add_arguments(self, parser):
+        parser.add_argument('filename')
         parser.add_argument('img_dir')
+        parser.add_argument('discipline')
 
     def handle(self, *args, **options):
         img_dir = options['img_dir']
+        discipline = options['discipline']
 
         for filename in os.listdir('json-questions/'):
             if not filename.endswith('.json'):
@@ -38,9 +41,7 @@ class Command(BaseCommand):
                 data = json.load(data_file)
 
                 # duplicate_ids = []
-                duplicate_ids = check_duplicates(data, 'História')
-
-                discipline = filename.split(".")[0]
+                duplicate_ids = check_duplicates(data, discipline)
 
                 for index, question_data in enumerate(data):
                     if question_data['id_enem'] in duplicate_ids:
