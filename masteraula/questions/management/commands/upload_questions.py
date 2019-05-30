@@ -203,7 +203,7 @@ class Command(BaseCommand):
                         #                         count_obj = count_obj + 1
                         #                         new_name = str(learning_object.id) + '.' + image.split('.')[-1]
 
-                        #                     os.rename(img_dir + '/' + image, img_dir + '/' + new_name)
+                        #                     os.rename(img_dir + '/' + image, 'img_upload' + '/' + new_name)
                                            
                         #                     if len_object == 1 and len(question_data["object_image"]) == 0:
                         #                         object_image = image
@@ -250,7 +250,7 @@ class Command(BaseCommand):
                                         count = count + 1
                                         new_name = str(question.id) + '.' + image.split('.')[-1]
 
-                                    os.rename(img_dir + '/' + image, img_dir + '/' + new_name)
+                                    os.rename(img_dir + '/' + image, 'img_upload' + '/' + new_name)
                                     question.statement = question.statement.replace(text, '<img src="https://s3.us-east-2.amazonaws.com/masteraula/images/question_images/new_questions/' + new_name + '"> ')
                                     question.save()    
                         
@@ -277,7 +277,7 @@ class Command(BaseCommand):
                                                 count = count + 1
                                                 new_name = str(question.id) + '.' + image.split('.')[-1]
 
-                                            os.rename(img_dir + '/' + image, img_dir + '/' + new_name)
+                                            os.rename(img_dir + '/' + image, 'img_upload' + '/' + new_name)
                                             answer_data = answer_data.replace(text, '<img src="https://s3.us-east-2.amazonaws.com/masteraula/images/question_images/new_questions/' + new_name + '"> ')
                                 answer = Alternative.objects.create(text=answer_data,
                                                                     is_correct=is_correct,
