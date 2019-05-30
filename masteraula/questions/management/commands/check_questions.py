@@ -182,7 +182,7 @@ def check_valid_questions(json_questions, discipline=None, output=False):
         with open('json-questions/reports/too_simple_questions.json', 'w') as f:
             json.dump(too_simple_questions, f, indent = 2)
 
-    return [json_question for json_question in json_questions if json_question['id_enem'] not in invalid_questions]
+    return [json_question['id_enem'] for json_question in json_questions if json_question['id_enem'] not in invalid_questions]
 
 
 class Command(BaseCommand):

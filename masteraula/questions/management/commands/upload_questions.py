@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 from masteraula.questions.models import Question, Alternative, TeachingLevel, Discipline, LearningObject
 from django.core.files import File
 
-from .check_duplicates import check_duplicates
+from .check_questions import check_valid_questions
 
 import json
 import os
@@ -21,31 +21,37 @@ class Command(BaseCommand):
         img_dir = options['img_dir']
         discipline = options['discipline']
 
+        try:
+            discipline = Discipline.objects.get(name=discipline)
+        except Discipline.DoesNotExist:
+            raise CommandError('Disciplina "%s" nao existe' % discipline)
+
+        errors = []
+        errors_list = []
+        alternatives = []
+        no_alternatives = []
+        two_alternatives = []
+        more_alternatives = []
+
+        question_with_objects = []
+
+        success = []
+
         for filename in os.listdir('json-questions/'):
             if not filename.endswith('.json'):
                 continue
 
             print ('Salvando questoes do arquivo ' + filename)
-            errors = []
-            errors_list = []
-            alternatives = []
-            no_alternatives = []
-            two_alternatives = []
-            more_alternatives = []
-
-            question_with_objects = []
-
-            success = []
         
             with open('json-questions/' + filename) as data_file:
                 data = json.load(data_file)
 
                 # duplicate_ids = []
-                duplicate_ids = check_duplicates(data, discipline)
+                valid_questions = check_valid_questions(data, discipline)
 
                 for index, question_data in enumerate(data):
-                    if question_data['id_enem'] in duplicate_ids:
-                        print("Questão {} provavelmente duplicada".format(question_data['id_enem']))
+                    if question_data['id_enem'] not in valid_questions:
+                        print("Questão {} com erro".format(question_data['id_enem']))
                         continue
                     try:
                         statement = ""
@@ -134,11 +140,6 @@ class Command(BaseCommand):
                             question_with_objects.append(question_data['id_enem'])
                             continue
                        
-                        try:
-                            discipline = Discipline.objects.get(name=discipline)
-                        except Discipline.DoesNotExist:
-                            raise CommandError('Disciplina "%s" nao existe' % discipline)
-                                            
                         if question_data["difficulty"]: 
                             if question_data["difficulty"] == "Fácil":
                                 difficulty = "E"
