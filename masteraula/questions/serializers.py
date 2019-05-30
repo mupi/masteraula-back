@@ -182,7 +182,7 @@ class ListDocumentQuestionSerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.ModelSerializer):
     author = UserDetailsSerializer(read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
-    learning_objects =  LearningObjectSerializer(many=True)
+    learning_objects =  LearningObjectSerializer(many=True, read_only=True)
     topics = TopicSimpleSerializer(read_only=True, many=True)
     topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
     difficulty = serializers.CharField()
@@ -216,26 +216,19 @@ class QuestionSerializer(serializers.ModelSerializer):
             'all_topics',
             'topics_ids',
 
-            'credit_cost',
+            # 'credit_cost',
             
             'tags',   
         )
 
-        extra_kwargs = {
-            'statement' : { 'read_only' : True },
-            'resolution' : { 'read_only' : True },
-            'difficulty' : { 'read_only' : False, 'required' : True},
-            'year' : { 'read_only' : True },
-            'source' : { 'read_only' : True },
-            'credit_cost' : { 'read_only' : True },
-        }
         depth = 1
 
     def create(self, validated_data):
+        # m2m
         tags = validated_data.pop('tags', None)
         topics = validated_data.pop('topics_ids', None)
 
-        question = super().create(instance, validated_data)
+        question = super().create(validated_data)
 
         if tags != None:
             for t in [tag for tag in tags if tag.strip() != '']:
@@ -247,6 +240,45 @@ class QuestionSerializer(serializers.ModelSerializer):
         question.save()
         
         return question
+
+    def update(self, instance, validated_data):
+        # m2m
+        tags = validated_data.pop('tags', None)
+        topics = validated_data.pop('topics_ids', None)
+
+        question = super().update(instance, validated_data)
+
+        if tags != None:
+            question.tags.clear()
+            for t in [tag for tag in tags if tag.strip() != '']:
+                question.tags.add(t)
+
+        if topics != None:
+            question.topics.clear()
+            for t in topics:
+                question.topics.add(t)
+        question.save()
+
+        return question
+
+class QuestionTagEditSerializer(serializers.ModelSerializer):
+    topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
+    tags = TagListSerializer(read_only=False) 
+
+    class Meta:
+        model = Question
+        fields = (
+            'id',
+            'difficulty',
+            'topics_ids',
+
+            'tags',   
+        )
+
+        extra_kwargs = {
+            'difficulty' : { 'read_only' : False, 'required' : True},
+        }
+        depth = 1
 
     def update(self, instance, validated_data):
         tags = validated_data.pop('tags', None)
