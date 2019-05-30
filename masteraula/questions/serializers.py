@@ -184,15 +184,14 @@ class QuestionSerializer(serializers.ModelSerializer):
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
     learning_objects =  LearningObjectSerializer(many=True, read_only=True)
     topics = TopicSimpleSerializer(read_only=True, many=True)
-    topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
-    difficulty = serializers.CharField()
 
     all_topics = serializers.SerializerMethodField('all_topics_serializer')
-
     def all_topics_serializer(self, question):
         return TopicSimpleSerializer(question.get_all_topics(), many=True).data
 
+    alternatives = AlternativeSerializer(many=True, read_only=False)
     tags = TagListSerializer(read_only=False) 
+    topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
 
     class Meta:
         model = Question
@@ -223,10 +222,20 @@ class QuestionSerializer(serializers.ModelSerializer):
 
         depth = 1
 
+    def validate_alternatives(self, value):
+        number_of_corrects = 0
+        for alternative in value:
+            if 'is_correct' in alternative and alternative['is_correct']:
+                number_of_corrects += 1
+        if number_of_corrects != 1:
+            raise serializers.ValidationError(_("Should contan at least 1 correct alternative"))
+        return value
+
     def create(self, validated_data):
         # m2m
         tags = validated_data.pop('tags', None)
         topics = validated_data.pop('topics_ids', None)
+        alternatives = validated_data.pop('alternatives', None)
 
         question = super().create(validated_data)
 
@@ -237,6 +246,11 @@ class QuestionSerializer(serializers.ModelSerializer):
         if topics != None:
             for t in topics:
                 question.topics.add(t)
+
+        if alternatives != None:
+            for alt in alternatives:
+                Alternative.objects.create(question=question, **alt)
+
         question.save()
         
         return question
@@ -245,6 +259,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         # m2m
         tags = validated_data.pop('tags', None)
         topics = validated_data.pop('topics_ids', None)
+        alternatives = validated_data.pop('alternatives', None)
 
         question = super().update(instance, validated_data)
 
@@ -257,6 +272,12 @@ class QuestionSerializer(serializers.ModelSerializer):
             question.topics.clear()
             for t in topics:
                 question.topics.add(t)
+
+        if alternatives != None:
+            question.alternatives.all().delete()
+            for alt in alternatives:
+                Alternative.objects.create(question=question, **alt)
+
         question.save()
 
         return question
