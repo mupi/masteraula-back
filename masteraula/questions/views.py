@@ -5,7 +5,7 @@ from haystack.query import SearchQuerySet, SQ, AutoQuery
 from rest_framework import (generics, response, viewsets, status, mixins, 
                     exceptions, pagination, permissions)
 
-from rest_framework.decorators import detail_route, list_route
+from rest_framework.decorators import detail_route, list_route, permission_classes
 from rest_framework.response import Response
 
 from django.db.models import Count, Q
@@ -137,7 +137,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
 class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.QuestionSerializer
     pagination_class = QuestionPagination
-    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions, QuestionPermission )
+    permission_classes = (permissions.IsAuthenticated, QuestionPermission )
 
     def get_queryset(self):
         queryset = Question.objects.all().order_by('id')
@@ -161,6 +161,9 @@ class QuestionViewSet(viewsets.ModelViewSet):
             
         return queryset
     
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+    
     def retrieve(self, request, pk=None):
         question = get_object_or_404(self.get_queryset(), pk=pk)
         serializer_question = self.serializer_class(question)
@@ -173,7 +176,20 @@ class QuestionViewSet(viewsets.ModelViewSet):
         return_data = serializer_question.data
         return_data['documents'] = serializer_documents.data
         
-        return Response(return_data)   
+        return Response(return_data)
+
+    @detail_route(methods=['put'], permission_classes=(permissions.IsAuthenticated, permissions.DjangoModelPermissions))
+    def tag_question(self, request, pk=None):
+        question = get_object_or_404(self.get_queryset(), pk=pk)
+        print(request.data)
+
+        serializer_question = serializers.QuestionTagEditSerializer(question, data=request.data)
+        serializer_question.is_valid(raise_exception=True)
+        new_question = serializer_question.save()
+        serializer_question = self.serializer_class(new_question)
+
+        return Response(serializer_question.data, status=status.HTTP_201_CREATED)
+
 
 class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Discipline.objects.all().order_by('name')
