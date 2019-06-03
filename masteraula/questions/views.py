@@ -66,7 +66,6 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         results = search_qs[page_start:page_start+16]
         for i in range(page_start, min(page_start + 16, len(queryset))):
             res = results.pop(0)
-            print(res.text)
             queryset[i] = res.object
         return queryset
     
@@ -78,7 +77,8 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         sources = self.request.query_params.getlist('sources', None)
         page = self.request.GET.get('page', None)
         text = self.request.GET.get('text', None)
-
+        author = self.request.query_params.get('author', None)
+        
         try:
             page_no = int(self.request.GET.get('page', 1))
         except (TypeError, ValueError):
@@ -114,7 +114,9 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             params['year__in'] = years
         if sources is not None and sources:
             params['source__in'] = sources
-
+        if author is not None and author:
+            params['author__id'] = author
+       
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         query = queries.pop()
@@ -146,7 +148,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
         difficulties = self.request.query_params.getlist('difficulties', None)
         years = self.request.query_params.getlist('years', None)
         sources = self.request.query_params.getlist('sources', None)
-
+        author = self.request.query_params.get('author', None)
+       
         if disciplines is not None and disciplines:
             queryset = queryset.filter(disciplines__in=disciplines).distinct()
         if teaching_levels is not None and teaching_levels:
@@ -158,6 +161,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
         if sources is not None and sources:
             query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             queryset = queryset.filter(query)
+        if author is not None and author:
+            queryset = queryset.filter(author__id=author).order_by('-create_date')
             
         return queryset
     
@@ -190,7 +195,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
         return Response(serializer_question.data, status=status.HTTP_201_CREATED)
 
-
+    
 class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Discipline.objects.all().order_by('name')
     serializer_class = serializers.DisciplineSerialzier
