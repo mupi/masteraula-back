@@ -193,9 +193,11 @@ class QuestionSerializer(serializers.ModelSerializer):
     alternatives = AlternativeSerializer(many=True, read_only=False)
     tags = TagListSerializer(read_only=False) 
     year = serializers.IntegerField(read_only=False, default=datetime.date.today().year)
+    difficulty = serializers.CharField(read_only=False, required=True)
     topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
     disciplines_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Discipline.objects.all())
     teaching_levels_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=TeachingLevel.objects.all())
+    source_id = serializers.PrimaryKeyRelatedField(write_only=True, required=False, queryset=Source.objects.all())
 
     class Meta:
         model = Question
@@ -221,6 +223,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             'topics_ids',
             'disciplines_ids',
             'teaching_levels_ids',
+            'source_id',
 
             # 'credit_cost',
             
@@ -256,7 +259,6 @@ class QuestionSerializer(serializers.ModelSerializer):
         return list(set(value))
 
     def validate_tags(self, value):
-        print(value)
         if len(value) < 2:
             raise serializers.ValidationError(_("At least two tags"))
         return value
@@ -273,8 +275,13 @@ class QuestionSerializer(serializers.ModelSerializer):
         alternatives = validated_data.pop('alternatives', None)
         disciplines = validated_data.pop('disciplines_ids', None)
         teaching_levels = validated_data.pop('teaching_levels_ids', None)
+        source = validated_data.pop('source_id', None)
 
         question = super().create(validated_data)
+        
+        if source:
+            question.source = source.name
+
         if not question.year:
             question.year = datetime.date.today().year
 
