@@ -1992,7 +1992,7 @@
     "pk": 222, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Literatura", 
       "parent": null
     }
@@ -2001,25 +2001,25 @@
     "pk": 223, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Teoria Literária", 
-      "parent": 222
+      "parent": null
     }
   },
   {
     "pk": 224, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Gênero Literário", 
-      "parent": 222
+      "parent": null
     }
   },
   {
     "pk": 225, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Épico", 
       "parent": 224
     }
@@ -2028,7 +2028,7 @@
     "pk": 226, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Lírico", 
       "parent": 224
     }
@@ -2037,7 +2037,7 @@
     "pk": 227, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Dramático", 
       "parent": 224
     }
@@ -2046,61 +2046,61 @@
     "pk": 228, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Trovadorismo", 
-      "parent": 222
+      "parent": null
     }
   },
   {
     "pk": 229, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Humanismo", 
-      "parent": 222
+      "parent": null
     }
   },
   {
     "pk": 230, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Classicismo", 
-      "parent": 222
+      "parent": null
     }
   },
   {
     "pk": 231, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Barroco", 
-      "parent": 222
+      "parent": null
     }
   },
   {
     "pk": 232, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Arcadismo", 
-      "parent": 222
+      "parent": null
     }
   },
   {
     "pk": 233, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Romantismo", 
-      "parent": 222
+      "parent": null
     }
   },
   {
     "pk": 234, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Primeira Geração do Romantismo", 
       "parent": 233
     }
@@ -2109,7 +2109,7 @@
     "pk": 235, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Segunda Geração do Romantismo", 
       "parent": 233
     }
@@ -2118,7 +2118,7 @@
     "pk": 236, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Terceira Geração do Romantismo", 
       "parent": 233
     }
@@ -2127,7 +2127,7 @@
     "pk": 237, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Romance Urbano", 
       "parent": 233
     }
@@ -2136,7 +2136,7 @@
     "pk": 238, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Romance Indianista", 
       "parent": 233
     }
@@ -2145,7 +2145,7 @@
     "pk": 239, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Romance Regionalista", 
       "parent": 233
     }
@@ -2154,61 +2154,61 @@
     "pk": 240, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Realismo", 
-      "parent": 222
+      "parent": null
     }
   },
   {
     "pk": 241, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Naturalismo", 
-      "parent": 222
+      "parent": null
     }
   },
   {
     "pk": 242, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Parnasianismo", 
-      "parent": 222
+      "parent": null
     }
   },
   {
     "pk": 243, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Simbolismo", 
-      "parent": 222
+      "parent": null
     }
   },
   {
     "pk": 244, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Pré-Modernismo", 
-      "parent": 222
+      "parent": null
     }
   },
   {
     "pk": 245, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Modernismo", 
-      "parent": 222
+      "parent": null
     }
   },
   {
     "pk": 246, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Primeira Fase do Modernismo", 
       "parent": 245
     }
@@ -2217,7 +2217,7 @@
     "pk": 247, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Segunda Fase do Modernismo", 
       "parent": 245
     }
@@ -2226,7 +2226,7 @@
     "pk": 248, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Terceira Fase do Modernismo", 
       "parent": 245
     }
@@ -2235,9 +2235,9 @@
     "pk": 249, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 3, 
       "name": "Pós-Modernismo", 
-      "parent": 222
+      "parent": null
     }
   },
   {
@@ -2271,7 +2271,7 @@
     "pk": 253, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Artes", 
       "parent": null
     }
@@ -2280,297 +2280,297 @@
     "pk": 254, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Arte do Paleolítico Superior", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 255, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Arte do Neolítico", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 256, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Arte no Egito", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 257, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Arte da Civilização Egéia", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 258, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Arte na Grécia", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 259, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Arte em Roma", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 260, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Arte Cristã Primitiva", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 261, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Arte Bizantina", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 262, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Arte da Europa Ocidental no Início da Idade Média", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 263, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Arte Romântica", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 264, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Arte Gótica", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 265, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Renascimento na Itália", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 266, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Renascimento na Alemanha e Países Baixos", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 267, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Arte Pré-Colombiana", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 268, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Barroco na Itália", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 269, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Barroco na Espanha e nos Países Baixos", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 270, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Rococó", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 271, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Neoclassicismo", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 272, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Romantismo", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 273, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Movimento das Artes e Ofícios Eart Nouveau", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 274, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Impressionismo", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 275, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Pós-Impressionismo", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 276, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Expressionismo", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 277, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Fauvismo", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 278, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Cubismo", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 279, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Concretismo", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 280, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Futurismo", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 281, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Abstracionismo", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 282, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Dadaísmo", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 283, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Surrealismo", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 284, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Pop-Art", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 285, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Arte Contemporânea", 
-      "parent": 253
+      "parent": null
     }
   },
   {
     "pk": 286, 
     "model": "questions.Topic",
     "fields": {
-      "discipline": 2, 
+      "discipline": 16, 
       "name": "Arte no Brasil", 
-      "parent": 253
+      "parent": null
     }
   },
   {
