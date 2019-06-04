@@ -68,7 +68,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             res = results.pop(0)
             print(res.text)
             queryset[i] = res.object
-        return queryset
+        return queryset.filter(disabled=False)
     
     def get_queryset(self):
         disciplines = self.request.query_params.getlist('disciplines', None)
@@ -160,7 +160,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(query)
             
         return queryset.filter(disabled=False)
-    
+
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
