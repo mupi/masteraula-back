@@ -23,6 +23,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     year = indexes.CharField(model_attr='year', null=True)
     source = indexes.CharField(model_attr='source', null=True)
     difficulty = indexes.CharField()
+    author = indexes.IntegerField()
 
     def get_model(self):
         return Question
@@ -50,3 +51,6 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_teaching_levels(self, obj):
         return [ teaching_level.pk for teaching_level in obj.teaching_levels.only('pk') ]
+
+    def prepare_author(self, obj):
+        return obj.author.pk 
