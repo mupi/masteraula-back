@@ -5,7 +5,7 @@ from haystack.query import SearchQuerySet, SQ, AutoQuery
 from rest_framework import (generics, response, viewsets, status, mixins, 
                     exceptions, pagination, permissions)
 
-from rest_framework.decorators import detail_route, list_route
+from rest_framework.decorators import detail_route, list_route, permission_classes
 from rest_framework.response import Response
 
 from django.db.models import Count, Q
@@ -66,9 +66,8 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         results = search_qs[page_start:page_start+16]
         for i in range(page_start, min(page_start + 16, len(queryset))):
             res = results.pop(0)
-            print(res.text)
             queryset[i] = res.object
-        return queryset
+        return queryset.filter(disabled=False)
     
     def get_queryset(self):
         disciplines = self.request.query_params.getlist('disciplines', None)
@@ -78,7 +77,8 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         sources = self.request.query_params.getlist('sources', None)
         page = self.request.GET.get('page', None)
         text = self.request.GET.get('text', None)
-
+        author = self.request.query_params.get('author', None)
+        
         try:
             page_no = int(self.request.GET.get('page', 1))
         except (TypeError, ValueError):
@@ -114,7 +114,9 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             params['year__in'] = years
         if sources is not None and sources:
             params['source__in'] = sources
-
+        if author is not None and author:
+            params['author__id'] = author
+       
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         query = queries.pop()
@@ -137,7 +139,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
 class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.QuestionSerializer
     pagination_class = QuestionPagination
-    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions, QuestionPermission )
+    permission_classes = (permissions.IsAuthenticated, QuestionPermission )
 
     def get_queryset(self):
         queryset = Question.objects.all().order_by('id')
@@ -146,7 +148,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
         difficulties = self.request.query_params.getlist('difficulties', None)
         years = self.request.query_params.getlist('years', None)
         sources = self.request.query_params.getlist('sources', None)
-
+        author = self.request.query_params.get('author', None)
+       
         if disciplines is not None and disciplines:
             queryset = queryset.filter(disciplines__in=disciplines).distinct()
         if teaching_levels is not None and teaching_levels:
@@ -158,8 +161,19 @@ class QuestionViewSet(viewsets.ModelViewSet):
         if sources is not None and sources:
             query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             queryset = queryset.filter(query)
+        if author is not None and author:
+            queryset = queryset.filter(author__id=author).order_by('-create_date')
             
-        return queryset
+        return queryset.filter(disabled=False)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    def destroy(self, request, pk=None):
+        question = self.get_object()
+        question.disabled = True
+        question.save()
+        return Response(status = status.HTTP_204_NO_CONTENT)
     
     def retrieve(self, request, pk=None):
         question = get_object_or_404(self.get_queryset(), pk=pk)
@@ -173,8 +187,21 @@ class QuestionViewSet(viewsets.ModelViewSet):
         return_data = serializer_question.data
         return_data['documents'] = serializer_documents.data
         
-        return Response(return_data)   
+        return Response(return_data)
 
+    @detail_route(methods=['put'], permission_classes=(permissions.IsAuthenticated, permissions.DjangoModelPermissions))
+    def tag_question(self, request, pk=None):
+        question = get_object_or_404(self.get_queryset(), pk=pk)
+        print(request.data)
+
+        serializer_question = serializers.QuestionTagEditSerializer(question, data=request.data)
+        serializer_question.is_valid(raise_exception=True)
+        new_question = serializer_question.save()
+        serializer_question = self.serializer_class(new_question)
+
+        return Response(serializer_question.data, status=status.HTTP_201_CREATED)
+
+    
 class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Discipline.objects.all().order_by('name')
     serializer_class = serializers.DisciplineSerialzier

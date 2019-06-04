@@ -7,13 +7,13 @@ class QuestionPermission(permissions.BasePermission):
         if request.user.is_authenticated:
             return True
         
-    # def has_object_permission(self, request, view, obj):
-    #     if request.user.is_superuser:
-    #         return True
-    #     if obj.author == request.user:
-    #         return True
-    #     if request.method in permissions.SAFE_METHODS:
-    #         return True
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_superuser:
+            return True
+        if obj.author == request.user:
+            return True
+        if request.method in permissions.SAFE_METHODS:
+            return True
 
 class LearningObjectPermission(permissions.BasePermission):
     """Só poderá editar o objeto se o usuário for autenticado"""
