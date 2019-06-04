@@ -245,6 +245,11 @@ class QuestionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(_("At least one discipline id"))
         return list(set(value))
 
+    def validate_topics_ids(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError(_("At least one topic id"))
+        return list(set(value))
+
     def validate_teaching_levels_ids(self, value):
         if len(value) == 0:
             raise serializers.ValidationError(_("At least one teaching level id"))
