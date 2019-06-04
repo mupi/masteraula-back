@@ -208,6 +208,11 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = Topic.objects.all()
         return queryset
 
+class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
+    pagination_class = LearningObjectPagination
+    serializer_class = serializers.LearningObjectSerializer
+    permission_classes = (permissions.IsAuthenticated, LearningObjectPermission, )
+
 class LearningObjectViewSet(viewsets.ModelViewSet):
     queryset = LearningObject.objects.all()
     serializer_class = serializers.LearningObjectSerializer
