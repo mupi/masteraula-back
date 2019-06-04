@@ -159,10 +159,16 @@ class QuestionViewSet(viewsets.ModelViewSet):
             query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             queryset = queryset.filter(query)
             
-        return queryset
+        return queryset.filter(disabled=False)
     
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    def destroy(self, request, pk=None):
+        question = self.get_object()
+        question.disabled = True
+        question.save()
+        return Response(status = status.HTTP_204_NO_CONTENT)
     
     def retrieve(self, request, pk=None):
         question = get_object_or_404(self.get_queryset(), pk=pk)
