@@ -192,6 +192,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     alternatives = AlternativeSerializer(many=True, read_only=False)
     tags = TagListSerializer(read_only=False) 
+    year = serializers.IntegerField(read_only=False, default=datetime.date.today().year)
     topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
     disciplines_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Discipline.objects.all())
     teaching_levels_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=TeachingLevel.objects.all())
@@ -229,6 +230,8 @@ class QuestionSerializer(serializers.ModelSerializer):
         depth = 1
 
     def validate_alternatives(self, value):
+        if len(value) < 3:
+            raise serializers.ValidationError(_("At least 3 alternatives"))
         number_of_corrects = 0
         for alternative in value:
             if 'is_correct' in alternative and alternative['is_correct']:
@@ -243,10 +246,20 @@ class QuestionSerializer(serializers.ModelSerializer):
         return list(set(value))
 
     def validate_teaching_levels_ids(self, value):
-        print(value)
         if len(value) == 0:
             raise serializers.ValidationError(_("At least one teaching level id"))
         return list(set(value))
+
+    def validate_tags(self, value):
+        print(value)
+        if len(value) < 2:
+            raise serializers.ValidationError(_("At least two tags"))
+        return value
+
+    def validate_year(self, value):
+        if value > datetime.date.today().year:
+            raise serializers.ValidationError(_("Year bigger than this year")) 
+        return value
 
     def create(self, validated_data):
         # m2m
