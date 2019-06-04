@@ -24,6 +24,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     source = indexes.CharField(model_attr='source', null=True)
     difficulty = indexes.CharField()
     author = indexes.IntegerField()
+    disabled = indexes.BooleanField()
 
     def get_model(self):
         return Question

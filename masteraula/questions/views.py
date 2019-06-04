@@ -67,7 +67,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         for i in range(page_start, min(page_start + 16, len(queryset))):
             res = results.pop(0)
             queryset[i] = res.object
-        return queryset.filter(disabled=False)
+        return queryset
     
     def get_queryset(self):
         disciplines = self.request.query_params.getlist('disciplines', None)
@@ -129,7 +129,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         for item in queries:
             query |= item
 
-        search_queryset = SearchQuerySet().models(Question).filter_and(**params)
+        search_queryset = SearchQuerySet().models(Question).filter_and(**params).filter(disabled=False)
         search_queryset = search_queryset.filter(SQ(content=AutoQuery(text)) | (
             SQ(content=AutoQuery(text)) & query
         ))
