@@ -213,6 +213,57 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.LearningObjectSerializer
     permission_classes = (permissions.IsAuthenticated, LearningObjectPermission, )
 
+    def gen_queryset(self, search_qs, page_start):
+        search_qs = search_qs.load_all()
+        queryset = [None] * len(search_qs)
+
+        results = search_qs[page_start:page_start+16]
+        for i in range(page_start, min(page_start + 16, len(queryset))):
+            res = results.pop(0)
+            queryset[i] = res.object
+        return queryset
+    
+    def get_queryset(self):
+        page = self.request.GET.get('page', None)
+        text = self.request.GET.get('text', None)
+
+        try:
+            page_no = int(self.request.GET.get('page', 1))
+        except (TypeError, ValueError):
+            raise FieldError("Not a valid number for page.")
+
+        if page_no < 1:
+            raise FieldError("Pages should be 1 or greater.")
+
+        if not text:
+            raise FieldError("Invalid search text")
+
+        text = stripaccents(text)
+        text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
+        
+        if not text:
+            raise FieldError("Invalid search text")   
+
+        start_offset = (page_no - 1) * 16
+
+        # The following queries are to apply the weights of haystack boost
+        queries = [SQ(tags=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        query = queries.pop()
+        for item in queries:
+            query |= item
+        queries = [SQ(source=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        for item in queries:
+            query |= item
+        queries = [SQ(text_object=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        for item in queries:
+            query |= item
+
+        search_queryset = SearchQuerySet().models(LearningObject).filter(SQ(content=AutoQuery(text)) | (
+            SQ(content=AutoQuery(text)) & query
+        ))
+
+        return self.gen_queryset(search_queryset, start_offset)
+
 class LearningObjectViewSet(viewsets.ModelViewSet):
     queryset = LearningObject.objects.all()
     serializer_class = serializers.LearningObjectSerializer

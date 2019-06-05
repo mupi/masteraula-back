@@ -52,9 +52,9 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         return [ teaching_level.pk for teaching_level in obj.teaching_levels.only('pk') ]
 
 class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
-    text_search = indexes.CharField(document=True, use_template=True, boost=0.01)
+    text = indexes.CharField(document=True, use_template=True, boost=0.01)
     source = indexes.CharField()
-    text = indexes.CharField()
+    text_object = indexes.CharField(model_attr='text', null=True)
     tags = indexes.CharField(boost=1000)
 
     def get_model(self):
