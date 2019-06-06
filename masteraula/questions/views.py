@@ -309,6 +309,19 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    def get_queryset(self):
+        queryset = LearningObject.objects.all().order_by('id')
+        is_image = self.request.query_params.get('is_image', None)
+        is_text = self.request.query_params.get('is_text', None)
+       
+        if is_image:
+            queryset = queryset.filter(image__isnull=False).exclude(image='')
+
+        if is_text:
+            queryset = queryset.filter(text__isnull=False).exclude(text='')
+            
+        return queryset.filter()
+
 class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = (DocumentsPermission, )
 
