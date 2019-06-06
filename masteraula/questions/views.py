@@ -253,6 +253,8 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         page = self.request.GET.get('page', None)
         text = self.request.GET.get('text', None)
+        is_image = self.request.GET.get('is_image', None)
+        is_text = self.request.GET.get('is_text', None)
 
         try:
             page_no = int(self.request.GET.get('page', 1))
@@ -269,7 +271,14 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
         text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
         
         if not text:
-            raise FieldError("Invalid search text")   
+            raise FieldError("Invalid search text")
+
+        params = {}
+        if is_image:
+            params['is_image'] = True
+        if is_text:
+            params['is_text'] = True
+        print(params)
 
         start_offset = (page_no - 1) * 16
 
@@ -285,7 +294,7 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
         for item in queries:
             query |= item
 
-        search_queryset = SearchQuerySet().models(LearningObject).filter(SQ(content=AutoQuery(text)) | (
+        search_queryset = SearchQuerySet().models(LearningObject).filter(**params).filter(SQ(content=AutoQuery(text)) | (
             SQ(content=AutoQuery(text)) & query
         ))
 

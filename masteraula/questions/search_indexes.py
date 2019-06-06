@@ -61,6 +61,8 @@ class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
     source = indexes.CharField()
     text_object = indexes.CharField(model_attr='text', null=True)
     tags = indexes.CharField(boost=1000)
+    is_image = indexes.BooleanField()
+    is_text = indexes.BooleanField()
 
     def get_model(self):
         return LearningObject
@@ -70,6 +72,13 @@ class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
     
     def prepare_text(self, obj):
         return prepare_document(obj.text)
+
+    def prepare_is_text(self, obj):
+        return obj.text != None and obj.text != ''
+
+    def prepare_is_image(self, obj):
+        print(obj.image != None and obj.image != '')
+        return obj.image != None and obj.image != ''
     
     def prepare_tags(self, obj):
         return ' '.join([ stripaccents(tag.name) for tag in obj.tags.only('name') ])
