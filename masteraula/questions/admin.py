@@ -114,7 +114,7 @@ class LearningObjectModelAdmin(admin.ModelAdmin):
 
 class QuestionModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('author', 'learning_objects', 'topics')
-    list_display = ('id', 'statement', 'year', 'source', 'tag_list')
+    list_display = ('id', 'statement', 'year', 'source', 'tag_list','disabled',)
     search_fields = ['id', 'year', 'source', 'statement', 'tags__name']
 
     inlines = [AlternativesInline, ]

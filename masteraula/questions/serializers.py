@@ -26,6 +26,7 @@ from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Ques
 
 import unicodedata
 import ast
+import datetime
 
 # from .search_indexes import QuestionIndex, TagIndex
 
@@ -182,17 +183,21 @@ class ListDocumentQuestionSerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.ModelSerializer):
     author = UserDetailsSerializer(read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
-    learning_objects =  LearningObjectSerializer(many=True)
+    learning_objects =  LearningObjectSerializer(many=True, read_only=True)
     topics = TopicSimpleSerializer(read_only=True, many=True)
-    topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
-    difficulty = serializers.CharField()
 
     all_topics = serializers.SerializerMethodField('all_topics_serializer')
-
     def all_topics_serializer(self, question):
         return TopicSimpleSerializer(question.get_all_topics(), many=True).data
 
+    alternatives = AlternativeSerializer(many=True, read_only=False)
     tags = TagListSerializer(read_only=False) 
+    year = serializers.IntegerField(read_only=False, default=datetime.date.today().year)
+    difficulty = serializers.CharField(read_only=False, required=True)
+    topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
+    disciplines_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Discipline.objects.all())
+    teaching_levels_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=TeachingLevel.objects.all())
+    source_id = serializers.PrimaryKeyRelatedField(write_only=True, required=False, queryset=Source.objects.all())
 
     class Meta:
         model = Question
@@ -214,28 +219,71 @@ class QuestionSerializer(serializers.ModelSerializer):
             'source',
             'topics',
             'all_topics',
-            'topics_ids',
 
-            'credit_cost',
+            'topics_ids',
+            'disciplines_ids',
+            'teaching_levels_ids',
+            'source_id',
+
+            # 'credit_cost',
             
             'tags',   
         )
 
-        extra_kwargs = {
-            'statement' : { 'read_only' : True },
-            'resolution' : { 'read_only' : True },
-            'difficulty' : { 'read_only' : False, 'required' : True},
-            'year' : { 'read_only' : True },
-            'source' : { 'read_only' : True },
-            'credit_cost' : { 'read_only' : True },
-        }
         depth = 1
 
+    def validate_alternatives(self, value):
+        if len(value) < 3:
+            raise serializers.ValidationError(_("At least 3 alternatives"))
+        number_of_corrects = 0
+        for alternative in value:
+            if 'is_correct' in alternative and alternative['is_correct']:
+                number_of_corrects += 1
+        if number_of_corrects != 1:
+            raise serializers.ValidationError(_("Should contan at least 1 correct alternative"))
+        return value
+
+    def validate_disciplines_ids(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError(_("At least one discipline id"))
+        return list(set(value))
+
+    def validate_topics_ids(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError(_("At least one topic id"))
+        return list(set(value))
+
+    def validate_teaching_levels_ids(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError(_("At least one teaching level id"))
+        return list(set(value))
+
+    def validate_tags(self, value):
+        if len(value) < 2:
+            raise serializers.ValidationError(_("At least two tags"))
+        return value
+
+    def validate_year(self, value):
+        if value > datetime.date.today().year:
+            raise serializers.ValidationError(_("Year bigger than this year")) 
+        return value
+
     def create(self, validated_data):
+        # m2m
         tags = validated_data.pop('tags', None)
         topics = validated_data.pop('topics_ids', None)
+        alternatives = validated_data.pop('alternatives', None)
+        disciplines = validated_data.pop('disciplines_ids', None)
+        teaching_levels = validated_data.pop('teaching_levels_ids', None)
+        source = validated_data.pop('source_id', None)
 
-        question = super().create(instance, validated_data)
+        question = super().create(validated_data)
+        
+        if source:
+            question.source = source.name
+
+        if not question.year:
+            question.year = datetime.date.today().year
 
         if tags != None:
             for t in [tag for tag in tags if tag.strip() != '']:
@@ -244,9 +292,80 @@ class QuestionSerializer(serializers.ModelSerializer):
         if topics != None:
             for t in topics:
                 question.topics.add(t)
+
+        if alternatives != None:
+            for alt in alternatives:
+                Alternative.objects.create(question=question, **alt)
+
+        for discipline in disciplines:
+            question.disciplines.add(discipline)
+
+        for teaching_level in teaching_levels:
+            question.teaching_levels.add(teaching_level)
+
         question.save()
         
         return question
+
+    def update(self, instance, validated_data):
+        # m2m
+        tags = validated_data.pop('tags', None)
+        topics = validated_data.pop('topics_ids', None)
+        alternatives = validated_data.pop('alternatives', None)
+        disciplines = validated_data.pop('disciplines_ids', None)
+        teaching_levels = validated_data.pop('teaching_levels_ids', None)
+
+        question = super().update(instance, validated_data)
+        if not question.year:
+            question.year = datetime.date.today().year
+
+        if tags != None:
+            question.tags.clear()
+            for t in [tag for tag in tags if tag.strip() != '']:
+                question.tags.add(t)
+
+        if topics != None:
+            question.topics.clear()
+            for t in topics:
+                question.topics.add(t)
+
+        if alternatives != None:
+            question.alternatives.all().delete()
+            for alt in alternatives:
+                Alternative.objects.create(question=question, **alt)
+
+        if alternatives != None:
+            question.disciplines.clear()
+            for discipline in disciplines:
+                question.disciplines.add(discipline)
+
+        if teaching_levels != None:
+            question.teaching_levels.clear()
+            for teaching_level in teaching_levels:
+                question.teaching_levels.add(teaching_level)
+
+        question.save()
+
+        return question
+
+class QuestionTagEditSerializer(serializers.ModelSerializer):
+    topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
+    tags = TagListSerializer(read_only=False) 
+
+    class Meta:
+        model = Question
+        fields = (
+            'id',
+            'difficulty',
+            'topics_ids',
+
+            'tags',   
+        )
+
+        extra_kwargs = {
+            'difficulty' : { 'read_only' : False, 'required' : True},
+        }
+        depth = 1
 
     def update(self, instance, validated_data):
         tags = validated_data.pop('tags', None)
