@@ -418,6 +418,21 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
             documentQuestion = document.add_question(validated_data['question'])
             return documentQuestion 
 
+class DocumentQuestionDestroySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DocumentQuestion
+        fields = (
+            'id',
+            'question',
+            'document',
+            'order',
+        )
+        extra_kwargs = {
+            'document' : { 'read_only' : True },
+            'order' : { 'required' : False }
+        }
+
 class DocumentQuestionListDetailSerializer(serializers.ModelSerializer):
     
     question = QuestionSerializer(read_only=True)
