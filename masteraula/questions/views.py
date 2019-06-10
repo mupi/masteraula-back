@@ -162,7 +162,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
             query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             queryset = queryset.filter(query)
         if author is not None and author:
-            queryset = queryset.filter(author__id=author).order_by('-create_date')
+            queryset = queryset.filter(author__id=author).order_by('-create_date')    
             
         return queryset.filter(disabled=False)
 
@@ -176,7 +176,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
         return Response(status = status.HTTP_204_NO_CONTENT)
     
     def retrieve(self, request, pk=None):
-        question = get_object_or_404(self.get_queryset(), pk=pk)
+        queryset = Question.objects.all()
+        question = get_object_or_404(queryset, pk=pk)
         serializer_question = self.serializer_class(question)
 
         documents_questions = DocumentQuestion.objects.filter(question__id=pk)
@@ -200,7 +201,6 @@ class QuestionViewSet(viewsets.ModelViewSet):
         serializer_question = self.serializer_class(new_question)
 
         return Response(serializer_question.data, status=status.HTTP_201_CREATED)
-
     
 class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Discipline.objects.all().order_by('name')
