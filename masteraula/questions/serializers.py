@@ -405,6 +405,11 @@ class DocumentQuestionSerializer(serializers.ModelSerializer):
             'document' : { 'read_only' : True },
             'order' : { 'required' : False }
         }
+
+    def validate_question(self, data):
+        if data.disabled:
+            raise serializers.ValidationError(_("This question is disabled"))
+        return data
     
     def create(self, validated_data):
         document = validated_data['document']
