@@ -298,7 +298,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def remove_question(self, request, pk=None):
         document = self.get_object()
         request.data['order'] = 0
-        serializer = serializers.DocumentQuestionSerializer(data=request.data)
+        serializer = serializers.DocumentQuestionDestroySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         question = serializer.validated_data['question']
         document.remove_question(question)
