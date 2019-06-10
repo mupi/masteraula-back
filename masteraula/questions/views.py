@@ -277,7 +277,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
         obj.save()
 
         for count, q in enumerate(questions):
-            dq = DocumentQuestion.objects.create(document=obj, question=q, order=count) 
+            if q.disabled == False:
+                dq = DocumentQuestion.objects.create(document=obj, question=q, order=count) 
        
         serializer = serializers.DocumentCreatesSerializer(obj)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
