@@ -224,10 +224,9 @@ class QuestionSerializer(serializers.ModelSerializer):
             'disciplines_ids',
             'teaching_levels_ids',
             'source_id',
-
             # 'credit_cost',
-            
             'tags',   
+            'disabled',
         )
 
         depth = 1
