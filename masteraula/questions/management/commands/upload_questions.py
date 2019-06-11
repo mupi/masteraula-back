@@ -20,6 +20,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         img_dir = options['img_dir']
         discipline = options['discipline']
+        filename = options['filename']
 
         try:
             discipline = Discipline.objects.get(name=discipline)
@@ -37,13 +38,13 @@ class Command(BaseCommand):
 
         success = []
 
-        for filename in os.listdir('json-questions/'):
+        for filename in [filename]:
             if not filename.endswith('.json'):
                 continue
 
             print ('Salvando questoes do arquivo ' + filename)
         
-            with open('json-questions/' + filename) as data_file:
+            with open(filename) as data_file:
                 data = json.load(data_file)
 
                 # duplicate_ids = []
