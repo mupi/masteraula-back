@@ -613,3 +613,37 @@ class SearchSerializer(serializers.ModelSerializer):
             'date_search',
         )
         
+class ListQuestionLearningObjectSerializer(serializers.ModelSerializer):
+    author = UserDetailsSerializer(read_only=True)
+    learning_objects =  LearningObjectSerializer(many=True, read_only=True)
+    topics = TopicSimpleSerializer(read_only=True, many=True)
+
+    all_topics = serializers.SerializerMethodField('all_topics_serializer')
+    def all_topics_serializer(self, question):
+        return TopicSimpleSerializer(question.get_all_topics(), many=True).data
+
+    tags = TagListSerializer(read_only=False) 
+    year = serializers.IntegerField(read_only=False, default=datetime.date.today().year)
+    difficulty = serializers.CharField(read_only=False, required=True)
+    
+    class Meta:
+        model = Question
+        fields = (
+            'id',
+            'author',
+            
+            'statement',
+            'learning_objects',
+            'difficulty',
+            
+            'disciplines',
+            'teaching_levels',
+            'year',
+            'source',
+            'topics',
+            'all_topics',
+
+            'tags',   
+        )
+        depth = 1
+        

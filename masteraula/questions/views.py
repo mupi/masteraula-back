@@ -244,6 +244,18 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    def retrieve(self, request, pk=None):
+        learning_object = get_object_or_404(self.get_queryset(), pk=pk)
+        serializer_learningobject = self.serializer_class(learning_object)
+
+        questions_object = Question.objects.filter(learning_objects__id=pk).order_by('-create_date')
+        serializer_questions = serializers.ListQuestionLearningObjectSerializer(questions_object, many = True)
+
+        return_data = serializer_learningobject.data
+        return_data['questions'] = serializer_questions.data
+        
+        return Response(return_data)
+
 class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = (DocumentsPermission, )
 
