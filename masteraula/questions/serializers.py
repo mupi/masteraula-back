@@ -612,4 +612,3 @@ class SearchSerializer(serializers.ModelSerializer):
             'year',
             'date_search',
         )
-        
