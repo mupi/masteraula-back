@@ -182,6 +182,9 @@ def check_valid_questions(json_questions, discipline=None, output=False):
         with open('json-questions/reports/too_simple_questions.json', 'w') as f:
             json.dump(too_simple_questions, f, indent = 2)
 
+        with open('json-questions/reports/good.json', 'w') as f:
+            json.dump([json_question['id_enem'] for json_question in json_questions if json_question['id_enem'] not in invalid_questions], f, indent = 2)
+
     return [json_question['id_enem'] for json_question in json_questions if json_question['id_enem'] not in invalid_questions]
 
 
@@ -202,10 +205,10 @@ class Command(BaseCommand):
             discipline = Discipline.objects.get(name__in=discipline)
 
         json_questions = []
-        for filename in os.listdir(folder):
+        for filename in [folder]:
             if not filename.endswith('.json'):
                 continue
-            with open('{}/{}'.format(folder, filename), 'r') as f:
+            with open(filename, 'r') as f:
                 json_questions += json.loads(f.read().replace(' ', ''))
 
         check_valid_questions(json_questions, discipline, export)
