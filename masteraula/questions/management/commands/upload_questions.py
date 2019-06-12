@@ -16,11 +16,13 @@ class Command(BaseCommand):
         parser.add_argument('filename')
         parser.add_argument('img_dir')
         parser.add_argument('discipline')
+        parser.add_argument('good')
 
     def handle(self, *args, **options):
+        filename = options['filename']
         img_dir = options['img_dir']
         discipline = options['discipline']
-        filename = options['filename']
+        good = options['good']
 
         try:
             discipline = Discipline.objects.get(name=discipline)
@@ -48,7 +50,8 @@ class Command(BaseCommand):
                 data = json.load(data_file)
 
                 # duplicate_ids = []
-                valid_questions = check_valid_questions(data, discipline)
+                # valid_questions = check_valid_questions(data, discipline)
+                valid_questions = json.load(open(good))
 
                 for index, question_data in enumerate(data):
                     if question_data['id_enem'] not in valid_questions:
