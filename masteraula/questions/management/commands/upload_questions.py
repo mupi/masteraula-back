@@ -39,6 +39,7 @@ class Command(BaseCommand):
         question_with_objects = []
 
         success = []
+        id_success = []
 
         for filename in [filename]:
             if not filename.endswith('.json'):
@@ -50,8 +51,8 @@ class Command(BaseCommand):
                 data = json.load(data_file)
 
                 # duplicate_ids = []
-                # valid_questions = check_valid_questions(data, discipline)
-                valid_questions = json.load(open(good))
+                valid_questions = check_valid_questions(data, discipline)
+                # valid_questions = json.load(open(good))
 
                 for index, question_data in enumerate(data):
                     if question_data['id_enem'] not in valid_questions:
@@ -289,6 +290,7 @@ class Command(BaseCommand):
                                                                     question_id=question.id)
                                                                     
                         success.append(question_data['id_enem'])
+                        id_success.append(question.id)
 
                     except Exception as e:
                         print('ERROR adding question Enem ' + question_data["id_enem"])
@@ -310,6 +312,7 @@ class Command(BaseCommand):
                     error_file.writerows(error_list)
 
         print('Foram adicionadas {} questoes: {}'.format(len(success), success))
+        print('Id das questoes questoes: {}'.format(id_success))
 
 def clean_div(text):
     div = re.findall(r'<div.*?>', text)
