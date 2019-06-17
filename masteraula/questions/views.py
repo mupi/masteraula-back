@@ -116,6 +116,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             params['source__in'] = sources
         if author is not None and author:
             params['author__id'] = author
+        params['disabled'] = 'false'
        
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
@@ -129,7 +130,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         for item in queries:
             query |= item
 
-        search_queryset = SearchQuerySet().models(Question).filter_and(**params).filter(disabled=False)
+        search_queryset = SearchQuerySet().models(Question).filter_and(**params)
         search_queryset = search_queryset.filter(SQ(content=AutoQuery(text)) | (
             SQ(content=AutoQuery(text)) & query
         ))
