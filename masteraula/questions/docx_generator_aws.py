@@ -28,7 +28,7 @@ class DocxGeneratorAWS():
         for learning_object in learning_objects:
             if learning_object.image:
                 self.html_file.write('<img src="%s" />\n' % learning_object.image.url)
-            else:
+            if learning_object.text:
                 self.html_file.write(learning_object.text)
             if learning_object.source:
                 self.html_file.write('<p>%s</p>' % learning_object.source)
