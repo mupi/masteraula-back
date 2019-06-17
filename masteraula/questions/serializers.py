@@ -197,7 +197,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
     disciplines_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Discipline.objects.all())
     teaching_levels_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=TeachingLevel.objects.all())
-    source_id = serializers.PrimaryKeyRelatedField(write_only=True, required=False, queryset=Source.objects.all())
+    source_id = serializers.PrimaryKeyRelatedField(write_only=True, required=False, allow_null=True, queryset=Source.objects.all())
 
     class Meta:
         model = Question
