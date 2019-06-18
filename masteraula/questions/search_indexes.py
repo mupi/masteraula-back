@@ -70,14 +70,13 @@ class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_source(self, obj):
         return prepare_document(obj.source)
     
-    def prepare_text(self, obj):
+    def prepare_text_object(self, obj):
         return prepare_document(obj.text)
 
     def prepare_is_text(self, obj):
         return obj.text != None and obj.text != ''
 
     def prepare_is_image(self, obj):
-        print(obj.image != None and obj.image != '')
         return obj.image != None and obj.image != ''
     
     def prepare_tags(self, obj):
