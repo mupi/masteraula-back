@@ -235,6 +235,71 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = Topic.objects.all()
         return queryset
 
+class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
+    pagination_class = LearningObjectPagination
+    serializer_class = serializers.LearningObjectSerializer
+    permission_classes = (permissions.IsAuthenticated, LearningObjectPermission, )
+
+    def gen_queryset(self, search_qs, page_start):
+        search_qs = search_qs.load_all()
+        queryset = [None] * len(search_qs)
+
+        results = search_qs[page_start:page_start+16]
+        for i in range(page_start, min(page_start + 16, len(queryset))):
+            res = results.pop(0)
+            queryset[i] = res.object
+        return queryset
+    
+    def get_queryset(self):
+        page = self.request.GET.get('page', None)
+        text = self.request.GET.get('text', None)
+        is_image = self.request.GET.get('is_image', None)
+        is_text = self.request.GET.get('is_text', None)
+
+        try:
+            page_no = int(self.request.GET.get('page', 1))
+        except (TypeError, ValueError):
+            raise FieldError("Not a valid number for page.")
+
+        if page_no < 1:
+            raise FieldError("Pages should be 1 or greater.")
+
+        if not text:
+            raise FieldError("Invalid search text")
+
+        text = stripaccents(text)
+        text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
+        
+        if not text:
+            raise FieldError("Invalid search text")
+
+        params = {}
+        if is_image:
+            params['is_image'] = True
+        if is_text:
+            params['is_text'] = True
+        print(params)
+
+        start_offset = (page_no - 1) * 16
+
+        # The following queries are to apply the weights of haystack boost
+        queries = [SQ(tags=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        query = queries.pop()
+        for item in queries:
+            query |= item
+        queries = [SQ(source=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        for item in queries:
+            query |= item
+        queries = [SQ(text_object=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        for item in queries:
+            query |= item
+
+        search_queryset = SearchQuerySet().models(LearningObject).filter(**params).filter(SQ(content=AutoQuery(text)) | (
+            SQ(content=AutoQuery(text)) & query
+        ))
+
+        return self.gen_queryset(search_queryset, start_offset)
+
 class LearningObjectViewSet(viewsets.ModelViewSet):
     queryset = LearningObject.objects.all()
     serializer_class = serializers.LearningObjectSerializer
@@ -255,6 +320,18 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
         return_data['questions'] = serializer_questions.data
         
         return Response(return_data)
+    def get_queryset(self):
+        queryset = LearningObject.objects.all().order_by('id')
+        is_image = self.request.query_params.get('is_image', None)
+        is_text = self.request.query_params.get('is_text', None)
+       
+        if is_image:
+            queryset = queryset.filter(image__isnull=False).exclude(image='')
+
+        if is_text:
+            queryset = queryset.filter(text__isnull=False).exclude(text='')
+            
+        return queryset.filter()
 
 class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = (DocumentsPermission, )

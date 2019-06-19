@@ -64,6 +64,7 @@ class LearningObject(models.Model):
     image = models.ImageField(null=True, blank=True, upload_to=get_upload_file_name)
     folder_name = models.CharField(max_length=100, null=True, blank=True)
     text = models.TextField(null=True, blank=True)
+    type_object = models.TextField(null=True, blank=True)
 
     tags = TaggableManager(blank=True)
 

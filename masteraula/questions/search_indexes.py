@@ -5,7 +5,7 @@ from taggit.models import Tag
 
 from haystack import indexes
 
-from .models import Question
+from .models import Question, LearningObject
 from masteraula.questions.templatetags.search_helpers import stripaccents, prepare_document
 
 import re
@@ -55,3 +55,30 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_author(self, obj):
         return obj.author.pk 
+
+class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
+    text = indexes.CharField(document=True, use_template=True, boost=0.01)
+    source = indexes.CharField()
+    text_object = indexes.CharField(model_attr='text', null=True)
+    tags = indexes.CharField(boost=1000)
+    is_image = indexes.BooleanField()
+    is_text = indexes.BooleanField()
+
+    def get_model(self):
+        return LearningObject
+
+    def prepare_source(self, obj):
+        return prepare_document(obj.source)
+    
+    def prepare_text_object(self, obj):
+        return prepare_document(obj.text)
+
+    def prepare_is_text(self, obj):
+        return obj.text != None and obj.text != ''
+
+    def prepare_is_image(self, obj):
+        return obj.image != None and obj.image != ''
+    
+    def prepare_tags(self, obj):
+        return ' '.join([ stripaccents(tag.name) for tag in obj.tags.only('name') ])
+
