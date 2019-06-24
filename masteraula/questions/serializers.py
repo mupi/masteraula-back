@@ -183,8 +183,8 @@ class ListDocumentQuestionSerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.ModelSerializer):
     author = UserDetailsSerializer(read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
-    learning_objects =  LearningObjectSerializer(many=True, read_only=True)
     topics = TopicSimpleSerializer(read_only=True, many=True)
+    learning_objects = LearningObjectSerializer(many=True, read_only=True)
 
     all_topics = serializers.SerializerMethodField('all_topics_serializer')
     def all_topics_serializer(self, question):
@@ -194,6 +194,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     tags = TagListSerializer(read_only=False) 
     year = serializers.IntegerField(read_only=False, default=datetime.date.today().year)
     difficulty = serializers.CharField(read_only=False, required=True)
+    learning_objects_ids = serializers.PrimaryKeyRelatedField(write_only=True, allow_null=True, required=False, many=True, queryset=LearningObject.objects.all())
     topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
     disciplines_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Discipline.objects.all())
     teaching_levels_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=TeachingLevel.objects.all())
@@ -220,6 +221,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             'topics',
             'all_topics',
 
+            'learning_objects_ids',
             'topics_ids',
             'disciplines_ids',
             'teaching_levels_ids',
@@ -275,6 +277,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         disciplines = validated_data.pop('disciplines_ids', None)
         teaching_levels = validated_data.pop('teaching_levels_ids', None)
         source = validated_data.pop('source_id', None)
+        learning_objects = validated_data.pop('learning_objects_ids', None)
 
         question = super().create(validated_data)
         
@@ -302,6 +305,10 @@ class QuestionSerializer(serializers.ModelSerializer):
         for teaching_level in teaching_levels:
             question.teaching_levels.add(teaching_level)
 
+        if learning_objects != None:
+            for learning_object in learning_objects:
+                question.learning_objects.add(learning_object)
+
         question.save()
         
         return question
@@ -313,6 +320,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         alternatives = validated_data.pop('alternatives', None)
         disciplines = validated_data.pop('disciplines_ids', None)
         teaching_levels = validated_data.pop('teaching_levels_ids', None)
+        learning_objects = validated_data.pop('learning_objects_ids', None)
 
         question = super().update(instance, validated_data)
         if not question.year:
@@ -333,7 +341,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             for alt in alternatives:
                 Alternative.objects.create(question=question, **alt)
 
-        if alternatives != None:
+        if disciplines != None:
             question.disciplines.clear()
             for discipline in disciplines:
                 question.disciplines.add(discipline)
@@ -342,6 +350,11 @@ class QuestionSerializer(serializers.ModelSerializer):
             question.teaching_levels.clear()
             for teaching_level in teaching_levels:
                 question.teaching_levels.add(teaching_level)
+
+        if learning_objects != None:
+            question.learning_objects.clear()
+            for learning_object in learning_objects:
+                question.learning_objects.add(learning_object)
 
         question.save()
 
