@@ -49,6 +49,9 @@ class Topic(models.Model):
     discipline = models.ForeignKey(Discipline, on_delete=models.CASCADE, null=False, blank=False)
     parent = models.ForeignKey('Topic', related_name='childs', on_delete=models.CASCADE, null=True, blank=True)
 
+    class Meta:
+        ordering = ['name']
+
     def __str__(self):
         return str(self.name)
 
