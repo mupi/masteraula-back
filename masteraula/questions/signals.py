@@ -1,9 +1,23 @@
 # -*- coding: utf-8 -*-
 from taggit.models import Tag, TaggedItemBase
 from .models import Question, LearningObject, Topic
-from django.db.models.signals import post_save, m2m_changed
+from ..users.models import User
+from django.db.models.signals import post_save, m2m_changed, pre_save
 from django.dispatch import receiver
 from .search_indexes import QuestionIndex
+
+@receiver(pre_save, sender=User)
+def update_username_same_email(sender, instance, **kwargs):
+    instance.username = instance.email
+
+@receiver(pre_save, sender=User)
+def update_fullname_same_first_second(sender, instance, **kwargs):
+    if not instance.name:
+        instance.name = instance.get_full_name()
+    else:
+        names = instance.name.split()
+        instance.first_name = names[0]
+        instance.last_name = ' '.join(names[1:])
 
 @receiver(m2m_changed, sender=Question.tags.through)
 def m2m_tags_changed(sender, instance, action, reverse, **kwargs):
