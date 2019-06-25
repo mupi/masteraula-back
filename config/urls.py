@@ -14,10 +14,14 @@ from allauth.account.views import ConfirmEmailView
 from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token
 
 from masteraula.users.views import null_view
+from masteraula.users.views import FacebookLogin, GoogleLogin
+
 
 urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
     url(settings.ADMIN_URL, admin.site.urls),
+    url(r'^rest-auth/facebook/$', FacebookLogin.as_view(), name='fb_login'),
+    url(r'^rest-auth/google/$', GoogleLogin.as_view(), name='google_login'),
 
     # Your stuff: custom urls includes go here
     url(r'', include('masteraula.questions.urls', namespace='masteraula.questions')),
