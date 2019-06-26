@@ -192,7 +192,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     alternatives = AlternativeSerializer(many=True, read_only=False)
     tags = TagListSerializer(read_only=False) 
-    year = serializers.IntegerField(read_only=False, default=datetime.date.today().year)
+    year = serializers.IntegerField(read_only=False, required=False, allow_null=True)
     difficulty = serializers.CharField(read_only=False, required=True)
     learning_objects_ids = serializers.PrimaryKeyRelatedField(write_only=True, allow_null=True, required=False, many=True, queryset=LearningObject.objects.all())
     topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
@@ -265,6 +265,10 @@ class QuestionSerializer(serializers.ModelSerializer):
         return value
 
     def validate_year(self, value):
+       
+        if not value:
+            return 0
+            
         if value > datetime.date.today().year:
             raise serializers.ValidationError(_("Year bigger than this year")) 
         return value
