@@ -7,7 +7,7 @@ from django.views.generic import DetailView, ListView, RedirectView, UpdateView
 from allauth.socialaccount.providers.facebook.views import FacebookOAuth2Adapter
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-from rest_auth.registration.views import SocialLoginView
+from rest_auth.registration.views import SocialLoginView, SocialConnectView
 
 from rest_framework import status
 from rest_framework import viewsets
@@ -55,6 +55,14 @@ class FacebookLogin(SocialLoginView):
     adapter_class = FacebookOAuth2Adapter
 
 class GoogleLogin(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+    # callback_url = 'http://localhost:8000/rest-auth/google'
+    client_class = OAuth2Client
+
+class FacebookConnect(SocialConnectView):
+    adapter_class = FacebookOAuth2Adapter
+
+class GoogleConnect(SocialConnectView):
     adapter_class = GoogleOAuth2Adapter
     # callback_url = 'http://localhost:8000/rest-auth/google'
     client_class = OAuth2Client

@@ -14,14 +14,11 @@ from allauth.account.views import ConfirmEmailView
 from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token
 
 from masteraula.users.views import null_view
-from masteraula.users.views import FacebookLogin, GoogleLogin
 
 
 urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
     url(settings.ADMIN_URL, admin.site.urls),
-    url(r'^rest-auth/facebook/$', FacebookLogin.as_view(), name='fb_login'),
-    url(r'^rest-auth/google/$', GoogleLogin.as_view(), name='google_login'),
 
     # Your stuff: custom urls includes go here
     url(r'', include('masteraula.questions.urls', namespace='masteraula.questions')),
@@ -36,6 +33,8 @@ urlpatterns = [
     url(r'^auth/', include('rest_auth.urls')),
     url(r'^auth/refresh-login', refresh_jwt_token),
     url(r'^auth/registration/', include('rest_auth.registration.urls')),
+
+    url(r'^accounts/', include('allauth.urls'), name='socialaccount_signup'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

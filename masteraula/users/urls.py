@@ -16,5 +16,9 @@ urlpatterns = [
         regex=r'^resend_confirmation_email$',
         view=views.UserConfirmationEmailView.as_view(),
         name='list'
-    ),  
+    ),
+    url(r'^rest-auth/facebook/$', views.FacebookLogin.as_view(), name='fb_login'),
+    url(r'^rest-auth/google/$', views.GoogleLogin.as_view(), name='google_login'),
+    url(r'^rest-auth/connect/facebook$', views.FacebookConnect.as_view(), name='fb_connect'),
+    url(r'^rest-auth/connect/google$', views.GoogleConnect.as_view(), name='google_connect'),
 ]
