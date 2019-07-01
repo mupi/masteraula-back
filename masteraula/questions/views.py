@@ -78,7 +78,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         page = self.request.GET.get('page', None)
         text = self.request.GET.get('text', None)
         author = self.request.query_params.get('author', None)
-        
+             
         try:
             page_no = int(self.request.GET.get('page', 1))
         except (TypeError, ValueError):
@@ -117,7 +117,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         if author is not None and author:
             params['author__id'] = author
         params['disabled'] = 'false'
-       
+
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         query = queries.pop()
@@ -135,6 +135,18 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             SQ(content=AutoQuery(text)) & query
         ))
 
+        #Salvar os dados de busca	        
+        obj = Search.objects.create(user=self.request.user, term=self.request.query_params['text'])	   
+        obj.disciplines = disciplines
+        obj.teaching_levels = teaching_levels
+        obj.source = ', '.join(sources)
+        obj.year = ', '.join(years)
+        if difficulties:
+            obj.difficulty = ', '.join(difficulties_texts)
+        else:
+            obj.difficulty = None
+        obj.save()
+        
         return self.gen_queryset(search_queryset, start_offset)
     
 class QuestionViewSet(viewsets.ModelViewSet):
