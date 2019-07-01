@@ -19,7 +19,7 @@ from rest_framework.permissions import AllowAny
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .models import User, City, State
-from .serializers import CitySerializer, StateSerializer, ResendConfirmationEmailSerializer
+from .serializers import CitySerializer, StateSerializer, ResendConfirmationEmailSerializer, SocialOnlyLoginSerializer
 
 
 class CityViewSet(viewsets.ReadOnlyModelViewSet):
@@ -50,21 +50,29 @@ class UserConfirmationEmailView(GenericAPIView):
         self.serializer.is_valid(raise_exception=True)            
         return Response({"status": "Confirmation e-mail was sent with success"}, status=status.HTTP_200_OK)
 
+class FacebookSignup(SocialLoginView):
+    adapter_class = FacebookOAuth2Adapter
+
+class GoogleSignup(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+    client_class = OAuth2Client
 
 class FacebookLogin(SocialLoginView):
     adapter_class = FacebookOAuth2Adapter
 
+    serializer_class = SocialOnlyLoginSerializer
+
 class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
-    # callback_url = 'http://localhost:8000/rest-auth/google'
     client_class = OAuth2Client
+
+    serializer_class = SocialOnlyLoginSerializer
 
 class FacebookConnect(SocialConnectView):
     adapter_class = FacebookOAuth2Adapter
 
 class GoogleConnect(SocialConnectView):
     adapter_class = GoogleOAuth2Adapter
-    # callback_url = 'http://localhost:8000/rest-auth/google'
     client_class = OAuth2Client
 
 @api_view()
