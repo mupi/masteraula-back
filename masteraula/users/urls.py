@@ -20,8 +20,10 @@ urlpatterns = [
         view=views.UserConfirmationEmailView.as_view(),
         name='list'
     ),
-    url(r'^rest-auth/facebook/$', views.FacebookLogin.as_view(), name='fb_login'),
-    url(r'^rest-auth/google/$', views.GoogleLogin.as_view(), name='google_login'),
+    url(r'^rest-auth/sign-in/facebook/$', views.FacebookLogin.as_view(), name='fb_login'),
+    url(r'^rest-auth/sign-in/google/$', views.GoogleLogin.as_view(), name='google_login'),
+    url(r'^rest-auth/sign-up/facebook/$', views.FacebookSignup.as_view(), name='fb_signup'),
+    url(r'^rest-auth/sign-up/google/$', views.GoogleSignup.as_view(), name='google_signup'),
     url(r'^rest-auth/connect/facebook/$', views.FacebookConnect.as_view(), name='fb_connect'),
     url(r'^rest-auth/connect/google/$', views.GoogleConnect.as_view(), name='google_connect'),
     url(
