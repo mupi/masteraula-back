@@ -141,9 +141,12 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         obj.teaching_levels = teaching_levels
         obj.source = ', '.join(sources)
         obj.year = ', '.join(years)
-        obj.difficulty = ', '.join(difficulties_texts)
+        if difficulties:
+            obj.difficulty = ', '.join(difficulties_texts)
+        else:
+            obj.difficulty = None
         obj.save()
-
+        
         return self.gen_queryset(search_queryset, start_offset)
     
 class QuestionViewSet(viewsets.ModelViewSet):
