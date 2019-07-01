@@ -34,6 +34,10 @@ def question_post_save(sender, instance, **kwargs):
     q =  Question.objects.get(id=instance.id)
     QuestionIndex().update_object(instance=q)
 
+@receiver(post_delete, sender=Question)
+def question_post_delete(sender, instance, **kwargs):
+    QuestionIndex().remove_object(instance)
+
 @receiver(post_save, sender=LearningObject)
 def learning_object_post_save(sender, instance, **kwargs):
     lo =  LearningObject.objects.get(id=instance.id)
