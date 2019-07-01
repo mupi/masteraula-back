@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from taggit.models import Tag, TaggedItemBase
 from .models import Question, LearningObject, Topic
-from django.db.models.signals import post_save, m2m_changed
+from django.db.models.signals import post_save, m2m_changed, post_delete
 from django.dispatch import receiver
-from .search_indexes import QuestionIndex
+from .search_indexes import QuestionIndex, LearningObjectIndex
 
 @receiver(m2m_changed, sender=Question.tags.through)
 def m2m_tags_changed(sender, instance, action, reverse, **kwargs):
@@ -37,8 +37,13 @@ def question_post_save(sender, instance, **kwargs):
 @receiver(post_save, sender=LearningObject)
 def learning_object_post_save(sender, instance, **kwargs):
     lo =  LearningObject.objects.get(id=instance.id)
+    LearningObjectIndex().update_object(instance=lo)
     for q in lo.question_set.all():
         QuestionIndex().update_object(instance=q)
+
+@receiver(post_delete, sender=LearningObject)
+def learning_object_post_delete(sender, instance, **kwargs):
+    LearningObjectIndex().remove_object(instance)
 
 @receiver(post_save, sender=Topic)
 def topic_post_save(sender, instance, **kwargs):
