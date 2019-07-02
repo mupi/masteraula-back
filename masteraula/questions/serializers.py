@@ -49,7 +49,7 @@ class TagListSerializer(serializers.Field):
             return [{'name' : tag.name} for tag in obj.all()]
         return obj
 
-class DisciplineSerialzier(serializers.ModelSerializer):
+class DisciplineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Discipline
         fields = (

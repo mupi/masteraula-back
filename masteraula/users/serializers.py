@@ -15,7 +15,7 @@ from django.contrib.auth import get_user_model
 from drf_haystack.serializers import HaystackSerializer, HaystackSerializerMixin
 
 from rest_auth.registration import serializers as auth_register_serializers
-from rest_auth.registration.serializers import SocialLoginSerializer
+from rest_auth.registration.serializers import SocialLoginSerializer, SocialAccountSerializer
 from rest_auth import serializers as auth_serializers
 
 from rest_framework import serializers, exceptions
@@ -61,7 +61,7 @@ class CityEditSerializer(serializers.Field):
         except:
             raise serializers.ValidationError(_('City does not exist 2'))
 
-class DisciplineSerialzier(serializers.ModelSerializer):
+class DisciplineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Discipline
         fields = (
@@ -79,14 +79,18 @@ class DisciplineSerialzier(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     city = CityEditSerializer(required=False, allow_null=True)
+    disciplines = DisciplineSerializer(many = True, required = False)
     groups = serializers.SerializerMethodField()
-    disciplines = DisciplineSerialzier(many = True, required = False)
-
+    soccialaccounts = serializers.SerializerMethodField()
+    
     def get_groups(self, obj):
         groups = [group.name for group in obj.groups.all()]
         if obj.is_superuser:
             groups.append('admin')
         return groups
+
+    def get_soccialaccounts(self, obj):
+        return SocialAccountSerializer(SocialAccount.objects.filter(user=obj), many=True).data
     
     class Meta:
         model = User
@@ -100,6 +104,7 @@ class UserSerializer(serializers.ModelSerializer):
             'disciplines',
             'profile_pic',
             'groups',
+            'soccialaccounts',
         )
         read_only_fields = ('username', 'email', 'groups'),
         extra_kwargs = {

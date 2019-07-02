@@ -204,7 +204,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
     
 class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Discipline.objects.all().order_by('name')
-    serializer_class = serializers.DisciplineSerialzier
+    serializer_class = serializers.DisciplineSerializer
     pagination_class = None
     
 class TeachingLevelViewSet(viewsets.ReadOnlyModelViewSet):
