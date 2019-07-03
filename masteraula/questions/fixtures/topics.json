@@ -28915,5 +28915,41 @@
       "name": "Editorial", 
       "parent": 143
     }
+  },
+  {
+    "pk": 3214, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 8, 
+      "name": "Grandezas Físicas", 
+      "parent": null
+    }
+  },
+  {
+    "pk": 3215, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 8, 
+      "name": "Método Científico", 
+      "parent": null
+    }
+  },
+  {
+    "pk": 3216, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 8, 
+      "name": "Sistema Linfático", 
+      "parent": null
+    }
+  },
+  {
+    "pk": 3217, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Resenha Crítica", 
+      "parent": 143
+    }
   }
 ]

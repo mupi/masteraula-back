@@ -2,6 +2,7 @@ from import_export.admin import ExportMixin
 from django.contrib import admin
 from import_export import resources, widgets
 from import_export.fields import Field
+from import_export.formats import base_formats
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
                      Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, Search,
@@ -163,6 +164,17 @@ class SearchModelAdmin(ExportMixin, admin.ModelAdmin):
     search_fields = ['id', 'user__name', 'term', 'date_search']
     list_per_page = 100
 
+    def get_export_formats(self):
+        
+        formats = (
+                base_formats.CSV,
+                base_formats.XLS,
+                base_formats.ODS,
+                base_formats.JSON,
+                base_formats.HTML,
+        )
+        return [f for f in formats if f().can_export()]
+
 class DocumentDownloadModelAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = DocumentResource
     raw_id_fields = ('user',)
@@ -170,6 +182,16 @@ class DocumentDownloadModelAdmin(ExportMixin, admin.ModelAdmin):
     search_fields = ['id', 'user__name', 'user__id', 'document__name']
     list_per_page = 100
 
+    def get_export_formats(self):
+        
+        formats = (
+                base_formats.CSV,
+                base_formats.XLS,
+                base_formats.ODS,
+                base_formats.JSON,
+                base_formats.HTML,
+        )
+        return [f for f in formats if f().can_export()]
 
 admin.site.register(Discipline, DisciplineModelAdmin)
 admin.site.register(Descriptor, DescriptorModelAdmin)
