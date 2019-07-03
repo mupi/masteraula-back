@@ -15,6 +15,7 @@ from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token
 
 from masteraula.users.views import null_view
 
+
 urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
     url(settings.ADMIN_URL, admin.site.urls),
@@ -32,6 +33,8 @@ urlpatterns = [
     url(r'^auth/', include('rest_auth.urls')),
     url(r'^auth/refresh-login', refresh_jwt_token),
     url(r'^auth/registration/', include('rest_auth.registration.urls')),
+
+    url(r'^accounts/', include('allauth.urls'), name='socialaccount_signup'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

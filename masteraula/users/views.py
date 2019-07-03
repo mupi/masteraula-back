@@ -4,6 +4,11 @@ from __future__ import absolute_import, unicode_literals
 from django.core.urlresolvers import reverse
 from django.views.generic import DetailView, ListView, RedirectView, UpdateView
 
+from allauth.socialaccount.providers.facebook.views import FacebookOAuth2Adapter
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+from rest_auth.registration.views import SocialLoginView, SocialConnectView
+
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -14,7 +19,7 @@ from rest_framework.permissions import AllowAny
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .models import User, City, State
-from .serializers import CitySerializer, StateSerializer, ResendConfirmationEmailSerializer
+from .serializers import CitySerializer, StateSerializer, ResendConfirmationEmailSerializer, SocialOnlyLoginSerializer
 
 
 class CityViewSet(viewsets.ReadOnlyModelViewSet):
@@ -44,6 +49,31 @@ class UserConfirmationEmailView(GenericAPIView):
                                                 context={'request': request})
         self.serializer.is_valid(raise_exception=True)            
         return Response({"status": "Confirmation e-mail was sent with success"}, status=status.HTTP_200_OK)
+
+class FacebookSignup(SocialLoginView):
+    adapter_class = FacebookOAuth2Adapter
+
+class GoogleSignup(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+    client_class = OAuth2Client
+
+class FacebookLogin(SocialLoginView):
+    adapter_class = FacebookOAuth2Adapter
+
+    serializer_class = SocialOnlyLoginSerializer
+
+class GoogleLogin(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+    client_class = OAuth2Client
+
+    serializer_class = SocialOnlyLoginSerializer
+
+class FacebookConnect(SocialConnectView):
+    adapter_class = FacebookOAuth2Adapter
+
+class GoogleConnect(SocialConnectView):
+    adapter_class = GoogleOAuth2Adapter
+    client_class = OAuth2Client
 
 @api_view()
 def null_view(request):
