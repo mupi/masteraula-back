@@ -8,11 +8,34 @@ from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.utils.translation import ugettext_lazy as _
 from .models import User
 
+from import_export.admin import ExportMixin
+from import_export import resources, widgets
+from import_export.fields import Field
+from import_export.formats import base_formats
+
+class MyUserAdminResource(resources.ModelResource):
+    class Meta:
+        model = User
+        fields = ('id','name', 'username', 'email', 'about', 'city', 'disciplines', 'date_joined')
+        widgets = {
+                'date_joined': {'format': '%d.%m.%Y'},
+                }
+    
+    def dehydrate_city(self,user):
+        if user.city:
+            return user.city.name
+
+    def dehydrate_disciplines(self,user):
+        itens = user.disciplines.all()
+        list_disciplines = []
+        for i in itens:
+            list_disciplines.append(i.name)
+
+        return(', '.join(list_disciplines))
 
 class MyUserChangeForm(UserChangeForm):
     class Meta(UserChangeForm.Meta):
         model = User
-
 
 class MyUserCreationForm(UserCreationForm):
 
@@ -33,7 +56,8 @@ class MyUserCreationForm(UserCreationForm):
 
 
 @admin.register(User)
-class MyUserAdmin(AuthUserAdmin):
+class MyUserAdmin(ExportMixin, AuthUserAdmin):
+    resource_class =  MyUserAdminResource
     form = MyUserChangeForm
     add_form = MyUserCreationForm
     raw_id_fields = ('city',)
@@ -42,3 +66,14 @@ class MyUserAdmin(AuthUserAdmin):
     ) + AuthUserAdmin.fieldsets
     list_display = ('id', 'username', 'name', 'is_superuser')
     search_fields = ['id', 'name', 'email', 'disciplines__name']
+
+    def get_export_formats(self):
+        
+        formats = (
+                base_formats.CSV,
+                base_formats.XLS,
+                base_formats.ODS,
+                base_formats.JSON,
+                base_formats.HTML,
+        )
+        return [f for f in formats if f().can_export()]
