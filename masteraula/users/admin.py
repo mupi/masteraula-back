@@ -20,6 +20,18 @@ class MyUserAdminResource(resources.ModelResource):
         widgets = {
                 'date_joined': {'format': '%d.%m.%Y'},
                 }
+    
+    def dehydrate_city(self,user):
+        if user.city:
+            return user.city.name
+
+    def dehydrate_disciplines(self,user):
+        itens = user.disciplines.all()
+        list_disciplines = []
+        for i in itens:
+            list_disciplines.append(i.name)
+
+        return(', '.join(list_disciplines))
 
 class MyUserChangeForm(UserChangeForm):
     class Meta(UserChangeForm.Meta):
