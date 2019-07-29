@@ -64,9 +64,9 @@ class MyUserAdmin(ExportMixin, AuthUserAdmin):
     fieldsets = (
             ('User Profile', {'fields': ('name', 'city', 'disciplines',)}),
     ) + AuthUserAdmin.fieldsets
-    list_display = ('id', 'username', 'name', 'is_superuser')
-    search_fields = ['id', 'name', 'email', 'disciplines__name']
-
+    list_display = ('id', 'username', 'name', 'is_superuser', 'date_joined')
+    search_fields = ['id', 'name', 'email', 'disciplines__name', 'date_joined']
+    
     def get_export_formats(self):
         
         formats = (
