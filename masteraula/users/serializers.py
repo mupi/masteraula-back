@@ -81,7 +81,7 @@ class UserSerializer(serializers.ModelSerializer):
     city = CityEditSerializer(required=False, allow_null=True)
     disciplines = DisciplineSerializer(many = True, required = False)
     groups = serializers.SerializerMethodField()
-    soccialaccounts = serializers.SerializerMethodField()
+    socialaccounts = serializers.SerializerMethodField()
     
     def get_groups(self, obj):
         groups = [group.name for group in obj.groups.all()]
@@ -89,7 +89,7 @@ class UserSerializer(serializers.ModelSerializer):
             groups.append('admin')
         return groups
 
-    def get_soccialaccounts(self, obj):
+    def get_socialaccounts(self, obj):
         return SocialAccountSerializer(SocialAccount.objects.filter(user=obj), many=True).data
     
     class Meta:
@@ -104,7 +104,7 @@ class UserSerializer(serializers.ModelSerializer):
             'disciplines',
             'profile_pic',
             'groups',
-            'soccialaccounts',
+            'socialaccounts',
         )
         read_only_fields = ('username', 'email', 'groups'),
         extra_kwargs = {
