@@ -33,7 +33,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         return prepare_document(obj.statement)
 
     def prepare_topics(self, obj):
-        return ' '.join([ stripaccents(topic.name) for topic in obj.topics.only('name') ])
+        return ' '.join([ stripaccents(topic.name) for topic in obj.get_all_topics() ])
 
     def prepare_tags(self, obj):
         return ' '.join([ stripaccents(tag.name) for tag in obj.tags.only('name') ])
