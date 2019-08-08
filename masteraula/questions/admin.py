@@ -14,7 +14,7 @@ class SearchResource(resources.ModelResource):
         model = Search
         fields = ('id','user', 'term', 'disciplines', 'teaching_levels', 'difficulty', 'source', 'year', 'date_search')
         widgets = {
-                'date_search': {'format': '%d.%m.%Y'},
+                'date_search': {'format': '%d/%m/%Y'},
                 }
 
     def dehydrate_disciplines(self,search):
@@ -38,9 +38,9 @@ class DocumentResource(resources.ModelResource):
     
     class Meta:
         model = DocumentDownload
-        fields = ('id','user', 'document', 'download_date', 'answers')
+        fields = ('id','user', 'user__name', 'document', 'download_date', 'answers')
         widgets = {
-                'download_date': {'format': '%H:%M:%S %d/%m/%Y'},
+                'download_date': {'format': '%d/%m/%Y'},
                 }
                 
 
