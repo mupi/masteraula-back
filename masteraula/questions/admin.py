@@ -39,6 +39,7 @@ class DocumentResource(resources.ModelResource):
     class Meta:
         model = DocumentDownload
         fields = ('id','user', 'user__name', 'document', 'download_date', 'answers')
+        export_order = fields
         widgets = {
                 'download_date': {'format': '%d/%m/%Y'},
                 }

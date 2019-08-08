@@ -17,10 +17,11 @@ class MyUserAdminResource(resources.ModelResource):
     class Meta:
         model = User
         fields = ('id','name', 'username', 'email', 'about', 'city', 'disciplines', 'date_joined')
+        export_order = fields
         widgets = {
-                'date_joined': {'format': '%d.%m.%Y'},
+                'date_joined': {'format': '%d/%m/%Y'},
                 }
-    
+
     def dehydrate_city(self,user):
         if user.city:
             return user.city.name
