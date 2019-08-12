@@ -476,6 +476,10 @@ class DocumentViewSet(viewsets.ModelViewSet):
             answers = 'answers' in flags and flags['answers'] == 'True'
             document_generator.generate_document(document, answers)
 
+            DocumentDownload.objects.create(user=self.request.user, 
+                                            document=document, 
+                                            answers=('answers' in flags and flags['answers'] == 'True'))
+
             response = FileResponse(
                 open(document_generator.docx_name + '.docx', "rb"), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
             )
