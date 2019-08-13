@@ -19,6 +19,7 @@ router.register(r'sources', views.SourceViewSet, base_name='sources')
 router.register(r'topics', views.TopicViewSet, base_name='topics')
 router.register(r'documents', views.DocumentViewSet, base_name='documents')
 router.register(r'headers', views.HeaderViewSet, base_name='headers')
+router.register(r'learning_object/search', views.LearningObjectSearchView, base_name='learning_object-search')
 router.register(r'learning_object', views.LearningObjectViewSet, base_name='learning_object')
 
 schema_view = get_swagger_view(title='Mupi Question API')

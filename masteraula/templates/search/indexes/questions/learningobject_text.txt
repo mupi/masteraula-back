@@ -1,0 +1,8 @@
+{% load search_helpers %}
+
+{{ object.source|prepare_document }}
+{{ object.text|prepare_document }}
+
+{% for tag in object.tags.all %}
+    {{ tag.name|stripaccents }}
+{% endfor %}

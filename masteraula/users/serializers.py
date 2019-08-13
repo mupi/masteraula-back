@@ -2,18 +2,25 @@ from allauth.account import app_settings as allauth_settings
 from allauth.utils import (email_address_exists,get_username_max_length)
 from allauth.account.adapter import get_adapter
 from allauth.account.utils import setup_user_email
+from allauth.socialaccount.helpers import complete_social_login
+from allauth.socialaccount.models import SocialAccount
+from allauth.socialaccount.providers.base import AuthProcess
 
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import slugify
 from django.core import validators
+from django.contrib.auth import get_user_model
 
 from drf_haystack.serializers import HaystackSerializer, HaystackSerializerMixin
 
 from rest_auth.registration import serializers as auth_register_serializers
+from rest_auth.registration.serializers import SocialLoginSerializer, SocialAccountSerializer
 from rest_auth import serializers as auth_serializers
 
 from rest_framework import serializers, exceptions
+
+from requests.exceptions import HTTPError
 
 from .models import User, Profile, City, State
 from masteraula.questions.models import Discipline
@@ -54,7 +61,7 @@ class CityEditSerializer(serializers.Field):
         except:
             raise serializers.ValidationError(_('City does not exist 2'))
 
-class DisciplineSerialzier(serializers.ModelSerializer):
+class DisciplineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Discipline
         fields = (
@@ -72,14 +79,18 @@ class DisciplineSerialzier(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     city = CityEditSerializer(required=False, allow_null=True)
+    disciplines = DisciplineSerializer(many = True, required = False)
     groups = serializers.SerializerMethodField()
-    disciplines = DisciplineSerialzier(many = True, required = False)
-
+    socialaccounts = serializers.SerializerMethodField()
+    
     def get_groups(self, obj):
         groups = [group.name for group in obj.groups.all()]
         if obj.is_superuser:
             groups.append('admin')
         return groups
+
+    def get_socialaccounts(self, obj):
+        return SocialAccountSerializer(SocialAccount.objects.filter(user=obj), many=True).data
     
     class Meta:
         model = User
@@ -93,6 +104,7 @@ class UserSerializer(serializers.ModelSerializer):
             'disciplines',
             'profile_pic',
             'groups',
+            'socialaccounts',
         )
         read_only_fields = ('username', 'email', 'groups'),
         extra_kwargs = {
@@ -289,3 +301,78 @@ class JWTSerializer(serializers.Serializer):
     """
     token = serializers.CharField()
     user = UserSerializer()
+
+
+class SocialOnlyLoginSerializer(SocialLoginSerializer):
+    def validate(self, attrs):
+        view = self.context.get('view')
+        request = self._get_request()
+
+        if not view:
+            raise serializers.ValidationError(
+                _("View is not defined, pass it as a context variable")
+            )
+
+        adapter_class = getattr(view, 'adapter_class', None)
+        if not adapter_class:
+            raise serializers.ValidationError(_("Define adapter_class in view"))
+
+        adapter = adapter_class(request)
+        app = adapter.get_provider().get_app(request)
+
+        # More info on code vs access_token
+        # http://stackoverflow.com/questions/8666316/facebook-oauth-2-0-code-and-token
+
+        # Case 1: We received the access_token
+        if attrs.get('access_token'):
+            access_token = attrs.get('access_token')
+
+        # Case 2: We received the authorization code
+        elif attrs.get('code'):
+            self.callback_url = getattr(view, 'callback_url', None)
+            self.client_class = getattr(view, 'client_class', None)
+
+            if not self.callback_url:
+                raise serializers.ValidationError(
+                    _("Define callback_url in view")
+                )
+            if not self.client_class:
+                raise serializers.ValidationError(
+                    _("Define client_class in view")
+                )
+
+            code = attrs.get('code')
+
+            provider = adapter.get_provider()
+            scope = provider.get_scope(request)
+            client = self.client_class(
+                request,
+                app.client_id,
+                app.secret,
+                adapter.access_token_method,
+                adapter.access_token_url,
+                self.callback_url,
+                scope
+            )
+            token = client.get_access_token(code)
+            access_token = token['access_token']
+
+        else:
+            raise serializers.ValidationError(
+                _("Incorrect input. access_token or code is required."))
+
+        social_token = adapter.parse_token({'access_token': access_token})
+        social_token.app = app
+
+        try:
+            login = self.get_social_login(adapter, app, social_token, access_token)
+            complete_social_login(request, login)
+        except HTTPError:
+            raise serializers.ValidationError(_("Incorrect value"))
+
+        if not login.is_existing:
+            raise serializers.ValidationError(_("Não há usuários associados a esta rede social"))
+
+        attrs['user'] = login.account.user
+
+        return attrs

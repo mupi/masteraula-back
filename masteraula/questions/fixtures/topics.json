@@ -28744,5 +28744,212 @@
       "name": "Grafo", 
       "parent": null
     }
+  },
+  {
+    "pk": 3195, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Estruturas Correlativas", 
+      "parent": 87
+    } 
+  },
+  {
+    "pk": 3196, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Sequência textual", 
+      "parent": 143
+    }
+  },
+  {
+    "pk": 3197, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Sequência autodescritiva", 
+      "parent": 3196
+    }
+  },
+  {
+    "pk": 3198, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Correlação Comparativa", 
+      "parent": 3195
+    }
+  },
+  {
+    "pk": 3199, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Norma-Padrão", 
+      "parent": 250
+    }
+  },
+  {
+    "pk": 3200, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Ensaio", 
+      "parent": 143
+    }
+  },
+  {
+    "pk": 3201, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Tipologia Textual", 
+      "parent": 143
+    }
+  },
+  {
+    "pk": 3202, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Sequência Descritiva", 
+      "parent": 3201
+    }
+  },
+  {
+    "pk": 3203, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Notícia", 
+      "parent": 152
+    }
+  },
+  {
+    "pk": 3204, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Tirinha", 
+      "parent": 143
+    }
+  },
+  {
+    "pk": 3205, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Norma-Padrão", 
+      "parent": 143
+    }
+  },
+  {
+    "pk": 3206, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Linguagem Coloquial", 
+      "parent": 3205
+    }
+  },
+  {
+    "pk": 3207, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Verbete", 
+      "parent": 143
+    }
+  },
+  {
+    "pk": 3208, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 3, 
+      "name": "Literatura Contemporânea", 
+      "parent": null
+    }
+  },
+  {
+    "pk": 3209, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Literatura", 
+      "parent": null
+    }
+  },
+  {
+    "pk": 3210, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Cordel", 
+      "parent": 3209
+    }
+  },
+  {
+    "pk": 3211, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Arte / Retórica", 
+      "parent": 143
+    }
+  },
+  {
+    "pk": 3212, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Diálogo", 
+      "parent": 3211
+    }
+  },
+  {
+    "pk": 3213, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Editorial", 
+      "parent": 143
+    }
+  },
+  {
+    "pk": 3214, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 8, 
+      "name": "Grandezas Físicas", 
+      "parent": null
+    }
+  },
+  {
+    "pk": 3215, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 8, 
+      "name": "Método Científico", 
+      "parent": null
+    }
+  },
+  {
+    "pk": 3216, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 8, 
+      "name": "Sistema Linfático", 
+      "parent": null
+    }
+  },
+  {
+    "pk": 3217, 
+    "model": "questions.Topic",
+    "fields": {
+      "discipline": 2, 
+      "name": "Resenha Crítica", 
+      "parent": 143
+    }
   }
 ]
