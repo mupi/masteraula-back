@@ -2,36 +2,40 @@ from django.db import models
 
 class TopicManager(models.Manager):
 
-    def get_parents_tree_values(self, disciplines_ids=None):
+    def max_depth(self):
         all_topics = self.all().select_related('parent')
-        if disciplines_ids:
-            all_topics = all_topics.filter(discipline__in=disciplines_ids).distinct()
-
-        all_topics = all_topics.values()
-        roots = []
-        topics_dict = {}
-
-        for topic in all_topics:
-            topics_dict[topic['id']] = topic
-
         children_dict = {}
+
         for topic in all_topics:
-            topic['childs'] = []
-            if not topic['parent_id']:
-                roots.append(topic)
+            if topic.parent and topic.parent_id in children_dict:
+                children_dict[topic.parent_id].append(topic)
             else:
-                if topic['parent_id'] in children_dict:
-                    children_dict[topic['parent_id']].append(topic)
-                else:
-                    children_dict[topic['parent_id']] = [topic]
+                children_dict[topic.parent_id] = [topic]
 
-        new_nodes = roots
-        while new_nodes:
-            curr_nodes = new_nodes
+        curr_nodes = self.filter(parent=None)
+        depth = 0
+        while curr_nodes:
+            depth += 1
             new_nodes = []
-            for root in curr_nodes:
-                root['childs'] = children_dict.get(root['id'], [])
-                new_nodes += root['childs']
+            for node in curr_nodes:
+                children = children_dict.get(node.id, [])
+                if children:
+                    new_nodes += children
+            curr_nodes = new_nodes
+        return depth
 
-        return roots
+
+    def get_parents_tree(self, disciplines=None):
+        depth = 3   # Hardcoded because whe already know the maximun depth of the tree
+        # depth = self.max_depth()
+        prefetch_args = []
+
+        for i in range(depth):
+            prefetch_args.append('__'.join(['childs'] * (i + 1)))
+            prefetch_args.append('__'.join(['childs'] * i + ['discipline']))
+
+        if disciplines:
+            return self.filter(parent=None, discipline_id__in=disciplines).prefetch_related(*prefetch_args)
+        return self.filter(parent=None).prefetch_related(*prefetch_args)
+
         
