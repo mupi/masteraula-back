@@ -145,7 +145,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, QuestionPermission )
 
     def get_queryset(self):
-        queryset = Question.objects.all().order_by('id')
+        queryset = Question.objects.get_list_questions()
+
         disciplines = self.request.query_params.getlist('disciplines', None)
         teaching_levels = self.request.query_params.getlist('teaching_levels', None)
         difficulties = self.request.query_params.getlist('difficulties', None)
@@ -153,21 +154,21 @@ class QuestionViewSet(viewsets.ModelViewSet):
         sources = self.request.query_params.getlist('sources', None)
         author = self.request.query_params.get('author', None)
        
-        if disciplines is not None and disciplines:
+        if disciplines:
             queryset = queryset.filter(disciplines__in=disciplines).distinct()
-        if teaching_levels is not None and teaching_levels:
+        if teaching_levels:
             queryset = queryset.filter(teaching_levels__in=teaching_levels).distinct()
-        if difficulties is not None and difficulties:
+        if difficulties:
             queryset = queryset.filter(difficulty__in=difficulties).distinct()
-        if years is not None and years:
+        if years:
             queryset = queryset.filter(year__in=years).distinct()
-        if sources is not None and sources:
+        if sources:
             query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             queryset = queryset.filter(query)
-        if author is not None and author:
-            queryset = queryset.filter(author__id=author).order_by('-create_date')    
-            
-        return queryset.filter(disabled=False)
+        if author:
+            queryset = queryset.filter(author__id=author).order_by('-create_date')
+
+        return queryset.order_by('id')
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
