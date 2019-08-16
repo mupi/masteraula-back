@@ -7,7 +7,7 @@ from taggit.managers import TaggableManager
 
 from masteraula.users.models import User
 
-from .managers import TopicManager
+from .managers import TopicManager, QuestionManager
 
 class DocumentQuestionManager(models.Manager):
     def create(self, *args, **kwargs):
@@ -118,6 +118,7 @@ class Question(models.Model):
 
     tags = TaggableManager(blank=True)
     disabled = models.BooleanField(null=False, blank=True, default=False)
+    objects = QuestionManager()
 
     def __str__(self):
         return self.statement[:75]

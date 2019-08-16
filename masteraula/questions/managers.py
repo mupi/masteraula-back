@@ -38,4 +38,11 @@ class TopicManager(models.Manager):
             return self.filter(parent=None, discipline_id__in=disciplines).prefetch_related(*prefetch_args)
         return self.filter(parent=None).prefetch_related(*prefetch_args)
 
-        
+
+class QuestionManager(models.Manager):
+    def get_list_questions(self, ):
+        return self.filter(disabled=False).order_by('id').prefetch_related(
+            'tags', 'alternatives', 'disciplines', 'teaching_levels', 'author',
+            'learning_objects', 'learning_objects__tags',
+            'topics', 'topics__discipline', 'topics__parent', 'topics__parent__discipline', 'topics__parent__parent', 'topics__parent__parent__discilpine',
+        )
