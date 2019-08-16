@@ -300,10 +300,6 @@ REST_FRAMEWORK = {
         #'rest_framework.authentication.SessionAuthentication',
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     ),
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-    ),
-    
 }
 
 ACCOUNT_SIGNUP_FORM_CLASS = 'masteraula.users.forms.SignupForm'
