@@ -44,5 +44,5 @@ class QuestionManager(models.Manager):
         return self.filter(disabled=False).order_by('id').prefetch_related(
             'tags', 'alternatives', 'disciplines', 'teaching_levels', 'author',
             'learning_objects', 'learning_objects__tags',
-            'topics', 'topics__discipline', 'topics__parent', 'topics__parent__discipline', 'topics__parent__parent', 'topics__parent__parent__discilpine',
+            'topics', 'topics__discipline', 'topics__parent', 'topics__parent__discipline', 'topics__parent__parent', 'topics__parent__parent__discipline',
         )
