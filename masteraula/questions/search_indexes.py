@@ -63,6 +63,7 @@ class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
     tags = indexes.CharField(boost=1000)
     is_image = indexes.BooleanField()
     is_text = indexes.BooleanField()
+    tags_questions = indexes.CharField(boost=1000)
 
     def get_model(self):
         return LearningObject
@@ -82,3 +83,9 @@ class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_tags(self, obj):
         return ' '.join([ stripaccents(tag.name) for tag in obj.tags.only('name') ])
 
+    def prepare_tags_questions(self, obj):
+        tag = ''
+        questions = Question.objects.filter(learning_objects = obj.pk)
+        for q in questions:
+            tag += ' '.join([ stripaccents(tag.name) for tag in q.tags.only('name') ])
+        return tag
