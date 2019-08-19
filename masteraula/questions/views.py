@@ -8,7 +8,7 @@ from rest_framework import (generics, response, viewsets, status, mixins,
 from rest_framework.decorators import detail_route, list_route, permission_classes
 from rest_framework.response import Response
 
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Case, When
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import FieldError
 
@@ -59,49 +59,40 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.QuestionSerializer
     permission_classes = (permissions.IsAuthenticated, QuestionPermission, )
      
-    def gen_queryset(self, search_qs, page_start):
-        search_qs = search_qs.load_all()
-        queryset = [None] * len(search_qs)
+    def paginate_queryset(self, search_queryset):
+        search_queryset = search_queryset.load_all()
 
-        results = search_qs[page_start:page_start+16]
-        for i in range(page_start, min(page_start + 16, len(queryset))):
-            res = results.pop(0)
-            queryset[i] = res.object
+        page = super().paginate_queryset(search_queryset)
+        questions_ids = [res.object.id for res in page]
+
+        queryset = Question.objects.get_list_questions().filter(id__in=questions_ids)
+        order = Case(*[When(id=id, then=pos) for pos, id in enumerate(questions_ids)])
+        queryset = queryset.order_by(order)
+
         return queryset
-    
+
     def get_queryset(self):
-        disciplines = self.request.query_params.getlist('disciplines', None)
-        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
-        difficulties = self.request.query_params.getlist('difficulties', None)
-        years = self.request.query_params.getlist('years', None)
-        sources = self.request.query_params.getlist('sources', None)
-        page = self.request.GET.get('page', None)
         text = self.request.GET.get('text', None)
-        author = self.request.query_params.get('author', None)
-             
-        try:
-            page_no = int(self.request.GET.get('page', 1))
-        except (TypeError, ValueError):
-            raise FieldError("Not a valid number for page.")
-
-        if page_no < 1:
-            raise FieldError("Pages should be 1 or greater.")
-
         if not text:
             raise FieldError("Invalid search text")
         text = stripaccents(text)
         text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
         if not text:
-            raise FieldError("Invalid search text")   
+            raise FieldError("Invalid search text")
 
-        start_offset = (page_no - 1) * 16
+        disciplines = self.request.query_params.getlist('disciplines', None)
+        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
+        difficulties = self.request.query_params.getlist('difficulties', None)
+        years = self.request.query_params.getlist('years', None)
+        sources = self.request.query_params.getlist('sources', None)
+        author = self.request.query_params.get('author', None)
 
-        params = {}
-        if disciplines is not None and disciplines:
+        params = {'disabled' : 'false'}
+        if disciplines:
             params['disciplines__id__in'] = disciplines
-        if teaching_levels is not None and teaching_levels:
+        if teaching_levels:
             params['teaching_levels__in'] = teaching_levels
-        if difficulties is not None and difficulties:
+        if difficulties:
             difficulties_texts = []
             if 'E' in difficulties:
                 difficulties_texts.append('Facil')
@@ -110,13 +101,12 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             if 'H' in difficulties:
                 difficulties_texts.append('Dificil')
             params['difficulty__in'] = difficulties_texts
-        if years is not None and years:
+        if years:
             params['year__in'] = years
-        if sources is not None and sources:
+        if sources:
             params['source__in'] = sources
-        if author is not None and author:
+        if author:
             params['author__id'] = author
-        params['disabled'] = 'false'
 
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
@@ -147,7 +137,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             obj.difficulty = None
         obj.save()
         
-        return self.gen_queryset(search_queryset, start_offset)
+        return search_queryset
     
 class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.QuestionSerializer
@@ -155,7 +145,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, QuestionPermission )
 
     def get_queryset(self):
-        queryset = Question.objects.all().order_by('id')
+        queryset = Question.objects.get_list_questions()
+
         disciplines = self.request.query_params.getlist('disciplines', None)
         teaching_levels = self.request.query_params.getlist('teaching_levels', None)
         difficulties = self.request.query_params.getlist('difficulties', None)
@@ -163,21 +154,21 @@ class QuestionViewSet(viewsets.ModelViewSet):
         sources = self.request.query_params.getlist('sources', None)
         author = self.request.query_params.get('author', None)
        
-        if disciplines is not None and disciplines:
+        if disciplines:
             queryset = queryset.filter(disciplines__in=disciplines).distinct()
-        if teaching_levels is not None and teaching_levels:
+        if teaching_levels:
             queryset = queryset.filter(teaching_levels__in=teaching_levels).distinct()
-        if difficulties is not None and difficulties:
+        if difficulties:
             queryset = queryset.filter(difficulty__in=difficulties).distinct()
-        if years is not None and years:
+        if years:
             queryset = queryset.filter(year__in=years).distinct()
-        if sources is not None and sources:
+        if sources:
             query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             queryset = queryset.filter(query)
-        if author is not None and author:
-            queryset = queryset.filter(author__id=author).order_by('-create_date')    
-            
-        return queryset.filter(disabled=False)
+        if author:
+            queryset = queryset.filter(author__id=author).order_by('-create_date')
+
+        return queryset.order_by('id')
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)

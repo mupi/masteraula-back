@@ -21,7 +21,7 @@ from taggit.models import Tag
 from masteraula.users.models import User, Profile
 from masteraula.users.serializers import UserDetailsSerializer
 
-from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
+from .models import (Discipline, TeachingLevel, LearningObject, Question,
                      Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, LearningObject, Search)
 
 import unicodedata
@@ -154,15 +154,6 @@ class TopicSimpleSerializer(serializers.ModelSerializer):
         else:
             return None
 
-class DescriptorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Descriptor
-        fields = (
-            'id',
-            'name',
-            'description'
-        )
-
 class AlternativeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alternative
@@ -194,6 +185,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     tags = TagListSerializer(read_only=False) 
     year = serializers.IntegerField(read_only=False, required=False, allow_null=True)
     difficulty = serializers.CharField(read_only=False, required=True)
+
     learning_objects_ids = serializers.PrimaryKeyRelatedField(write_only=True, allow_null=True, required=False, many=True, queryset=LearningObject.objects.all())
     topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
     disciplines_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Discipline.objects.all())
@@ -214,7 +206,6 @@ class QuestionSerializer(serializers.ModelSerializer):
             'alternatives',
 
             'disciplines',
-            'descriptors',
             'teaching_levels',
             'year',
             'source',
