@@ -81,4 +81,3 @@ class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
     
     def prepare_tags(self, obj):
         return ' '.join([ stripaccents(tag.name) for tag in obj.tags.only('name') ])
-

@@ -82,6 +82,10 @@ class LearningObject(models.Model):
             setattr(self, name, value)
         self.save()
 
+    def get_questions(self):
+        questions = Question.objects.filter(learning_objects = self.pk)
+        return questions
+
 class Descriptor(models.Model):
     name = models.CharField(max_length=100, null=False, blank=False)
     description = models.TextField(null=True, blank=True)
