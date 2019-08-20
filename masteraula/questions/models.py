@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import datetime
 from django.db import models
+from django.db.models import Prefetch
 from django.utils.translation import ugettext_lazy as _
 
 from taggit.managers import TaggableManager
 
 from masteraula.users.models import User
 
-from .managers import TopicManager, QuestionManager
+from .managers import TopicManager
 
 class DocumentQuestionManager(models.Manager):
     def create(self, *args, **kwargs):
@@ -89,6 +90,17 @@ class Descriptor(models.Model):
     def __str__(self):
         return self.name + " " + self.description[:50]
 
+class QuestionManager(models.Manager):
+    def get_list_questions(self):
+        # Hardcoded because we know the size of the topics and subtopics
+        topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
+            'parent', 'discipline', 'parent__parent', 'parent__discipline')
+        )
+
+        return self.filter(disabled=False).order_by('id').select_related('author').prefetch_related(
+            'tags', 'disciplines', 'teaching_levels', 'alternatives', 'learning_objects', 'learning_objects__tags',
+            topics_prefetch
+        )
 
 class Question(models.Model):
     LEVEL_CHOICES = (
