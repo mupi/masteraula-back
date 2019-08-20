@@ -294,9 +294,6 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
         queries = [SQ(text_object=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         for item in queries:
             query |= item
-        queries = [SQ(tags_questions=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
-        for item in queries:
-            query |= item
 
         search_queryset = SearchQuerySet().models(LearningObject).filter(**params).filter(SQ(content=AutoQuery(text)) | (
             SQ(content=AutoQuery(text)) & query

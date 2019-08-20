@@ -12,3 +12,9 @@
         {{ tag.name|stripaccents }}
     {% endfor %}
 {% endfor %}
+
+{% for question in object.get_questions %}
+    {% for topic in question.get_all_topics %}
+        {{ topic.name|stripaccents }}
+    {% endfor %}
+{% endfor %}
