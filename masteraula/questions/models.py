@@ -102,6 +102,16 @@ class QuestionManager(models.Manager):
             topics_prefetch
         )
 
+    def get_question_prefetched(self, question):
+        topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
+            'parent', 'discipline', 'parent__parent', 'parent__discipline')
+        )
+
+        return self.all().select_related('author').prefetch_related(
+            'tags', 'disciplines', 'teaching_levels', 'alternatives', 'learning_objects', 'learning_objects__tags',
+            topics_prefetch
+        ).get(id=question.id)
+
 class Question(models.Model):
     LEVEL_CHOICES = (
         ('', _('None')),
