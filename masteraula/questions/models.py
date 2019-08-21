@@ -91,7 +91,7 @@ class Descriptor(models.Model):
         return self.name + " " + self.description[:50]
 
 class QuestionManager(models.Manager):
-    def get_list_questions(self):
+    def get_questions_prefetched(self):
         # Hardcoded because we know the size of the topics and subtopics
         topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
             'parent', 'discipline', 'parent__parent', 'parent__discipline')
