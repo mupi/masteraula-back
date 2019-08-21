@@ -145,6 +145,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, QuestionPermission )
 
     def get_queryset(self):
+        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+            return Question.objects.all()
         queryset = Question.objects.get_list_questions()
 
         disciplines = self.request.query_params.getlist('disciplines', None)
@@ -180,13 +182,10 @@ class QuestionViewSet(viewsets.ModelViewSet):
         return Response(status = status.HTTP_204_NO_CONTENT)
     
     def retrieve(self, request, pk=None):
-        queryset = Question.objects.all()
-        question = get_object_or_404(queryset, pk=pk)
+        question = get_object_or_404(self.get_queryset(), pk=pk)
         serializer_question = self.serializer_class(question)
 
-        documents_questions = DocumentQuestion.objects.filter(question__id=pk)
-        documents = [dq.document for dq in documents_questions if dq.document.owner==request.user]
-        documents = sorted(documents, key=lambda doc: doc.create_date)
+        documents = Document.objects.filter(questions__id=pk, owner=request.user).order_by('create_date')
         serializer_documents = serializers.ListDocumentQuestionSerializer(documents, many = True)
 
         return_data = serializer_question.data
@@ -321,6 +320,7 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
         return_data['questions'] = serializer_questions.data
         
         return Response(return_data)
+
     def get_queryset(self):
         queryset = LearningObject.objects.all().order_by('id')
         is_image = self.request.query_params.get('is_image', None)
