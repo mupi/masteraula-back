@@ -30,7 +30,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         return Question
     
     def index_queryset(self, using=None):
-        return Question.objects.get_questions_rebuild_index()
+        return Question.objects.get_questions_update_index().filter(disabled=False)
 
     def prepare_statement(self, obj):
 
@@ -72,7 +72,7 @@ class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
         return LearningObject
 
     def index_queryset(self, using=None):
-        return LearningObject.objects.get_objects_rebuild_index()
+        return LearningObject.objects.get_objects_update_index()
 
     def prepare_source(self, obj):
         return prepare_document(obj.source)

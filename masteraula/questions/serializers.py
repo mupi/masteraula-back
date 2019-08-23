@@ -312,7 +312,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             for alt in alternatives:
                 Alternative.objects.create(question=question, **alt)
 
-        return Question.objects.get_question_prefetched(question)
+        return Question.objects.get_questions_prefetched().get(id=question.id)
 
     def update(self, instance, validated_data):
         # m2m
@@ -341,7 +341,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             for alt in alternatives:
                 Alternative.objects.create(question=question, **alt)
 
-        return Question.objects.get_question_prefetched(question)
+        return Question.objects.get_questions_prefetched().get(id=question.id)
 
 class QuestionTagEditSerializer(serializers.ModelSerializer):
     topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())

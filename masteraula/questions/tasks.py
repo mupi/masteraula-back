@@ -22,7 +22,7 @@ def update_question_index(question):
 @shared_task(name="update_learning_object_index")
 def update_learning_object_index(learningObject):
     try:
-        lo = LearningObject.objects.get_objects_rebuild_index().get(id=learningObject)
+        lo = LearningObject.objects.get_objects_update_index().get(id=learningObject)
         LearningObjectIndex().update_object(instance=lo)
         for question in lo.questions.all():
             update_or_remove_question(question)

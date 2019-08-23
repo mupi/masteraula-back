@@ -73,26 +73,21 @@ class QuestionManager(models.Manager):
         'parent', 'discipline', 'parent__parent', 'parent__discipline')
     )
 
-    def get_questions_prefetched(self):
-        return self.filter(disabled=False).order_by('id').select_related('author').prefetch_related(
+    def get_questions_prefetched(self, topics=True):
+        qs = self.all().select_related('author').prefetch_related(
             'tags', 'disciplines', 'teaching_levels', 'alternatives', 'learning_objects', 'learning_objects__tags',
-            self.topics_prefetch
         )
+        if topics:
+            qs = qs.prefetch_related(self.topics_prefetch)
+        return qs
 
-    def get_question_prefetched(self, question):
-        return self.all().select_related('author').prefetch_related(
-            'tags', 'disciplines', 'teaching_levels', 'alternatives', 'learning_objects', 'learning_objects__tags',
-            self.topics_prefetch
-        ).get(id=question.id)
-
-    def get_questions_update_index(self):
-        return self.all().select_related('author').prefetch_related(
-            'disciplines', 'teaching_levels', 'learning_objects',
+    def get_questions_update_index(self, topics=True):
+        qs = self.all().select_related('author').prefetch_related(
+            'tags', 'disciplines', 'teaching_levels', 'learning_objects', 'learning_objects__tags', 
         )
-    
-    def get_questions_rebuild_index(self):
-        return self.get_questions_update_index().filter(disabled=False)
-
+        if topics:
+            qs = qs.prefetch_related(self.topics_prefetch)
+        return qs
     
 
 class Question(models.Model):
@@ -138,11 +133,12 @@ class Question(models.Model):
         return list(set(topics))
 
 class LearningObjectManager(models.Manager):
-    questions_prefetch = Prefetch('questions', queryset=Question.objects.get_questions_update_index())
+    questions_prefetch = Prefetch('questions', queryset=Question.objects.get_questions_update_index(False))
 
-    def get_objects_rebuild_index(self):
+    def get_objects_update_index(self):
         return self.all().select_related('owner').prefetch_related(
-            'tags', self.questions_prefetch
+            'tags', 
+            self.questions_prefetch
         )
 
 class LearningObject(models.Model):
