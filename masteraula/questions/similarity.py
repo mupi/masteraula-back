@@ -56,7 +56,7 @@ class RelatedQuestions():
             related_questions = questions.filter(id__in=similar_questions)
             ids = [i.id for i in related_questions]
 
-            if related_questions.count() > 4: 
+            if len(related_questions) > 4: 
                 related_questions = list(related_questions.order_by('?')[:4])
                 
             if len(related_questions) < 4: 
