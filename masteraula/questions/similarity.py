@@ -59,8 +59,8 @@ class RelatedQuestions():
             if related_questions.count() > 4: 
                 related_questions = list(related_questions.order_by('?')[:4])
                 
-            if related_questions.count() < 4: 
-                qtd = 4 - related_questions.count()
+            if len(related_questions) < 4: 
+                qtd = 4 - len(related_questions)
                 questions = questions.exclude(id__in=ids).order_by('?')[:qtd]
                 related_questions =  list(related_questions) + list(questions)
 
