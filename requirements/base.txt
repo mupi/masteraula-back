@@ -59,3 +59,4 @@ django-import-export==1.2.0
 celery==4.2.1
 beautifulsoup4==4.7.1
 django-silk==3.0.2
+spacy>=2.0.0,<3.0.0
