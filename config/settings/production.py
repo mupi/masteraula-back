@@ -217,6 +217,7 @@ HAYSTACK_CONNECTIONS = {
         'ENGINE': 'haystack.backends.elasticsearch2_backend.Elasticsearch2SearchEngine',
         'URL': env('DJANGO_HAYSTACK_URL'),
         'INDEX_NAME': env('DJANGO_HAYSTACK_INDEX_NAME'),
+        'SILENTLY_FAIL' : env('DJANGO_HAYSTACK_SILENTLY_FAIL'),
     },
 }
 
