@@ -293,8 +293,8 @@ class QuestionSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         alternatives = validated_data.pop('alternatives', None)
 
-        if not validate_data['year']:
-            validate_data['year'] =  datetime.date.today().year
+        if not validated_data['year']:
+            validated_data['year'] =  datetime.date.today().year
 
         for key in validated_data:
             if key.endswith('_ids'):
