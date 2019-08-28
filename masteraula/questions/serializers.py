@@ -36,7 +36,7 @@ class TagListSerializer(serializers.Field):
     rest_framework
     '''
     def to_internal_value(self, data):
-        if  type(data) is list:
+        if type(data) is list:
             return data
         try:
             taglist = ast.literal_eval(data)
@@ -48,6 +48,31 @@ class TagListSerializer(serializers.Field):
         if type(obj) is not list:
             return [{'name' : tag.name} for tag in obj.all()]
         return obj
+
+class ModelListSerializer(serializers.ListField):
+    
+    def __init__(self, queryset, *args, **kwargs):
+        super().__init__(args, kwargs)
+        self.queryset = queryset
+
+    def to_internal_value(self, data):
+        if type(data) is not list:
+            raise serializers.ValidationError(_("Expected a list of data"))
+
+        ids_list = list(set(data))
+        try:
+            ids_list = [int(_id) for _id in ids_list]
+        except:
+            raise serializers.ValidationError(_("Expected a list valid primary keys"))
+        
+        qs = self.queryset.filter(id__in=ids_list)
+        qs_ids = [obj.id for obj in qs]
+
+        not_present_ids = [str(_id) for _id in qs_ids if _id not in ids_list]
+
+        if not_present_ids:
+            raise serializers.ValidationError('{} [{}]'.format(_("Id not presented: "), ', '.join(not_present_ids)))
+        return qs
 
 class DisciplineSerializer(serializers.ModelSerializer):
     class Meta:
@@ -187,9 +212,9 @@ class QuestionSerializer(serializers.ModelSerializer):
     difficulty = serializers.CharField(read_only=False, required=True)
 
     learning_objects_ids = serializers.PrimaryKeyRelatedField(write_only=True, allow_null=True, required=False, many=True, queryset=LearningObject.objects.all())
-    topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
-    disciplines_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Discipline.objects.all())
-    teaching_levels_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=TeachingLevel.objects.all())
+    topics_ids = ModelListSerializer(write_only=True, many=True, queryset=Topic.objects.all())
+    disciplines_ids = ModelListSerializer(write_only=True, many=True, queryset=Discipline.objects.all())
+    teaching_levels_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingLevel.objects.all())
     source_id = serializers.PrimaryKeyRelatedField(write_only=True, required=False, allow_null=True, queryset=Source.objects.all())
 
     class Meta:
@@ -256,7 +281,6 @@ class QuestionSerializer(serializers.ModelSerializer):
         return value
 
     def validate_year(self, value):
-       
         if not value:
             return 0
             
@@ -267,93 +291,57 @@ class QuestionSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # m2m
         tags = validated_data.pop('tags', None)
-        topics = validated_data.pop('topics_ids', None)
         alternatives = validated_data.pop('alternatives', None)
-        disciplines = validated_data.pop('disciplines_ids', None)
-        teaching_levels = validated_data.pop('teaching_levels_ids', None)
-        source = validated_data.pop('source_id', None)
-        learning_objects = validated_data.pop('learning_objects_ids', None)
+
+        if not validated_data['year']:
+            validated_data['year'] =  datetime.date.today().year
+
+        for key in validated_data:
+            if key.endswith('_ids'):
+                validated_data[key[:-4]] = validated_data.pop(key)
+            if key.endswith('_id'):
+                validated_data[key[:-3]] = validated_data.pop(key)
 
         question = super().create(validated_data)
-        
-        if source:
-            question.source = source.name
-
-        if not question.year:
-            question.year = datetime.date.today().year
 
         if tags != None:
-            for t in [tag for tag in tags if tag.strip() != '']:
-                question.tags.add(t)
-
-        if topics != None:
-            for t in topics:
-                question.topics.add(t)
+            tags = [tag for tag in tags if tag.strip() != '']
+            question.tags.set(*tags, clear=True)
 
         if alternatives != None:
             for alt in alternatives:
                 Alternative.objects.create(question=question, **alt)
 
-        for discipline in disciplines:
-            question.disciplines.add(discipline)
-
-        for teaching_level in teaching_levels:
-            question.teaching_levels.add(teaching_level)
-
-        if learning_objects != None:
-            for learning_object in learning_objects:
-                question.learning_objects.add(learning_object)
-
-        question.save()
-        
-        return question
+        return Question.objects.get_question_prefetched(question)
 
     def update(self, instance, validated_data):
         # m2m
         tags = validated_data.pop('tags', None)
-        topics = validated_data.pop('topics_ids', None)
         alternatives = validated_data.pop('alternatives', None)
-        disciplines = validated_data.pop('disciplines_ids', None)
-        teaching_levels = validated_data.pop('teaching_levels_ids', None)
-        learning_objects = validated_data.pop('learning_objects_ids', None)
 
+        instance.year = datetime.date.today().year
+
+        for key in validated_data:
+            if key.endswith('_ids'):
+                validated_data[key[:-4]] = validated_data.pop(key)
+            if key.endswith('_id'):
+                validated_data[key[:-3]] = validated_data.pop(key)
+        print(validated_data)
         question = super().update(instance, validated_data)
+
         if not question.year:
             question.year = datetime.date.today().year
 
         if tags != None:
-            question.tags.clear()
-            for t in [tag for tag in tags if tag.strip() != '']:
-                question.tags.add(t)
-
-        if topics != None:
-            question.topics.clear()
-            for t in topics:
-                question.topics.add(t)
+            tags = [tag for tag in tags if tag.strip() != '']
+            question.tags.set(*tags, clear=True)
 
         if alternatives != None:
             question.alternatives.all().delete()
             for alt in alternatives:
                 Alternative.objects.create(question=question, **alt)
 
-        if disciplines != None:
-            question.disciplines.clear()
-            for discipline in disciplines:
-                question.disciplines.add(discipline)
-
-        if teaching_levels != None:
-            question.teaching_levels.clear()
-            for teaching_level in teaching_levels:
-                question.teaching_levels.add(teaching_level)
-
-        if learning_objects != None:
-            question.learning_objects.clear()
-            for learning_object in learning_objects:
-                question.learning_objects.add(learning_object)
-
-        question.save()
-
-        return question
+        return Question.objects.get_question_prefetched(question)
 
 class QuestionTagEditSerializer(serializers.ModelSerializer):
     topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())

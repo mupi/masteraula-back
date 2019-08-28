@@ -66,7 +66,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         page = super().paginate_queryset(search_queryset)
         questions_ids = [res.object.id for res in page]
 
-        queryset = Question.objects.get_list_questions().filter(id__in=questions_ids)
+        queryset = Question.objects.get_questions_prefetched().filter(id__in=questions_ids)
         order = Case(*[When(id=id, then=pos) for pos, id in enumerate(questions_ids)])
         queryset = queryset.order_by(order)
 
@@ -146,7 +146,9 @@ class QuestionViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, QuestionPermission )
 
     def get_queryset(self):
-        queryset = Question.objects.get_list_questions()
+        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+            return Question.objects.all()
+        queryset = Question.objects.get_questions_prefetched()
 
         disciplines = self.request.query_params.getlist('disciplines', None)
         teaching_levels = self.request.query_params.getlist('teaching_levels', None)
@@ -181,13 +183,10 @@ class QuestionViewSet(viewsets.ModelViewSet):
         return Response(status = status.HTTP_204_NO_CONTENT)
     
     def retrieve(self, request, pk=None):
-        queryset = Question.objects.all()
-        question = get_object_or_404(queryset, pk=pk)
+        question = get_object_or_404(self.get_queryset(), pk=pk)
         serializer_question = self.serializer_class(question)
 
-        documents_questions = DocumentQuestion.objects.filter(question__id=pk)
-        documents = [dq.document for dq in documents_questions if dq.document.owner==request.user]
-        documents = sorted(documents, key=lambda doc: doc.create_date)
+        documents = Document.objects.filter(questions__id=pk, owner=request.user).order_by('create_date')
         serializer_documents = serializers.ListDocumentQuestionSerializer(documents, many = True)
 
         return_data = serializer_question.data
