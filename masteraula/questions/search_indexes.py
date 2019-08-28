@@ -28,15 +28,19 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
 
     def get_model(self):
         return Question
+    
+    def index_queryset(self, using=None):
+        return Question.objects.get_questions_update_index().filter(disabled=False)
 
     def prepare_statement(self, obj):
+
         return prepare_document(obj.statement)
 
     def prepare_topics(self, obj):
         return ' '.join([ stripaccents(topic.name) for topic in obj.get_all_topics() ])
 
     def prepare_tags(self, obj):
-        return ' '.join([ stripaccents(tag.name) for tag in obj.tags.only('name') ])
+        return ' '.join([ stripaccents(tag.name) for tag in obj.tags.all() ])
 
     def prepare_difficulty(self, obj):
         if obj.difficulty == 'E':
@@ -48,13 +52,13 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         return ''
 
     def prepare_disciplines(self, obj):
-        return [ discipline.pk for discipline in obj.disciplines.only('pk') ]
+        return [ discipline.pk for discipline in obj.disciplines.all() ]
 
     def prepare_teaching_levels(self, obj):
-        return [ teaching_level.pk for teaching_level in obj.teaching_levels.only('pk') ]
+        return [ teaching_level.pk for teaching_level in obj.teaching_levels.all() ]
 
     def prepare_author(self, obj):
-        return obj.author.pk 
+        return obj.author_id 
 
 class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True, boost=0.01)
@@ -66,6 +70,9 @@ class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
 
     def get_model(self):
         return LearningObject
+
+    def index_queryset(self, using=None):
+        return LearningObject.objects.get_objects_update_index()
 
     def prepare_source(self, obj):
         return prepare_document(obj.source)
@@ -80,4 +87,5 @@ class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
         return obj.image != None and obj.image != ''
     
     def prepare_tags(self, obj):
-        return ' '.join([ stripaccents(tag.name) for tag in obj.tags.only('name') ])
+        return ' '.join([ stripaccents(tag.name) for tag in obj.tags.all() ])
+

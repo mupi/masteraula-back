@@ -7,6 +7,7 @@ from django.db.models.signals import post_save, m2m_changed, post_delete, pre_sa
 
 from django.dispatch import receiver
 from .search_indexes import QuestionIndex, LearningObjectIndex
+from .tasks import update_question_index, update_learning_object_index, update_questions_topic
 
 @receiver(pre_save, sender=User)
 def update_username_same_email(sender, instance, **kwargs):
@@ -21,34 +22,11 @@ def update_fullname_same_first_second(sender, instance, **kwargs):
         instance.first_name = names[0]
         instance.last_name = ' '.join(names[1:])
 
-@receiver(m2m_changed, sender=Question.tags.through)
-def m2m_tags_changed(sender, instance, action, reverse, **kwargs):
-    if action == 'post_add' or action == 'post_remove':
-        if type(instance) == Question:
-            q = Question.objects.get(id=instance.id)
-            QuestionIndex().update_object(instance=q)
 
-        elif type(instance) == LearningObject:
-            lo =  LearningObject.objects.get(id=instance.id)
-            for q in lo.question_set.all():
-                QuestionIndex().update_object(instance=q)
-
-@receiver(m2m_changed, sender=Question.learning_objects.through)
-def m2m_learning_object_changed(sender, instance, action, reverse, **kwargs):
-    if action == 'post_add' or action == 'post_remove':
-        q = Question.objects.get(id=instance.id)
-        QuestionIndex().update_object(instance=q)
-
-@receiver(m2m_changed, sender=Question.topics.through)
-def m2m_topic_changed(sender, instance, action, reverse, **kwargs):
-    if action == 'post_add' or action == 'post_remove':
-        q = Question.objects.get(id=instance.id)
-        QuestionIndex().update_object(instance=q)
 
 @receiver(post_save, sender=Question)
 def question_post_save(sender, instance, **kwargs):
-    q =  Question.objects.get(id=instance.id)
-    QuestionIndex().update_object(instance=q)
+    update_question_index.apply_async((instance.id,), countdown=5)
 
 @receiver(post_delete, sender=Question)
 def question_post_delete(sender, instance, **kwargs):
@@ -56,17 +34,8 @@ def question_post_delete(sender, instance, **kwargs):
 
 @receiver(post_save, sender=LearningObject)
 def learning_object_post_save(sender, instance, **kwargs):
-    lo =  LearningObject.objects.get(id=instance.id)
-    LearningObjectIndex().update_object(instance=lo)
-    for q in lo.question_set.all():
-        QuestionIndex().update_object(instance=q)
-
-@receiver(post_delete, sender=LearningObject)
-def learning_object_post_delete(sender, instance, **kwargs):
-    LearningObjectIndex().remove_object(instance)
+    update_learning_object_index.apply_async((instance.id,), countdown=5)
 
 @receiver(post_save, sender=Topic)
 def topic_post_save(sender, instance, **kwargs):
-    topic =  Topic.objects.get(id=instance.id)
-    for q in topic.question_set.all():
-        QuestionIndex().update_object(instance=q)
+    update_questions_topic.apply_async((instance.id,), countdown=5)
