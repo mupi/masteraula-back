@@ -194,7 +194,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
         related_questions = RelatedQuestions().similar_questions(question)
 
-        questions_object = Question.objects.filter(id__in=related_questions)
+        questions_object = Question.objects.get_questions_prefetched().filter(id__in=related_questions)
         serializer_questions = serializers.QuestionSerializer(questions_object, many=True)
 
         return_data['related_questions'] = serializer_questions.data
