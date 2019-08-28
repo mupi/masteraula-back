@@ -282,7 +282,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     def validate_year(self, value):
         if not value:
-            return 0
+            return datetime.date.today().year
             
         if value > datetime.date.today().year:
             raise serializers.ValidationError(_("Year bigger than this year")) 
@@ -293,7 +293,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         alternatives = validated_data.pop('alternatives', None)
 
-        if not validated_data['year']:
+        if 'year' not in validated_data or not validated_data['year']:
             validated_data['year'] =  datetime.date.today().year
 
         for key in validated_data:
@@ -319,17 +319,12 @@ class QuestionSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         alternatives = validated_data.pop('alternatives', None)
 
-        instance.year = datetime.date.today().year
-
         for key in validated_data:
             if key.endswith('_ids'):
                 validated_data[key[:-4]] = validated_data.pop(key)
             if key.endswith('_id'):
                 validated_data[key[:-3]] = validated_data.pop(key)
         question = super().update(instance, validated_data)
-
-        if not question.year:
-            question.year = datetime.date.today().year
 
         if tags != None:
             tags = [tag for tag in tags if tag.strip() != '']
