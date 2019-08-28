@@ -147,7 +147,9 @@ class QuestionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
             return Question.objects.all()
-        queryset = Question.objects.get_questions_prefetched().filter(disabled=False).order_by('id')
+        queryset = Question.objects.get_questions_prefetched()
+        if self.action == 'list':
+            queryset = queryset.filter(disabled=False).order_by('id')
 
         disciplines = self.request.query_params.getlist('disciplines', None)
         teaching_levels = self.request.query_params.getlist('teaching_levels', None)
