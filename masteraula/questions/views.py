@@ -65,7 +65,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         page = super().paginate_queryset(search_queryset)
         questions_ids = [res.object.id for res in page]
 
-        queryset = Question.objects.get_questions_prefetched().filter(id__in=questions_ids)
+        queryset = Question.objects.get_questions_prefetched().filter(disabled=False, id__in=questions_ids)
         order = Case(*[When(id=id, then=pos) for pos, id in enumerate(questions_ids)])
         queryset = queryset.order_by(order)
 

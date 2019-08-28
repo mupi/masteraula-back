@@ -211,7 +211,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     year = serializers.IntegerField(read_only=False, required=False, allow_null=True)
     difficulty = serializers.CharField(read_only=False, required=True)
 
-    learning_objects_ids = serializers.PrimaryKeyRelatedField(write_only=True, allow_null=True, required=False, many=True, queryset=LearningObject.objects.all())
+    learning_objects_ids = ModelListSerializer(write_only=True, allow_null=True, required=False, many=True, queryset=LearningObject.objects.all())
     topics_ids = ModelListSerializer(write_only=True, many=True, queryset=Topic.objects.all())
     disciplines_ids = ModelListSerializer(write_only=True, many=True, queryset=Discipline.objects.all())
     teaching_levels_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingLevel.objects.all())
@@ -326,7 +326,6 @@ class QuestionSerializer(serializers.ModelSerializer):
                 validated_data[key[:-4]] = validated_data.pop(key)
             if key.endswith('_id'):
                 validated_data[key[:-3]] = validated_data.pop(key)
-        print(validated_data)
         question = super().update(instance, validated_data)
 
         if not question.year:

@@ -97,7 +97,7 @@ class QuestionManager(models.Manager):
             'parent', 'discipline', 'parent__parent', 'parent__discipline')
         )
 
-        return self.filter(disabled=False).order_by('id').select_related('author').prefetch_related(
+        return self.all().select_related('author').prefetch_related(
             'tags', 'disciplines', 'teaching_levels', 'alternatives', 'learning_objects', 'learning_objects__tags',
             topics_prefetch
         )
@@ -107,10 +107,7 @@ class QuestionManager(models.Manager):
             'parent', 'discipline', 'parent__parent', 'parent__discipline')
         )
 
-        return self.all().select_related('author').prefetch_related(
-            'tags', 'disciplines', 'teaching_levels', 'alternatives', 'learning_objects', 'learning_objects__tags',
-            topics_prefetch
-        ).get(id=question.id)
+        return self.get_questions_prefetched().get(id=question.id)
 
 class Question(models.Model):
     LEVEL_CHOICES = (
