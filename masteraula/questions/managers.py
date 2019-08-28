@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Prefetch
 
 class TopicManager(models.Manager):
 
@@ -28,21 +29,11 @@ class TopicManager(models.Manager):
     def get_parents_tree(self, disciplines=None):
         depth = 3   # Hardcoded because whe already know the maximun depth of the tree
         # depth = self.max_depth()
-        prefetch_args = []
+        prefetchs = [Prefetch('childs', queryset=self.select_related('discipline'))]
 
         for i in range(depth):
-            prefetch_args.append('__'.join(['childs'] * (i + 1)))
-            prefetch_args.append('__'.join(['childs'] * i + ['discipline']))
+            prefetchs.append(Prefetch('childs', queryset=self.select_related('discipline').prefetch_related(prefetchs[-1])))
 
         if disciplines:
-            return self.filter(parent=None, discipline_id__in=disciplines).prefetch_related(*prefetch_args)
-        return self.filter(parent=None).prefetch_related(*prefetch_args)
-
-
-class QuestionManager(models.Manager):
-    def get_list_questions(self, ):
-        return self.filter(disabled=False).order_by('id').prefetch_related(
-            'tags', 'alternatives', 'disciplines', 'teaching_levels', 'author',
-            'learning_objects', 'learning_objects__tags',
-            'topics', 'topics__discipline', 'topics__parent', 'topics__parent__discipline', 'topics__parent__parent', 'topics__parent__parent__discipline',
-        )
+            return self.filter(parent=None, discipline_id__in=disciplines).prefetch_related(prefetchs[-1])
+        return self.filter(parent=None).prefetch_related(prefetchs[-1])
