@@ -211,7 +211,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     year = serializers.IntegerField(read_only=False, required=False, allow_null=True)
     difficulty = serializers.CharField(read_only=False, required=True)
 
-    learning_objects_ids = serializers.PrimaryKeyRelatedField(write_only=True, allow_null=True, required=False, many=True, queryset=LearningObject.objects.all())
+    learning_objects_ids = ModelListSerializer(write_only=True, allow_null=True, required=False, many=True, queryset=LearningObject.objects.all())
     topics_ids = ModelListSerializer(write_only=True, many=True, queryset=Topic.objects.all())
     disciplines_ids = ModelListSerializer(write_only=True, many=True, queryset=Discipline.objects.all())
     teaching_levels_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingLevel.objects.all())
@@ -282,7 +282,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     def validate_year(self, value):
         if not value:
-            return 0
+            return datetime.date.today().year
             
         if value > datetime.date.today().year:
             raise serializers.ValidationError(_("Year bigger than this year")) 
@@ -293,10 +293,10 @@ class QuestionSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         alternatives = validated_data.pop('alternatives', None)
 
-        if not validated_data['year']:
+        if 'year' not in validated_data or not validated_data['year']:
             validated_data['year'] =  datetime.date.today().year
 
-        for key in validated_data:
+        for key in list(validated_data.keys()):
             if key.endswith('_ids'):
                 validated_data[key[:-4]] = validated_data.pop(key)
             if key.endswith('_id'):
@@ -312,25 +312,19 @@ class QuestionSerializer(serializers.ModelSerializer):
             for alt in alternatives:
                 Alternative.objects.create(question=question, **alt)
 
-        return Question.objects.get_question_prefetched(question)
+        return Question.objects.get_questions_prefetched().get(id=question.id)
 
     def update(self, instance, validated_data):
         # m2m
         tags = validated_data.pop('tags', None)
         alternatives = validated_data.pop('alternatives', None)
 
-        instance.year = datetime.date.today().year
-
-        for key in validated_data:
+        for key in list(validated_data.keys()):
             if key.endswith('_ids'):
                 validated_data[key[:-4]] = validated_data.pop(key)
             if key.endswith('_id'):
                 validated_data[key[:-3]] = validated_data.pop(key)
-        print(validated_data)
         question = super().update(instance, validated_data)
-
-        if not question.year:
-            question.year = datetime.date.today().year
 
         if tags != None:
             tags = [tag for tag in tags if tag.strip() != '']
@@ -341,7 +335,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             for alt in alternatives:
                 Alternative.objects.create(question=question, **alt)
 
-        return Question.objects.get_question_prefetched(question)
+        return Question.objects.get_questions_prefetched().get(id=question.id)
 
 class QuestionTagEditSerializer(serializers.ModelSerializer):
     topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())

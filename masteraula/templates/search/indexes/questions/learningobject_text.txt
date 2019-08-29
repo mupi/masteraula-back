@@ -7,7 +7,7 @@
     {{ tag.name|stripaccents }}
 {% endfor %}
 
-{% for question in object.get_questions %}
+{% for question in object.questions.all %}
     {% for tag in question.tags.all %}
         {{ tag.name|stripaccents }}
     {% endfor %}

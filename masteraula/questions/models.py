@@ -60,33 +60,6 @@ class Topic(models.Model):
     def __str__(self):
         return str(self.name)
 
-class LearningObject(models.Model):
-    def get_upload_file_name(learning_object,filename):
-        folder_name = learning_object.folder_name if learning_object.folder_name else 'default'
-        return u'masteraula/%s/%s' % (folder_name, filename)
-
-    # name = models.CharField(max_length=100, null=False, blank=False)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
-
-    source = models.TextField(null=True, blank=True)
-    image = models.ImageField(null=True, blank=True, upload_to=get_upload_file_name)
-    folder_name = models.CharField(max_length=100, null=True, blank=True)
-    text = models.TextField(null=True, blank=True)
-    type_object = models.TextField(null=True, blank=True)
-
-    tags = TaggableManager(blank=True)
-
-    def update(self, **kwargs):
-        allowed_attributes = {'owner', 'source', 'image', 'text', 'tags'}
-        for name, value in kwargs.items():
-            assert name in allowed_attributes
-            setattr(self, name, value)
-        self.save()
-
-    def get_questions(self):
-        questions = Question.objects.filter(learning_objects = self.pk)
-        return questions
-
 class Descriptor(models.Model):
     name = models.CharField(max_length=100, null=False, blank=False)
     description = models.TextField(null=True, blank=True)
@@ -95,26 +68,27 @@ class Descriptor(models.Model):
         return self.name + " " + self.description[:50]
 
 class QuestionManager(models.Manager):
-    def get_questions_prefetched(self):
-        # Hardcoded because we know the size of the topics and subtopics
-        topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
-            'parent', 'discipline', 'parent__parent', 'parent__discipline')
-        )
+    # Hardcoded because we know the total depth of the topics tree
+    topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')
+    )
 
-        return self.filter(disabled=False).order_by('id').select_related('author').prefetch_related(
+    def get_questions_prefetched(self, topics=True):
+        qs = self.all().select_related('author').prefetch_related(
             'tags', 'disciplines', 'teaching_levels', 'alternatives', 'learning_objects', 'learning_objects__tags',
-            topics_prefetch
         )
+        if topics:
+            qs = qs.prefetch_related(self.topics_prefetch)
+        return qs
 
-    def get_question_prefetched(self, question):
-        topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
-            'parent', 'discipline', 'parent__parent', 'parent__discipline')
+    def get_questions_update_index(self, topics=True):
+        qs = self.all().select_related('author').prefetch_related(
+            'tags', 'disciplines', 'teaching_levels', 'learning_objects', 'learning_objects__tags', 
         )
-
-        return self.all().select_related('author').prefetch_related(
-            'tags', 'disciplines', 'teaching_levels', 'alternatives', 'learning_objects', 'learning_objects__tags',
-            topics_prefetch
-        ).get(id=question.id)
+        if topics:
+            qs = qs.prefetch_related(self.topics_prefetch)
+        return qs
+    
 
 class Question(models.Model):
     LEVEL_CHOICES = (
@@ -128,7 +102,7 @@ class Question(models.Model):
     create_date = models.DateTimeField(auto_now_add=True)
 
     statement = models.TextField()
-    learning_objects = models.ManyToManyField(LearningObject, blank=True)
+    learning_objects = models.ManyToManyField('LearningObject', related_name='questions', blank=True)
     resolution = models.TextField(null=True, blank=True)
     difficulty = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)
 
@@ -157,6 +131,40 @@ class Question(models.Model):
             topics = topics + new_topics
             new_topics = parents_id
         return list(set(topics))
+
+class LearningObjectManager(models.Manager):
+    questions_prefetch = Prefetch('questions', queryset=Question.objects.get_questions_update_index(False))
+
+    def get_objects_update_index(self):
+        return self.all().select_related('owner').prefetch_related(
+            'tags', 
+            self.questions_prefetch
+        )
+
+class LearningObject(models.Model):
+    def get_upload_file_name(learning_object,filename):
+        folder_name = learning_object.folder_name if learning_object.folder_name else 'default'
+        return u'masteraula/%s/%s' % (folder_name, filename)
+
+    # name = models.CharField(max_length=100, null=False, blank=False)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    source = models.TextField(null=True, blank=True)
+    image = models.ImageField(null=True, blank=True, upload_to=get_upload_file_name)
+    folder_name = models.CharField(max_length=100, null=True, blank=True)
+    text = models.TextField(null=True, blank=True)
+    type_object = models.TextField(null=True, blank=True)
+
+    tags = TaggableManager(blank=True)
+
+    objects = LearningObjectManager()
+
+    def update(self, **kwargs):
+        allowed_attributes = {'owner', 'source', 'image', 'text', 'tags'}
+        for name, value in kwargs.items():
+            assert name in allowed_attributes
+            setattr(self, name, value)
+        self.save()
 
 class Alternative(models.Model):
     question = models.ForeignKey(Question, related_name='alternatives', on_delete=models.CASCADE)
