@@ -195,8 +195,9 @@ class QuestionViewSet(viewsets.ModelViewSet):
         return_data['documents'] = serializer_documents.data
 
         related_questions = RelatedQuestions().similar_questions(question)
+        order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_questions)])
 
-        questions_object = Question.objects.get_questions_prefetched().filter(id__in=related_questions)
+        questions_object = Question.objects.get_questions_prefetched().filter(id__in=related_questions).order_by(order)
         serializer_questions = serializers.QuestionSerializer(questions_object, many=True)
 
         return_data['related_questions'] = serializer_questions.data
