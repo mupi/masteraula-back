@@ -24,6 +24,7 @@ from .templatetags.search_helpers import stripaccents
 from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
+from .similarity import RelatedQuestions
 from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission
 from . import serializers as serializers
 
@@ -192,7 +193,15 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
         return_data = serializer_question.data
         return_data['documents'] = serializer_documents.data
-        
+
+        related_questions = RelatedQuestions().similar_questions(question)
+        order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_questions)])
+
+        questions_object = Question.objects.get_questions_prefetched().filter(id__in=related_questions).order_by(order)
+        serializer_questions = serializers.QuestionSerializer(questions_object, many=True)
+
+        return_data['related_questions'] = serializer_questions.data
+    
         return Response(return_data)
 
     @detail_route(methods=['put'], permission_classes=(permissions.IsAuthenticated, permissions.DjangoModelPermissions))
@@ -205,7 +214,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
         serializer_question = self.serializer_class(new_question)
 
         return Response(serializer_question.data, status=status.HTTP_201_CREATED)
-    
+
 class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Discipline.objects.all().order_by('name')
     serializer_class = serializers.DisciplineSerializer
