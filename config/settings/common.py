@@ -17,14 +17,6 @@ import datetime
 
 import sys
 
-import spacy
-import warnings
-
-LANGUAGE_MODELS_PT = spacy.load('pt_core_news_sm')
-LANGUAGE_MODELS_EN = spacy.load('en_core_web_md')
-
-warnings.filterwarnings("ignore")
-
 RUNNING_DEVSERVER = (len(sys.argv) > 1 and sys.argv[1] == 'runserver')
 
 ROOT_DIR = environ.Path(__file__) - 3  # (masteraula/config/settings/common.py - 3 = masteraula/)
