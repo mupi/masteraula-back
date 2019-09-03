@@ -257,6 +257,8 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
 
         results = search_qs[page_start:page_start+16]
         for i in range(page_start, min(page_start + 16, len(queryset))):
+            if len(res) == 0:
+                break
             res = results.pop(0)
             queryset[i] = res.object
         return queryset
