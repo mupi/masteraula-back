@@ -177,7 +177,8 @@ class StatementLearningObject(DisciplineReportsBaseView):
             'Acesso',
             'In:',
             'http(s)?://',
-            'Adapted'
+            'Adapted',
+            '<small>'
         ]
         possible_objects = set()
         for program in program_list:
