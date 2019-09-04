@@ -36,9 +36,9 @@ def question_post_delete(sender, instance, **kwargs):
 def learning_object_post_save(sender, instance, **kwargs):
     update_learning_object_index.apply_async((instance.id,), countdown=5)
 
-# @receiver(post_delete, sender=LearningObject)
-# def learning_object_post_delete(sender, instance, **kwargs):
-#     LearningObjectIndex.remove_object(instance)
+@receiver(post_delete, sender=LearningObject)
+def learning_object_post_delete(sender, instance, **kwargs):
+    LearningObjectIndex().remove_object(instance)
 
 @receiver(post_save, sender=Topic)
 def topic_post_save(sender, instance, **kwargs):
