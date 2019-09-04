@@ -10,7 +10,7 @@ def stripaccents(value):
 
 def prepare_document(value):
     if value is not None:
-        value = re.sub('<.*?>', '', value.lower())
+        value = re.sub('<.*?>', ' ', value.lower())
         value = ' '.join(list(set(re.findall('\w\w\w+', value))))
         return ''.join((c for c in unicodedata.normalize('NFD', value) if unicodedata.category(c) != 'Mn'))
     return ''

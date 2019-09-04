@@ -254,12 +254,16 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
     def gen_queryset(self, search_qs, page_start):
         search_qs = search_qs.load_all()
         queryset = [None] * len(search_qs)
-
+        count = 0
         results = search_qs[page_start:page_start+16]
         for i in range(page_start, min(page_start + 16, len(queryset))):
+            if len(results) == 0:
+                break
             res = results.pop(0)
             queryset[i] = res.object
-        return queryset
+            count += 1
+            
+        return queryset[:count]
     
     def get_queryset(self):
         page = self.request.GET.get('page', None)
@@ -289,7 +293,6 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
             params['is_image'] = True
         if is_text:
             params['is_text'] = True
-        print(params)
 
         start_offset = (page_no - 1) * 16
 

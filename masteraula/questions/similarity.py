@@ -1,4 +1,3 @@
-import spacy
 import warnings
 
 from taggit.models import Tag
