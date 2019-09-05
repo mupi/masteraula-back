@@ -186,7 +186,7 @@ class ObjectsWithPInsideP(DisciplineReportsBaseView):
 
 class ObjectsTagsPSpace(DisciplineReportsBaseView):
     template_name = 'reports/edit_object_text.html'
-    header = 'Tags <p> sem espaço'
+    header = 'Objectos com tags <p> sem espaço'
 
     def queryset(self, disciplines):
         learning_objects = LearningObject.objects.filter(text__isnull=False).filter(text__contains='</p><p>') \

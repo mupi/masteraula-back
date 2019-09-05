@@ -26,7 +26,8 @@ class StatementsAllFilter(DisciplineReportsBaseView):
             report_functions.process_super_sub,
             report_functions.process_line_heigth,
             report_functions.process_tags_p_inside_p,
-            report_functions.process_empty_p_tags
+            report_functions.process_empty_p_tags,
+            report_functions.process_tags_p_space
         ]
         all_res = [func(ids, texts) for func in all_res]
         ids = list(set([item for sublist, _, _ in all_res for item in sublist]))
@@ -46,7 +47,8 @@ class StatementsAllFilter(DisciplineReportsBaseView):
             report_functions.process_super_sub,
             report_functions.process_line_heigth,
             report_functions.process_tags_p_inside_p,
-            report_functions.process_empty_p_tags
+            report_functions.process_empty_p_tags,
+            report_functions.process_tags_p_space
         ]
 
         clean = texts
@@ -165,3 +167,17 @@ class StatementsWithPInsideP(DisciplineReportsBaseView):
 
     def report_function(self, *args, **kwargs):
         return report_functions.process_tags_p_inside_p(*args, **kwargs)
+
+class StatementsTagsPSpace(DisciplineReportsBaseView):
+    template_name = 'reports/edit_question_statement.html'
+    header = 'Questões com tags <p> sem espaço'
+
+    def queryset(self, disciplines):
+        questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='</p><p>').order_by('id')
+        print(len(questions))
+        if questions.count() > 0:
+            return zip(*[(q.id, q.statement) for q in questions])
+        return None
+
+    def report_function(self, *args, **kwargs):
+        return report_functions.process_tags_p_space(*args, **kwargs)
