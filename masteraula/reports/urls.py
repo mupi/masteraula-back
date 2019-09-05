@@ -33,6 +33,7 @@ urlpatterns = [
     url(r'^objects_with_sup_sub/$', objects_views.ObjectsWithSupSub.as_view(), name='objects_with_sup_sub'),
     url(r'^objects_with_line_height/$', objects_views.ObjectsWithLineHeight.as_view(), name='objects_with_line_height'),
     url(r'^objects_all/$', objects_views.ObjectsAllFilter.as_view(), name='objects_all'),
+    url(r'^process_tags_p_space/$', objects_views.ObjectsTagsPSpace.as_view(), name='process_tags_p_space'),
 
     # url(r'^objects_with_div/$', objects_views.ObjectsWithDivView.as_view(), name='objects_with_div'),
     # url(r'^objects_with_texto_associado/$', objects_views.ObjectsWithTextoAssociado.as_view(), name='objects_with_texto_associado'),
