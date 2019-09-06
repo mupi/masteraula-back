@@ -8,7 +8,9 @@
 <br>
 <a href="{% url 'reports:number_documents' %}">Quantidade de provas do usuário</a>
 <br>
+<br>
 <h1>Questoes</h1>
+<br>
 <a href="{% url 'reports:statements_with_div' %}">Questões com tag div</a>
 <br>
 <a href="{% url 'reports:statements_with_texto_associado' %}">Questões com texto associado</a>
@@ -25,7 +27,10 @@
 <br>
 <a href="{% url 'reports:statements_with_line_height' %}">Questões com line height</a>
 <br>
+<a href="{% url 'reports:statements_tags_p_space' %}">Questões com tags p sem espaço</a>
+<br>
 <a href="{% url 'reports:statements_all' %}">Questões com todos os filtros</a>
+<br>
 <br>
 <h1>Objetos de aprendizagem</h1>
 <br>
@@ -45,15 +50,20 @@
 <br>
 <a href="{% url 'reports:objects_with_line_height' %}">Objetos de aprendizagem com line height</a>
 <br>
+<a href="{% url 'reports:objects_tags_p_space' %}">Objetos de aprendizagem com tags p sem espaço</a>
+<br>
 <a href="{% url 'reports:objects_all' %}">Objetos de aprendizagem com todos os filtros</a>
 <br>
-<h1>Alterntivas</h1>
+<br>
+<h1>Alternativas</h1>
 <br>
 <a href="{% url 'reports:alternatives_all' %}">Alternativas com todos os filtros</a>
+<br>
 <br>
 <h1>Objetos de aprendizagem sem source</h1>
 <br>
 <a href="{% url 'reports:objects_without_source' %}">Objetos sem fonte</a>
+<br>
 <br>
 <h1>Possiveis objetos de aprendizagem</h1>
 <a href="{% url 'reports:has_learning_object' %}">Possiveis objetos</a>

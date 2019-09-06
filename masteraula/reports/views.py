@@ -118,7 +118,6 @@ class NumberDocumentsView(SuperuserMixin, TemplateView):
         response['Content-Disposition'] = 'attachment; filename="relatorio_provas.csv"'
         return response
 
-    
 class UncategorizedTagsView(DisciplineReportsBaseView):
     template_name = 'reports/uncategorized_questions.html'
 

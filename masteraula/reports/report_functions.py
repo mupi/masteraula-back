@@ -21,6 +21,15 @@ def apply_regex_program(regex, sub_string, status_string, all_ids, all_texts, fo
             status.append(status_string if has else '')
     return ids, texts, clean, status
 
+def process_tags_p_space(all_ids, all_texts, force_stay=False, get_status=False):
+    program = '</p><p>'
+
+    ids, texts, clean, status = apply_regex_program(program, '</p>\n<p>', 'Given spaces between tags <p>', all_ids, all_texts, force_stay)
+
+    if get_status:
+        return ids, texts, clean, status
+    return ids, texts, clean
+    
 def process_tags_div(all_ids, all_texts, force_stay=False, get_status=False):
     program1 = '<div[^<]*>(.*?)<\/div>'         
     program2 = '<div[^<]*>'
