@@ -184,48 +184,49 @@ class Document(models.Model):
         self.save()
 
     def add_question(self, question):
-        order = 0
-        new_order = self.documentquestion_set.count()
         last_learning_object = None
-        for order, documentQuestion in enumerate(self.documentquestion_set.all().order_by('order')):
-            if (last_learning_object and last_learning_object != [q for q  in documentQuestion.question.learning_objects.values()]
-                    and last_learning_object == [q for q in question.learning_objects.values()]):
+
+        question = Question.objects.prefetch_related('learning_objects').get(id=question.id)
+        qs = self.documentquestion_set.all().select_related('question').prefetch_related('question__learning_objects').order_by('order')
+        new_order = len(qs)
+
+        for order, document_question in enumerate(qs):
+            if (last_learning_object and last_learning_object != [q.id for q in document_question.question.learning_objects.all()]
+                    and last_learning_object == [q.id for q in question.learning_objects.all()]):
                 new_order = order
                 break
 
-            last_learning_object = [q for q  in documentQuestion.question.learning_objects.values()]
-        documentQuestion = self.documentquestion_set.create(question=question, order=new_order)
-        self.save()
-        return documentQuestion
+            last_learning_object = [q.id for q in document_question.question.learning_objects.all()]
+        document_question = self.documentquestion_set.create(question=question, order=new_order)
+
+        return document_question
 
     def remove_question(self, question):
         self.documentquestion_set.filter(question=question).delete()
-        self.save()
         self.update_orders()
 
     def update_orders(self):
         added_questions = []
-        documentQuestions = self.documentquestion_set.all().order_by('order')
+        learning_objects_pos = {}
+        qs = self.documentquestion_set.all().select_related('question').prefetch_related('question__learning_objects').order_by('order')
 
+        for document_question in qs:
+            if len(document_question.question.learning_objects.all()) == 0:
+                added_questions.append([document_question])
+            else:
+                learning_objects_hash = '-'.join(str(lo.id) for lo in document_question.question.learning_objects.all())
+                if learning_objects_hash in learning_objects_pos:
+                    added_questions[learning_objects_pos[learning_objects_hash]].append(document_question)
+                else:
+                    learning_objects_pos[learning_objects_hash] = len(added_questions)
+                    added_questions.append([document_question])
+                    
         order = 0
-        for i, documentQuestion in enumerate(documentQuestions):
-            # Added questions
-            if i in added_questions:
-                continue
-            
-            documentQuestion.set_order(order)
-            order = order + 1
-
-            # unify the questions with same learning object
-            learning_objects = [q for q  in documentQuestion.question.learning_objects.values()]
-            if learning_objects:
-                for j in range(i, len(documentQuestions)):
-                    if j in added_questions:
-                        continue
-                    if learning_objects == [q for q  in documentQuestions[j].question.learning_objects.values()]:
-                        added_questions.append(j)
-                        documentQuestions[j].set_order(order)
-                        order = order + 1
+        for question_list in added_questions:
+            for question in question_list:
+                question.order = order
+                question.save()
+                order += 1
 
     def update(self, **kwargs):
         # https://www.dabapps.com/blog/django-models-and-encapsulation/
