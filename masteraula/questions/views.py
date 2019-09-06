@@ -393,6 +393,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
         serializer = serializers.DocumentQuestionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         document_question = serializer.save(document=document)
+
+        document_question = DocumentQuestion.objects.get_questions_prefetched().get(id=document_question.id)
+        
         list_document = serializers.DocumentQuestionListDetailSerializer(document_question)
         headers = self.get_success_headers(list_document.data)
         

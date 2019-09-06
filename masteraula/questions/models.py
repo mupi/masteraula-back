@@ -10,17 +10,6 @@ from masteraula.users.models import User
 
 from .managers import TopicManager
 
-class DocumentQuestionManager(models.Manager):
-    def create(self, *args, **kwargs):
-        documentQuestion = super().create(*args, **kwargs)
-        documentQuestions = super().filter(document=documentQuestion.document).filter(order__gte=documentQuestion.order)
-        for dq in documentQuestions:
-            if dq != documentQuestion:
-                dq.order = dq.order + 1
-                dq.save()
-
-        return documentQuestion
-
 class Discipline(models.Model):
     name = models.CharField(max_length=50, null=False, blank=False)
     slug = models.CharField(max_length=10, null=True, blank=True)
@@ -246,6 +235,37 @@ class Document(models.Model):
             assert name in allowed_attributes
             setattr(self, name, value)
         self.save()
+
+class DocumentQuestionManager(models.Manager):
+
+    topics_prefetch = Prefetch('question__topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')
+    )
+
+    learning_objects_prefetch = Prefetch(
+        'question__learning_objects',
+        queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags')
+    )
+
+    def get_questions_prefetched(self, topics=True):
+        qs = self.all().select_related('question').prefetch_related(
+            'question__tags', 'question__disciplines', 'question__teaching_levels', 'question__alternatives',
+            self.learning_objects_prefetch
+        )
+        if topics:
+            qs = qs.prefetch_related(self.topics_prefetch)
+        return qs
+
+    def create(self, *args, **kwargs):
+        documentQuestion = super().create(*args, **kwargs)
+        documentQuestions = self.filter(document=documentQuestion.document).filter(order__gte=documentQuestion.order)
+        for dq in documentQuestions:
+            if dq != documentQuestion:
+                dq.order = dq.order + 1
+                dq.save()
+
+        return documentQuestion
+
 
 class DocumentQuestion(models.Model):
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
