@@ -64,7 +64,8 @@ class QuestionManager(models.Manager):
 
     def get_questions_prefetched(self, topics=True):
         qs = self.all().select_related('author').prefetch_related(
-            'tags', 'disciplines', 'teaching_levels', 'alternatives', 'learning_objects', 'learning_objects__tags',
+            'tags', 'disciplines', 'teaching_levels', 'alternatives',
+            'learning_objects', 'learning_objects__tags', 'learning_objects__owner', 
         )
         if topics:
             qs = qs.prefetch_related(self.topics_prefetch)
@@ -122,12 +123,10 @@ class Question(models.Model):
         return list(set(topics))
 
 class LearningObjectManager(models.Manager):
-    questions_prefetch = Prefetch('questions', queryset=Question.objects.get_questions_update_index(False))
 
     def get_objects_update_index(self):
         return self.all().select_related('owner').prefetch_related(
-            'tags', 
-            self.questions_prefetch
+            'tags', Prefetch('questions', queryset=Question.objects.get_questions_update_index(False))
         )
 
 class LearningObject(models.Model):
