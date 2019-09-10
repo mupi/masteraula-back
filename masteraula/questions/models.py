@@ -165,6 +165,29 @@ class Alternative(models.Model):
     def __str__(self):
         return self.text[:50]
 
+class DocumentManager(models.Manager):
+    topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')
+    )
+
+    learning_objects_prefetch = Prefetch('learning_objects',
+        queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags')
+    )
+
+    questions_prefetch = Prefetch('documentquestion_set__question',
+        queryset=Question.objects.all().select_related('author').prefetch_related(
+            'tags', 'disciplines', 'teaching_levels', 'alternatives',
+            topics_prefetch, 
+            learning_objects_prefetch
+        )
+    )
+
+    def get_questions_prefetched(self):
+        qs = self.all().prefetch_related(
+            self.questions_prefetch,
+        )
+        return qs
+
 class Document(models.Model):
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -173,6 +196,8 @@ class Document(models.Model):
     secret = models.BooleanField()
     disabled = models.BooleanField(null=False, blank=True, default=False)
       
+    objects = DocumentManager()
+
     def __str__(self):
         return self.name[:50]
         
