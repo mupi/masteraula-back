@@ -77,7 +77,9 @@ class DocxGeneratorAWS():
         if not document.questions:
             raise exceptions.ValidationError('Can not generate an empty list')
 
-        questions = [dq.question for dq in document.documentquestion_set.all().order_by('order')]
+        questions = [dq for dq in document.documentquestion_set.all()]
+        questions.sort(key=lambda x:x.order)
+        questions = [dq.question for dq in questions]
 
         # Saves the learning objects that have already been used
         learning_objects_questions = []
@@ -87,26 +89,34 @@ class DocxGeneratorAWS():
             if question_counter not in learning_objects_questions:
                 
                 # Verify if that the learning object has already been used
-                current_learning_objects = [q for q in question.learning_objects.values().order_by('id')]
+                # current_learning_objects = [q for q in question.learning_objects.values().order_by('id')]
+                current_learning_objects = [lo for lo in question.learning_objects.all()]
+                current_learning_objects.sort(key=lambda x:x.id)
                 if current_learning_objects:
                     first_question_counter = question_counter + 1
                     last_question_counter = first_question_counter
+                    current_hash = '-'.join([str(q.id) for q in current_learning_objects])
+
                     # Check the first and last question that uses that learning object
                     for i in range(first_question_counter, len(questions)):
-                        if current_learning_objects != [q for q in questions[i].learning_objects.values().order_by('id')]:
+                        compare_learning_objects = [q for q in questions[i].learning_objects.all()]
+                        compare_learning_objects.sort(key=lambda x:x.id)
+                        compare_hash = '-'.join([str(q.id) for q in compare_learning_objects])
+
+                        if compare_hash != current_hash:
                             break
 
                         learning_objects_questions.append(i)
                         last_question_counter = last_question_counter + 1
                     
-                    self.write_learning_objects(question.learning_objects.all().order_by('id'), first_question_counter, last_question_counter)
+                    self.write_learning_objects(current_learning_objects, first_question_counter, last_question_counter)
                         
             self.write_question(question, question_counter)
 
             self.write_alternatives(question)
 
         if answers:
-            self.write_answers(document.questions.all())
+            self.write_answers(questions)
         
         self.close_html_file()
 
