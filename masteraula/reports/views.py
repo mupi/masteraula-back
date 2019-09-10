@@ -12,7 +12,8 @@ from django.utils.decorators import method_decorator
 
 from django.contrib.auth.mixins import UserPassesTestMixin
 
-from masteraula.questions.models import Question, Discipline, Document, LearningObject, User, Alternative
+from masteraula.questions.models import Question, Discipline, Document, LearningObject, User, Alternative, DocumentDownload
+from masteraula.users.models import School
 
 from .serializers import QuestionStatementEditSerializer, LearningObjectEditSerializer, AlternativeEditSerializer
 
@@ -118,9 +119,56 @@ class NumberDocumentsView(SuperuserMixin, TemplateView):
         response['Content-Disposition'] = 'attachment; filename="relatorio_provas.csv"'
         return response
 
+class DataSchoolView(SuperuserMixin, TemplateView):
+    login_url = '/admin/login/'
+    template_name = 'reports/data_users_school.html'
+
+    def get(self, request, *args, **kwargs):
+        context= self.get_context_data(**kwargs)
+        context['data'] = School.objects.all().order_by('name')
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):      
+        data = 'Usuário,Email,Quantidade de Provas,Quantidade de Questões,Quantidade de downloads (provas),Quantidade de downloads (questões)\n'  
+        id_users =  request.POST.get('id_users', None)
+        id_school = request.POST.get('id_school', None)
+
+        try:
+            if id_users:
+                users = User.objects.filter(id__in=id_users.split(','))
+            else:
+                users = User.objects.all()
+        except:
+            return render(request, self.template_name, {'not_found' : True})
+
+        if users.count() == 0:
+            return render(request, self.template_name, {'not_found' : True})
+        
+        if id_school:
+                users = users.filter(school__id=id_school)
+
+        for user in users:
+            documents = Document.objects.filter(owner=user)
+            questions = 0
+            q_downloads = 0
+
+            for doc in documents:
+                questions = questions + doc.questions.count()
+
+            doc_downloads = DocumentDownload.objects.filter(user=user)
+
+            for doc in doc_downloads:
+                q_downloads = q_downloads + doc.document.questions.count()
+
+            documents_active = documents.filter(disabled = False)
+            data = data + str(user) + ',' + user.email + ',' + str(documents.count()) + ',' + str(questions) + ',' + str(doc_downloads.count()) + ',' + str(q_downloads) + '\n'
+              
+        response = HttpResponse(data, 'text/csv')
+        response['Content-Disposition'] = 'attachment; filename="relatorio_escola.csv"'
+        return response
+
 class UncategorizedTagsView(DisciplineReportsBaseView):
     template_name = 'reports/uncategorized_questions.html'
-
 
     def post(self, request, *args, **kwargs):
         disciplines = request.POST.getlist('disciplines',[])
@@ -194,7 +242,7 @@ class StatementLearningObject(DisciplineReportsBaseView):
 class StatemensUpdateView(SuperuserMixin, View):
     def post(self, request, *args, **kwargs):
         body_unicode = request.body.decode('utf-8')
-        data = data=json.loads(body_unicode)
+        data = json.loads(body_unicode)
 
         try:
             question = Question.objects.get(id=data['id'])
@@ -212,7 +260,7 @@ class StatemensUpdateView(SuperuserMixin, View):
 class LearningObjectUpdateView(SuperuserMixin, View):
     def post(self, request, *args, **kwargs):
         body_unicode = request.body.decode('utf-8')
-        data = data=json.loads(body_unicode)
+        data = json.loads(body_unicode)
 
         try:
             lo = LearningObject.objects.get(id=data['id'])
@@ -230,7 +278,7 @@ class LearningObjectUpdateView(SuperuserMixin, View):
 class AlternativeUpdateView(SuperuserMixin, View):
     def post(self, request, *args, **kwargs):
         body_unicode = request.body.decode('utf-8')
-        data = data=json.loads(body_unicode)
+        data = json.loads(body_unicode)
 
         try:
             lo = Alternative.objects.get(id=data['id'])

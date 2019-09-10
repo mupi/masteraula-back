@@ -2,14 +2,17 @@
 {% load static %}
 
 {% block content %}
-<h1>Relatórios</h1>
-<br>
-<a href="{% url 'reports:uncategorized_questions' %}">Questões não categorizadas</a>
+<h2>Relatórios Administrativos</h2>
 <br>
 <a href="{% url 'reports:number_documents' %}">Quantidade de provas do usuário</a>
 <br>
+<a href="{% url 'reports:data_users_school' %}">Informações dos usuários por escola</a>
 <br>
-<h1>Questoes</h1>
+<br>
+<h2>Correções de conteúdo</h2>
+<br>
+<h5>Questões</h5>
+<a href="{% url 'reports:uncategorized_questions' %}">Questões não categorizadas</a>
 <br>
 <a href="{% url 'reports:statements_with_div' %}">Questões com tag div</a>
 <br>
@@ -32,8 +35,7 @@
 <a href="{% url 'reports:statements_all' %}">Questões com todos os filtros</a>
 <br>
 <br>
-<h1>Objetos de aprendizagem</h1>
-<br>
+<h5>Objetos de aprendizagem</h5>
 <a href="{% url 'reports:objects_with_div' %}">Objetos de aprendizagem  com tag div</a>
 <br>
 <a href="{% url 'reports:objects_with_texto_associado' %}">Objetos de aprendizagem com texto associado</a>
@@ -54,18 +56,15 @@
 <br>
 <a href="{% url 'reports:objects_all' %}">Objetos de aprendizagem com todos os filtros</a>
 <br>
-<br>
-<h1>Alternativas</h1>
-<br>
-<a href="{% url 'reports:alternatives_all' %}">Alternativas com todos os filtros</a>
-<br>
-<br>
-<h1>Objetos de aprendizagem sem source</h1>
-<br>
 <a href="{% url 'reports:objects_without_source' %}">Objetos sem fonte</a>
 <br>
-<br>
-<h1>Possiveis objetos de aprendizagem</h1>
 <a href="{% url 'reports:has_learning_object' %}">Possiveis objetos</a>
+<br>
+<br>
+<h5>Alternativas</h5>
+<a href="{% url 'reports:alternatives_all' %}">Alternativas com todos os filtros</a>
+<br>
+
+
 
 {% endblock %}
