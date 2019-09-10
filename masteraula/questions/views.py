@@ -353,6 +353,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Document.objects.get_questions_prefetched().filter(owner=self.request.user, disabled=False)
+        if (self.action=='generate_list'):
+            queryset = Document.objects.get_generate_document().filter(owner=self.request.user, disabled=False)
         return queryset
 
     def get_serializer_class(self):
@@ -449,31 +451,11 @@ class DocumentViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    # @detail_route(methods=['get'])
-    # def get_list(self, request, pk=None):
-    #     """
-    #     Generate a docx file containing all the list.
-    #     """
-    #     document = self.get_object()
-    #     document_name = document.name
-    #     docx_name = pk + document_name + '.docx'
-
-    #     data = open(docx_name, "rb").read()
-
-    #     response = HttpResponse(
-    #         data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    #     )
-    #     response['Content-Disposition'] = 'attachment; filename="' + document_name + '.docx"'
-    #     # Apaga o arquivo temporario criado
-    #     os.remove(docx_name)
-    #     return response
-
     @detail_route(methods=['get'])
     def generate_list(self, request, pk=None):
         """
         Generate a docx file containing all the list.
         """
-        
         document = self.get_object()
         document_generator = DocxGeneratorAWS()
 
@@ -484,7 +466,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
             DocumentDownload.objects.create(user=self.request.user, 
                                             document=document, 
-                                            answers=('answers' in flags and flags['answers'] == 'True'))
+                                            answers=answers)
 
             response = FileResponse(
                 open(document_generator.docx_name + '.docx', "rb"), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'

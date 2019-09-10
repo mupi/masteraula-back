@@ -73,7 +73,7 @@ class QuestionManager(models.Manager):
 
     def get_questions_update_index(self, topics=True):
         qs = self.all().select_related('author').prefetch_related(
-            'tags', 'disciplines', 'teaching_levels', 'learning_objects', 'learning_objects__tags', 
+            'tags', 'alternatives', 'disciplines', 'teaching_levels', 'learning_objects', 'learning_objects__tags', 
         )
         if topics:
             qs = qs.prefetch_related(self.topics_prefetch)
@@ -183,10 +183,18 @@ class DocumentManager(models.Manager):
     )
 
     def get_questions_prefetched(self):
-        qs = self.all().prefetch_related(
+        return self.all().prefetch_related(
             self.questions_prefetch,
         )
-        return qs
+
+    def get_generate_document(self):
+        return self.all().prefetch_related(
+            Prefetch('documentquestion_set__question',
+                queryset=Question.objects.all().prefetch_related(
+                    'alternatives', 'learning_objects'
+                )
+            ),
+        )
 
 class Document(models.Model):
     name = models.CharField(max_length=200)
