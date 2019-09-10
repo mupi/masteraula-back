@@ -352,7 +352,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = (DocumentsPermission, )
 
     def get_queryset(self):
-        queryset = Document.objects.filter(owner=self.request.user, disabled=False)
+        queryset = Document.objects.get_questions_prefetched().filter(owner=self.request.user, disabled=False)
         return queryset
 
     def get_serializer_class(self):
