@@ -26,7 +26,6 @@ class City (models.Model):
 
 class School (models.Model):
     name = models.CharField(max_length=80)
-    city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -56,6 +55,10 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+class SchoolGroup(models.Model):
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE)
+    school = models.ForeignKey(School, on_delete=models.CASCADE)
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

@@ -13,15 +13,17 @@ from import_export import resources, widgets
 from import_export.fields import Field
 from import_export.formats import base_formats
 
-class SchoolInline(admin.TabularInline):
-    model = School
+class SchoolGroupInline(admin.TabularInline):
+    model = SchoolGroup
+    raw_id_fields = ('school', 'teacher', )
 
+@admin.register(School)
 class SchoolModelAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'city')
+    list_display = ('id', 'name', )
     search_fields = ['id', 'name',]
-    list_per_page = 100
-
-    inlines = [SchoolInline,]
+    
+    inlines = [SchoolGroupInline, ]
+    
 
 class MyUserAdminResource(resources.ModelResource):
     class Meta:
@@ -96,5 +98,3 @@ class MyUserAdmin(ExportMixin, AuthUserAdmin):
                 base_formats.HTML,
         )
         return [f for f in formats if f().can_export()]
-
-admin.site.register(School, )
