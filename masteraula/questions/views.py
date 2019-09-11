@@ -355,6 +355,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
         queryset = Document.objects.get_questions_prefetched().filter(owner=self.request.user, disabled=False)
         if (self.action=='generate_list'):
             queryset = Document.objects.get_generate_document().filter(owner=self.request.user, disabled=False)
+        if self.action == 'add_question' or self.action == 'remove_question':
+            queryset = Document.objects.filter(owner=self.request.user, disabled=False)
         return queryset
 
     def get_serializer_class(self):
@@ -406,7 +408,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @detail_route(methods=['post'])
     def remove_question(self, request, pk=None):
         document = self.get_object()
-        request.data['order'] = 0
         serializer = serializers.DocumentQuestionDestroySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         question = serializer.validated_data['question']
