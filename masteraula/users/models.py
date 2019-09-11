@@ -49,16 +49,12 @@ class User(AbstractUser):
     email = models.EmailField(blank=False, null=False)
     about = models.TextField(blank=True)
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
-    school = models.ManyToManyField(School, blank=True)
+    schools = models.ManyToManyField(School, blank=True, related_name="teachers")
     disciplines = models.ManyToManyField('questions.Discipline', related_name="users_discipline")
     profile_pic = models.ImageField(null=True, upload_to='profile_pics', validators=[validate_image])
 
     def __str__(self):
         return self.username
-
-class SchoolGroup(models.Model):
-    teacher = models.ForeignKey(User, on_delete=models.CASCADE)
-    school = models.ForeignKey(School, on_delete=models.CASCADE)
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

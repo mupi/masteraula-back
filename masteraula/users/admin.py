@@ -13,22 +13,21 @@ from import_export import resources, widgets
 from import_export.fields import Field
 from import_export.formats import base_formats
 
-class SchoolGroupInline(admin.TabularInline):
-    model = SchoolGroup
-    raw_id_fields = ('school', 'teacher', )
+class SchoolInline(admin.TabularInline):
+    model = User.schools.through
 
 @admin.register(School)
 class SchoolModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', )
     search_fields = ['id', 'name',]
     
-    inlines = [SchoolGroupInline, ]
+    inlines = [SchoolInline, ]
     
 
 class MyUserAdminResource(resources.ModelResource):
     class Meta:
         model = User
-        fields = ('id','name', 'username', 'email', 'about', 'city', 'school', 'disciplines', 'date_joined')
+        fields = ('id','name', 'username', 'email', 'about', 'city', 'schools', 'disciplines', 'date_joined')
         export_order = fields
         widgets = {
                 'date_joined': {'format': '%d/%m/%Y'},
@@ -46,11 +45,11 @@ class MyUserAdminResource(resources.ModelResource):
 
         return(', '.join(list_disciplines))
 
-    def dehydrate_school(self,user):
-        itens = user.school.all()
-        list_school = []
+    def dehydrate_schools(self,user):
+        itens = user.schools.all()
+        list_schools = []
         for i in itens:
-            list_school.append(i.name)
+            list_schools.append(i.name)
 
         return(', '.join(list_disciplines))
 
@@ -81,12 +80,12 @@ class MyUserAdmin(ExportMixin, AuthUserAdmin):
     resource_class =  MyUserAdminResource
     form = MyUserChangeForm
     add_form = MyUserCreationForm
-    raw_id_fields = ('city', 'school')
+    raw_id_fields = ('city', 'schools')
     fieldsets = (
-            ('User Profile', {'fields': ('name', 'city', 'school', 'disciplines',)}),
+            ('User Profile', {'fields': ('name', 'city', 'schools', 'disciplines',)}),
     ) + AuthUserAdmin.fieldsets
     list_display = ('id', 'username', 'name', 'is_superuser', 'date_joined')
-    search_fields = ['id', 'name', 'email', 'disciplines__name', 'school__name', 'date_joined']
+    search_fields = ['id', 'name', 'email', 'disciplines__name', 'schools__name', 'date_joined']
     
     def get_export_formats(self):
         
