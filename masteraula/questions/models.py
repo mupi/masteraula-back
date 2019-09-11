@@ -10,17 +10,6 @@ from masteraula.users.models import User
 
 from .managers import TopicManager
 
-class DocumentQuestionManager(models.Manager):
-    def create(self, *args, **kwargs):
-        documentQuestion = super().create(*args, **kwargs)
-        documentQuestions = super().filter(document=documentQuestion.document).filter(order__gte=documentQuestion.order)
-        for dq in documentQuestions:
-            if dq != documentQuestion:
-                dq.order = dq.order + 1
-                dq.save()
-
-        return documentQuestion
-
 class Discipline(models.Model):
     name = models.CharField(max_length=50, null=False, blank=False)
     slug = models.CharField(max_length=10, null=True, blank=True)
@@ -75,7 +64,8 @@ class QuestionManager(models.Manager):
 
     def get_questions_prefetched(self, topics=True):
         qs = self.all().select_related('author').prefetch_related(
-            'tags', 'disciplines', 'teaching_levels', 'alternatives', 'learning_objects', 'learning_objects__tags',
+            'tags', 'disciplines', 'teaching_levels', 'alternatives',
+            'learning_objects', 'learning_objects__tags', 'learning_objects__owner', 
         )
         if topics:
             qs = qs.prefetch_related(self.topics_prefetch)
@@ -83,7 +73,7 @@ class QuestionManager(models.Manager):
 
     def get_questions_update_index(self, topics=True):
         qs = self.all().select_related('author').prefetch_related(
-            'tags', 'disciplines', 'teaching_levels', 'learning_objects', 'learning_objects__tags', 
+            'tags', 'alternatives', 'disciplines', 'teaching_levels', 'learning_objects', 'learning_objects__tags', 
         )
         if topics:
             qs = qs.prefetch_related(self.topics_prefetch)
@@ -133,12 +123,10 @@ class Question(models.Model):
         return list(set(topics))
 
 class LearningObjectManager(models.Manager):
-    questions_prefetch = Prefetch('questions', queryset=Question.objects.get_questions_update_index(False))
 
     def get_objects_update_index(self):
         return self.all().select_related('owner').prefetch_related(
-            'tags', 
-            self.questions_prefetch
+            'tags', Prefetch('questions', queryset=Question.objects.get_questions_update_index(False))
         )
 
 class LearningObject(models.Model):
@@ -177,6 +165,37 @@ class Alternative(models.Model):
     def __str__(self):
         return self.text[:50]
 
+class DocumentManager(models.Manager):
+    topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')
+    )
+
+    learning_objects_prefetch = Prefetch('learning_objects',
+        queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags')
+    )
+
+    questions_prefetch = Prefetch('documentquestion_set__question',
+        queryset=Question.objects.all().select_related('author').prefetch_related(
+            'tags', 'disciplines', 'teaching_levels', 'alternatives',
+            topics_prefetch, 
+            learning_objects_prefetch
+        )
+    )
+
+    def get_questions_prefetched(self):
+        return self.all().select_related('owner').prefetch_related(
+            self.questions_prefetch,
+        )
+
+    def get_generate_document(self):
+        return self.all().prefetch_related(
+            Prefetch('documentquestion_set__question',
+                queryset=Question.objects.all().prefetch_related(
+                    'alternatives', 'learning_objects'
+                )
+            ),
+        )
+
 class Document(models.Model):
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -185,6 +204,8 @@ class Document(models.Model):
     secret = models.BooleanField()
     disabled = models.BooleanField(null=False, blank=True, default=False)
       
+    objects = DocumentManager()
+
     def __str__(self):
         return self.name[:50]
         
@@ -196,48 +217,49 @@ class Document(models.Model):
         self.save()
 
     def add_question(self, question):
-        order = 0
-        new_order = self.documentquestion_set.count()
         last_learning_object = None
-        for order, documentQuestion in enumerate(self.documentquestion_set.all().order_by('order')):
-            if (last_learning_object and last_learning_object != [q for q  in documentQuestion.question.learning_objects.values()]
-                    and last_learning_object == [q for q in question.learning_objects.values()]):
+
+        question = Question.objects.prefetch_related('learning_objects').get(id=question.id)
+        qs = self.documentquestion_set.all().select_related('question').prefetch_related('question__learning_objects').order_by('order')
+        new_order = len(qs)
+
+        for order, document_question in enumerate(qs):
+            if (last_learning_object and last_learning_object != [q.id for q in document_question.question.learning_objects.all()]
+                    and last_learning_object == [q.id for q in question.learning_objects.all()]):
                 new_order = order
                 break
 
-            last_learning_object = [q for q  in documentQuestion.question.learning_objects.values()]
-        documentQuestion = self.documentquestion_set.create(question=question, order=new_order)
-        self.save()
-        return documentQuestion
+            last_learning_object = [q.id for q in document_question.question.learning_objects.all()]
+        document_question = self.documentquestion_set.create(question=question, order=new_order)
+
+        return document_question
 
     def remove_question(self, question):
         self.documentquestion_set.filter(question=question).delete()
-        self.save()
         self.update_orders()
 
     def update_orders(self):
         added_questions = []
-        documentQuestions = self.documentquestion_set.all().order_by('order')
+        learning_objects_pos = {}
+        qs = self.documentquestion_set.all().select_related('question').prefetch_related('question__learning_objects').order_by('order')
 
+        for document_question in qs:
+            if len(document_question.question.learning_objects.all()) == 0:
+                added_questions.append([document_question])
+            else:
+                learning_objects_hash = '-'.join(str(lo.id) for lo in document_question.question.learning_objects.all())
+                if learning_objects_hash in learning_objects_pos:
+                    added_questions[learning_objects_pos[learning_objects_hash]].append(document_question)
+                else:
+                    learning_objects_pos[learning_objects_hash] = len(added_questions)
+                    added_questions.append([document_question])
+                    
         order = 0
-        for i, documentQuestion in enumerate(documentQuestions):
-            # Added questions
-            if i in added_questions:
-                continue
-            
-            documentQuestion.set_order(order)
-            order = order + 1
-
-            # unify the questions with same learning object
-            learning_objects = [q for q  in documentQuestion.question.learning_objects.values()]
-            if learning_objects:
-                for j in range(i, len(documentQuestions)):
-                    if j in added_questions:
-                        continue
-                    if learning_objects == [q for q  in documentQuestions[j].question.learning_objects.values()]:
-                        added_questions.append(j)
-                        documentQuestions[j].set_order(order)
-                        order = order + 1
+        for question_list in added_questions:
+            for question in question_list:
+                question.order = order
+                question.save()
+                order += 1
 
     def update(self, **kwargs):
         # https://www.dabapps.com/blog/django-models-and-encapsulation/
@@ -246,6 +268,37 @@ class Document(models.Model):
             assert name in allowed_attributes
             setattr(self, name, value)
         self.save()
+
+class DocumentQuestionManager(models.Manager):
+
+    topics_prefetch = Prefetch('question__topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')
+    )
+
+    learning_objects_prefetch = Prefetch(
+        'question__learning_objects',
+        queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags')
+    )
+
+    def get_questions_prefetched(self, topics=True):
+        qs = self.all().select_related('question').prefetch_related(
+            'question__tags', 'question__disciplines', 'question__teaching_levels', 'question__alternatives',
+            self.learning_objects_prefetch
+        )
+        if topics:
+            qs = qs.prefetch_related(self.topics_prefetch)
+        return qs
+
+    def create(self, *args, **kwargs):
+        documentQuestion = super().create(*args, **kwargs)
+        documentQuestions = self.filter(document=documentQuestion.document).filter(order__gte=documentQuestion.order)
+        for dq in documentQuestions:
+            if dq != documentQuestion:
+                dq.order = dq.order + 1
+                dq.save()
+
+        return documentQuestion
+
 
 class DocumentQuestion(models.Model):
     document = models.ForeignKey(Document, on_delete=models.CASCADE)

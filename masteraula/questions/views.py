@@ -352,7 +352,11 @@ class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = (DocumentsPermission, )
 
     def get_queryset(self):
-        queryset = Document.objects.filter(owner=self.request.user, disabled=False)
+        queryset = Document.objects.get_questions_prefetched().filter(owner=self.request.user, disabled=False)
+        if (self.action=='generate_list'):
+            queryset = Document.objects.get_generate_document().filter(owner=self.request.user, disabled=False)
+        if self.action == 'add_question' or self.action == 'remove_question' or self.action == 'update' or self.action == 'partial_update':
+            queryset = Document.objects.filter(owner=self.request.user, disabled=False)
         return queryset
 
     def get_serializer_class(self):
@@ -380,9 +384,11 @@ class DocumentViewSet(viewsets.ModelViewSet):
         obj.name = obj.name + ' (Cópia)'
         obj.save()
 
+        new_questions = []
         for count, q in enumerate(questions):
             if q.disabled == False:
-                dq = DocumentQuestion.objects.create(document=obj, question=q, order=count) 
+                new_questions.append(DocumentQuestion(document=obj, question=q, order=count))
+        DocumentQuestion.objects.bulk_create(new_questions) 
        
         serializer = serializers.DocumentCreatesSerializer(obj)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -393,6 +399,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
         serializer = serializers.DocumentQuestionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         document_question = serializer.save(document=document)
+
+        document_question = DocumentQuestion.objects.get_questions_prefetched().get(id=document_question.id)
+        
         list_document = serializers.DocumentQuestionListDetailSerializer(document_question)
         headers = self.get_success_headers(list_document.data)
         
@@ -401,7 +410,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @detail_route(methods=['post'])
     def remove_question(self, request, pk=None):
         document = self.get_object()
-        request.data['order'] = 0
         serializer = serializers.DocumentQuestionDestroySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         question = serializer.validated_data['question']
@@ -446,31 +454,11 @@ class DocumentViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    # @detail_route(methods=['get'])
-    # def get_list(self, request, pk=None):
-    #     """
-    #     Generate a docx file containing all the list.
-    #     """
-    #     document = self.get_object()
-    #     document_name = document.name
-    #     docx_name = pk + document_name + '.docx'
-
-    #     data = open(docx_name, "rb").read()
-
-    #     response = HttpResponse(
-    #         data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    #     )
-    #     response['Content-Disposition'] = 'attachment; filename="' + document_name + '.docx"'
-    #     # Apaga o arquivo temporario criado
-    #     os.remove(docx_name)
-    #     return response
-
     @detail_route(methods=['get'])
     def generate_list(self, request, pk=None):
         """
         Generate a docx file containing all the list.
         """
-        
         document = self.get_object()
         document_generator = DocxGeneratorAWS()
 
@@ -481,7 +469,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
             DocumentDownload.objects.create(user=self.request.user, 
                                             document=document, 
-                                            answers=('answers' in flags and flags['answers'] == 'True'))
+                                            answers=answers)
 
             response = FileResponse(
                 open(document_generator.docx_name + '.docx', "rb"), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
