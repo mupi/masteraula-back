@@ -174,7 +174,6 @@ class StatementsTagsPSpace(DisciplineReportsBaseView):
 
     def queryset(self, disciplines):
         questions = Question.objects.filter(disciplines__in=disciplines).filter(statement__contains='</p><p>').order_by('id')
-        print(len(questions))
         if questions.count() > 0:
             return zip(*[(q.id, q.statement) for q in questions])
         return None
