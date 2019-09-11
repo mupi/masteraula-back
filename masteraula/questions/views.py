@@ -355,7 +355,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         queryset = Document.objects.get_questions_prefetched().filter(owner=self.request.user, disabled=False)
         if (self.action=='generate_list'):
             queryset = Document.objects.get_generate_document().filter(owner=self.request.user, disabled=False)
-        if self.action == 'add_question' or self.action == 'remove_question':
+        if self.action == 'add_question' or self.action == 'remove_question' or self.action == 'update' or self.action == 'partial_update':
             queryset = Document.objects.filter(owner=self.request.user, disabled=False)
         return queryset
 

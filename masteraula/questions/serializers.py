@@ -467,7 +467,6 @@ class DocumentDetailSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionListDetailSerializer(many=True, source='documentquestion_set', read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
   
-
     class Meta:
         model = Document
         fields = (
@@ -485,27 +484,15 @@ class DocumentDetailSerializer(serializers.ModelSerializer):
             'documentquestion_set' : { 'read_only' : True}
               }
 
-    # def validate_questions(self, value):
-    #     documentQuestions = sorted(value, key=lambda k: k['order'])
-    #     documentQuestions = [{'question' : dc['question'], 'order' : order} for order, dc in enumerate(documentQuestions)]
-    #     return documentQuestions
-
     def create(self, validated_data):
-        # documentQuestions = validated_data.pop('documentquestion_set')
         document = Document.objects.create(**validated_data)
-
-        # document.set_questions(documentQuestions)
 
         return document
 
     def update(self, instance, validated_data):
-        # if 'documentquestion_set' in validated_data:
-        #     documentquestion_set = validated_data.pop('documentquestion_set')
-            # instance.set_questions(documentquestion_set)
-
         instance.update(**validated_data)
         
-        return instance
+        return Document.objects.get_questions_prefetched().get(id=instance.id)
 
 class DocumentCreatesSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionListDetailSerializer(many=True, source='documentquestion_set', read_only=True)
