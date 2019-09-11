@@ -384,9 +384,11 @@ class DocumentViewSet(viewsets.ModelViewSet):
         obj.name = obj.name + ' (Cópia)'
         obj.save()
 
+        new_questions = []
         for count, q in enumerate(questions):
             if q.disabled == False:
-                dq = DocumentQuestion.objects.create(document=obj, question=q, order=count) 
+                new_questions.append(DocumentQuestion(document=obj, question=q, order=count))
+        DocumentQuestion.objects.bulk_create(new_questions) 
        
         serializer = serializers.DocumentCreatesSerializer(obj)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
