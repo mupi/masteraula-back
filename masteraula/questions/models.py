@@ -183,7 +183,7 @@ class DocumentManager(models.Manager):
     )
 
     def get_questions_prefetched(self):
-        return self.all().prefetch_related(
+        return self.all().select_related('owner').prefetch_related(
             self.questions_prefetch,
         )
 
