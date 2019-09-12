@@ -145,7 +145,7 @@ class DataSchoolView(SuperuserMixin, TemplateView):
             return render(request, self.template_name, {'not_found' : True})
         
         if id_school:
-                users = users.filter(school__id=id_school)
+                users = users.filter(schools__id=id_school)
 
         for user in users:
             documents = Document.objects.filter(owner=user)
