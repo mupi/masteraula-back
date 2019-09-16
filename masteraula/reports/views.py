@@ -129,7 +129,7 @@ class DataSchoolView(SuperuserMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):      
-        data = 'Usuário,Email,Quantidade de Provas,Quantidade de Questões,Quantidade de downloads (provas),Quantidade de downloads (questões)\n'  
+        data = 'Usuário,Email,Quantidade de Provas,Quantidade de Questões,Quantidade de downloads (provas),Quantidade de downloads (questões),ID das Provas baixadas + de uma vez,ID das Questões baixadas + de uma vez\n'  
         id_users =  request.POST.get('id_users', None)
         id_school = request.POST.get('id_school', None)
 
@@ -149,20 +149,75 @@ class DataSchoolView(SuperuserMixin, TemplateView):
 
         for user in users:
             documents = Document.objects.filter(owner=user)
-            questions = 0
             q_downloads = 0
+            check_doc = []
+            check_question = []
+            check_dup_questions = []
+            dup_questions = []
+            dup_doc = [] 
+            dup_doc_group = []
+            dup_questions_group = []
+           
 
             for doc in documents:
-                questions = questions + doc.questions.count()
+                for q in doc.questions.all():
+                        if q.id in check_dup_questions:
+                            continue 
+                        else:
+                            check_dup_questions.append(q.id)
 
             doc_downloads = DocumentDownload.objects.filter(user=user)
 
             for doc in doc_downloads:
-                q_downloads = q_downloads + doc.document.questions.count()
+                check = False
+                if doc.document.id in check_doc:
+                    for i, token in enumerate(dup_doc):
+                        if token[0] == doc.document.id:
+                            change = (doc.document.id, token[1] + 1)
+                            dup_doc[i] = change 
+                            check = True
+                            continue    
+                    if check == False:
+                        dup_doc.append((doc.document.id, 1))    
+            
+                else:         
+                    q_downloads = q_downloads + doc.document.questions.count()
+                    check_doc.append(doc.document.id)
 
+                    for q in doc.document.questions.all():
+                        check = False
+                        if q.id in check_question:
+                            for i, token in enumerate(dup_questions):
+                                if token[0] == q.id:
+                                    change = (q.id, token[1] + 1)
+                                    dup_questions[i] = change 
+                                    check = True
+                                    continue    
+                            if check == False:
+                                dup_questions.append((q.id, 1))    
+                            
+                            continue 
+                        else:
+                            check_question.append(q.id)
+
+            for dup in dup_doc:
+                #dup_doc_group += "\"" + str(dup[0]) + " - " + str(dup[1]) + " vezes \n"
+                dup_doc_group += str(dup[0]) + ' - ' + str(dup[1]) + 'vezes '
+
+            for dup in dup_questions:
+                dup_questions_group += str(dup[0]) + ' - ' + str(dup[1]) + 'vezes '
+            
             documents_active = documents.filter(disabled = False)
-            data = data + str(user) + ',' + user.email + ',' + str(documents.count()) + ',' + str(questions) + ',' + str(doc_downloads.count()) + ',' + str(q_downloads) + '\n'
-              
+            data = data + str(user) \
+                + ',' + user.email \
+                + ',' + str(documents.count()) \
+                + ',' + str(len(check_dup_questions)) \
+                + ',' + str(len(check_doc)) \
+                + ',' + str(len(check_question)) \
+                + ',' + str(''.join(dup_doc_group)) \
+                + ',' + str(''.join( dup_questions_group)) + '\n'
+
+
         response = HttpResponse(data, 'text/csv')
         response['Content-Disposition'] = 'attachment; filename="relatorio_escola.csv"'
         return response
