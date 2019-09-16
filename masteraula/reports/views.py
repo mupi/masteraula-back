@@ -129,7 +129,7 @@ class DataSchoolView(SuperuserMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):      
-        data = 'Usuário,Email,Quantidade de Provas,Quantidade de Questões,Quantidade de downloads (provas),Quantidade de downloads (questões),ID das Provas baixadas + de uma vez,ID das Questões baixadas + de uma vez\n'  
+        data = 'Usuário,Email,Quantidade de Provas,Quantidade de Questões,Quantidade de downloads (provas),Quantidade de downloads (questões),IDs das Provas baixadas + de uma vez,IDs das Questões baixadas + de uma vez\n'  
         id_users =  request.POST.get('id_users', None)
         id_school = request.POST.get('id_school', None)
 
@@ -178,7 +178,7 @@ class DataSchoolView(SuperuserMixin, TemplateView):
                             check = True
                             continue    
                     if check == False:
-                        dup_doc.append((doc.document.id, 1))    
+                        dup_doc.append((doc.document.id, 2))    
             
                 else:         
                     q_downloads = q_downloads + doc.document.questions.count()
@@ -194,18 +194,21 @@ class DataSchoolView(SuperuserMixin, TemplateView):
                                     check = True
                                     continue    
                             if check == False:
-                                dup_questions.append((q.id, 1))    
+                                dup_questions.append((q.id, 2))    
                             
                             continue 
                         else:
                             check_question.append(q.id)
 
-            for dup in dup_doc:
-                #dup_doc_group += "\"" + str(dup[0]) + " - " + str(dup[1]) + " vezes \n"
-                dup_doc_group += str(dup[0]) + ' - ' + str(dup[1]) + 'vezes '
+            for i, dup in enumerate(dup_doc):
+                if i == 0:
+                    dup_doc_group += '"'
+                dup_doc_group += '\"' + str(dup[0]) + '" ' + str(dup[1]) + ' vezes \r\n"'
 
-            for dup in dup_questions:
-                dup_questions_group += str(dup[0]) + ' - ' + str(dup[1]) + 'vezes '
+            for i, dup in enumerate(dup_questions):
+                if i == 0:
+                    dup_questions_group += '"'
+                dup_questions_group += '\"' + str(dup[0]) + '" ' + str(dup[1]) + ' vezes \r\n"'  
             
             documents_active = documents.filter(disabled = False)
             data = data + str(user) \
