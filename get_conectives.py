@@ -45,7 +45,6 @@ connectives += split_value(stripaccents(value))
 connectives = list(set(connectives))
 connectives.sort()
 
-print('connectives = [')
 line = ''
 for i in range(len(connectives)):
     line += '\'{}\', '.format(connectives[i])
