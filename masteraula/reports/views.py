@@ -145,10 +145,10 @@ class DataSchoolView(SuperuserMixin, TemplateView):
             return render(request, self.template_name, {'not_found' : True})
         
         if id_school:
-                users = users.filter(schools__id=id_school)
+            users = users.filter(schools__id=id_school)
 
         for user in users:
-            documents = Document.objects.filter(owner=user)
+            documents = Document.objects.filter(owner=user).prefetch_related('questions')
             q_downloads = 0
             check_doc = []
             check_question = []
@@ -161,16 +161,14 @@ class DataSchoolView(SuperuserMixin, TemplateView):
 
             for doc in documents:
                 for q in doc.questions.all():
-                        if q.id in check_dup_questions:
-                            continue 
-                        else:
-                            check_dup_questions.append(q.id)
+                    if q.id not in check_dup_questions:
+                        check_dup_questions.append(q.id)
 
-            doc_downloads = DocumentDownload.objects.filter(user=user)
+            doc_downloads = DocumentDownload.objects.filter(user=user).select_related('document').prefetch_related('document__questions')
 
             for doc in doc_downloads:
                 check = False
-                if doc.document.id in check_doc:
+                if doc.document_id in check_doc:
                     for i, token in enumerate(dup_doc):
                         if token[0] == doc.document.id:
                             change = (doc.document.id, token[1] + 1)
@@ -203,12 +201,12 @@ class DataSchoolView(SuperuserMixin, TemplateView):
             for i, dup in enumerate(dup_doc):
                 if i == 0:
                     dup_doc_group += '"'
-                dup_doc_group += '\"' + str(dup[0]) + '" ' + str(dup[1]) + ' vezes \r\n"'
+                dup_doc_group += '\"' + str(dup[0]) + '" ' + str(dup[1]) + ' vezes "'
 
             for i, dup in enumerate(dup_questions):
                 if i == 0:
                     dup_questions_group += '"'
-                dup_questions_group += '\"' + str(dup[0]) + '" ' + str(dup[1]) + ' vezes \r\n"'  
+                dup_questions_group += '\"' + str(dup[0]) + '" ' + str(dup[1]) + ' vezes "'  
             
             documents_active = documents.filter(disabled = False)
             data = data + str(user) \
