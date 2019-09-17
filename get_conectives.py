@@ -45,13 +45,13 @@ connectives += split_value(stripaccents(value))
 connectives = list(set(connectives))
 connectives.sort()
 
-line = ''
-for i in range(len(connectives)):
-    line += '\'{}\', '.format(connectives[i])
-    if i and i % 10 == 0:
-        print('\t{}'.format(line))
-        line = ''
+# line = ''
+# for i in range(len(connectives)):
+#     line += '\'{}\', '.format(connectives[i])
+#     if i and i % 10 == 0:
+#         print('\t{}'.format(line))
+#         line = ''
 
-if line:
-    print('\t{}'.format(line))
-print(']')
+# if line:
+#     print('\t{}'.format(line))
+# print(']')
