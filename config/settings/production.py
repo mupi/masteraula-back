@@ -191,7 +191,7 @@ LOGGING = {
         'logfile' : {
             'level' : 'ERROR',
             'class' : 'logging.handlers.WatchedFileHandler',
-            'filename' : '~/logs/masteraula.log'
+            'filename' : '../logs/masteraula.log'
         },
     },
     'loggers': {
@@ -223,9 +223,11 @@ URL_FRONT = env('DJANGO_URL_FRONT')
 CORS_ORIGIN_WHITELIST = env('DJANGO_CORS_ORIGIN_WHITELIST')
 CORS_ORIGIN_ALLOW_ALL = env.bool('DJANGO_CORS_ALLOW_ALL')
 HAYSTACK_CONNECTIONS = {
-    'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
-    'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
-    'SILENTLY_FAIL' : False,
+    'default': {
+        'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+        'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
+        'SILENTLY_FAIL' : False,
+    },
     # 'default': {
     #     'ENGINE': 'haystack.backends.elasticsearch2_backend.Elasticsearch2SearchEngine',
     #     'URL': env('DJANGO_HAYSTACK_URL'),
