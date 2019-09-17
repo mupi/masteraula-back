@@ -188,13 +188,23 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
+        'logfile' : {
+            'level' : 'ERROR',
+            'class' : 'logging.handlers.WatchedFileHandler',
+            'filename' : '~/logs/masteraula.log'
+        },
     },
     'loggers': {
         'django.request': {
-            'handlers': ['mail_admins'],
+            'handlers': ['logfile'],
             'level': 'ERROR',
             'propagate': True
         },
+        # 'django.request': {
+        #     'handlers': ['mail_admins'],
+        #     'level': 'ERROR',
+        #     'propagate': True
+        # },
         'django.security.DisallowedHost': {
             'level': 'ERROR',
             'handlers': ['console', 'mail_admins'],
