@@ -8,7 +8,7 @@ from rest_framework import (generics, response, viewsets, status, mixins,
 from rest_framework.decorators import detail_route, list_route, permission_classes
 from rest_framework.response import Response
 
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Case, When
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import FieldError
 
@@ -24,6 +24,7 @@ from .templatetags.search_helpers import stripaccents
 from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
+from .similarity import RelatedQuestions
 from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission
 from . import serializers as serializers
 
@@ -59,49 +60,40 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.QuestionSerializer
     permission_classes = (permissions.IsAuthenticated, QuestionPermission, )
      
-    def gen_queryset(self, search_qs, page_start):
-        search_qs = search_qs.load_all()
-        queryset = [None] * len(search_qs)
+    def paginate_queryset(self, search_queryset):
+        search_queryset = search_queryset.load_all()
 
-        results = search_qs[page_start:page_start+16]
-        for i in range(page_start, min(page_start + 16, len(queryset))):
-            res = results.pop(0)
-            queryset[i] = res.object
+        page = super().paginate_queryset(search_queryset)
+        questions_ids = [res.object.id for res in page]
+
+        queryset = Question.objects.get_questions_prefetched().filter(disabled=False, id__in=questions_ids).order_by('id')
+        order = Case(*[When(id=id, then=pos) for pos, id in enumerate(questions_ids)])
+        queryset = queryset.order_by(order)
+
         return queryset
-    
+
     def get_queryset(self):
-        disciplines = self.request.query_params.getlist('disciplines', None)
-        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
-        difficulties = self.request.query_params.getlist('difficulties', None)
-        years = self.request.query_params.getlist('years', None)
-        sources = self.request.query_params.getlist('sources', None)
-        page = self.request.GET.get('page', None)
         text = self.request.GET.get('text', None)
-        author = self.request.query_params.get('author', None)
-             
-        try:
-            page_no = int(self.request.GET.get('page', 1))
-        except (TypeError, ValueError):
-            raise FieldError("Not a valid number for page.")
-
-        if page_no < 1:
-            raise FieldError("Pages should be 1 or greater.")
-
         if not text:
             raise FieldError("Invalid search text")
         text = stripaccents(text)
         text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
         if not text:
-            raise FieldError("Invalid search text")   
+            raise FieldError("Invalid search text")
 
-        start_offset = (page_no - 1) * 16
+        disciplines = self.request.query_params.getlist('disciplines', None)
+        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
+        difficulties = self.request.query_params.getlist('difficulties', None)
+        years = self.request.query_params.getlist('years', None)
+        sources = self.request.query_params.getlist('sources', None)
+        author = self.request.query_params.get('author', None)
 
-        params = {}
-        if disciplines is not None and disciplines:
+        params = {'disabled' : 'false'}
+        if disciplines:
             params['disciplines__id__in'] = disciplines
-        if teaching_levels is not None and teaching_levels:
+        if teaching_levels:
             params['teaching_levels__in'] = teaching_levels
-        if difficulties is not None and difficulties:
+        if difficulties:
             difficulties_texts = []
             if 'E' in difficulties:
                 difficulties_texts.append('Facil')
@@ -110,13 +102,12 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             if 'H' in difficulties:
                 difficulties_texts.append('Dificil')
             params['difficulty__in'] = difficulties_texts
-        if years is not None and years:
+        if years:
             params['year__in'] = years
-        if sources is not None and sources:
+        if sources:
             params['source__in'] = sources
-        if author is not None and author:
+        if author:
             params['author__id'] = author
-        params['disabled'] = 'false'
 
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
@@ -147,7 +138,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             obj.difficulty = None
         obj.save()
         
-        return self.gen_queryset(search_queryset, start_offset)
+        return search_queryset
     
 class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.QuestionSerializer
@@ -155,7 +146,12 @@ class QuestionViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, QuestionPermission )
 
     def get_queryset(self):
-        queryset = Question.objects.all().order_by('id')
+        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+            return Question.objects.all()
+        queryset = Question.objects.get_questions_prefetched()
+        if self.action == 'list':
+            queryset = queryset.filter(disabled=False).order_by('id')
+
         disciplines = self.request.query_params.getlist('disciplines', None)
         teaching_levels = self.request.query_params.getlist('teaching_levels', None)
         difficulties = self.request.query_params.getlist('difficulties', None)
@@ -163,21 +159,21 @@ class QuestionViewSet(viewsets.ModelViewSet):
         sources = self.request.query_params.getlist('sources', None)
         author = self.request.query_params.get('author', None)
        
-        if disciplines is not None and disciplines:
+        if disciplines:
             queryset = queryset.filter(disciplines__in=disciplines).distinct()
-        if teaching_levels is not None and teaching_levels:
+        if teaching_levels:
             queryset = queryset.filter(teaching_levels__in=teaching_levels).distinct()
-        if difficulties is not None and difficulties:
+        if difficulties:
             queryset = queryset.filter(difficulty__in=difficulties).distinct()
-        if years is not None and years:
+        if years:
             queryset = queryset.filter(year__in=years).distinct()
-        if sources is not None and sources:
+        if sources:
             query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             queryset = queryset.filter(query)
-        if author is not None and author:
-            queryset = queryset.filter(author__id=author).order_by('-create_date')    
-            
-        return queryset.filter(disabled=False)
+        if author:
+            queryset = queryset.filter(author__id=author).order_by('-create_date')
+
+        return queryset.order_by('id')
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -189,18 +185,23 @@ class QuestionViewSet(viewsets.ModelViewSet):
         return Response(status = status.HTTP_204_NO_CONTENT)
     
     def retrieve(self, request, pk=None):
-        queryset = Question.objects.all()
-        question = get_object_or_404(queryset, pk=pk)
+        question = get_object_or_404(self.get_queryset(), pk=pk)
         serializer_question = self.serializer_class(question)
 
-        documents_questions = DocumentQuestion.objects.filter(question__id=pk)
-        documents = [dq.document for dq in documents_questions if dq.document.owner==request.user]
-        documents = sorted(documents, key=lambda doc: doc.create_date)
+        documents = Document.objects.filter(questions__id=pk, owner=request.user).order_by('create_date')
         serializer_documents = serializers.ListDocumentQuestionSerializer(documents, many = True)
 
         return_data = serializer_question.data
         return_data['documents'] = serializer_documents.data
-        
+
+        related_questions = RelatedQuestions().similar_questions(question)
+        order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_questions)])
+
+        questions_object = Question.objects.get_questions_prefetched().filter(id__in=related_questions).order_by(order)
+        serializer_questions = serializers.QuestionSerializer(questions_object, many=True)
+
+        return_data['related_questions'] = serializer_questions.data
+    
         return Response(return_data)
 
     @detail_route(methods=['put'], permission_classes=(permissions.IsAuthenticated, permissions.DjangoModelPermissions))
@@ -213,7 +214,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
         serializer_question = self.serializer_class(new_question)
 
         return Response(serializer_question.data, status=status.HTTP_201_CREATED)
-    
+
 class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Discipline.objects.all().order_by('name')
     serializer_class = serializers.DisciplineSerializer
@@ -235,17 +236,15 @@ class SourceViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
 
 class TopicViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Topic.objects.get_parents_tree()
     serializer_class = serializers.TopicSerializer
     pagination_class = None
 
     def get_queryset(self, *args, **kwargs):
         if self.request.query_params:
             disciplines = self.request.query_params.getlist('disciplines', None)
-            queryset = Topic.objects.filter(parent=None).filter(discipline__in=disciplines).distinct()
-
-        else:
-            queryset = Topic.objects.all()
-        return queryset
+            return Topic.objects.get_parents_tree(disciplines)
+        return self.queryset
 
 class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
     pagination_class = LearningObjectPagination
@@ -255,12 +254,16 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
     def gen_queryset(self, search_qs, page_start):
         search_qs = search_qs.load_all()
         queryset = [None] * len(search_qs)
-
+        count = 0
         results = search_qs[page_start:page_start+16]
         for i in range(page_start, min(page_start + 16, len(queryset))):
+            if len(results) == 0:
+                break
             res = results.pop(0)
             queryset[i] = res.object
-        return queryset
+            count += 1
+            
+        return queryset[:count]
     
     def get_queryset(self):
         page = self.request.GET.get('page', None)
@@ -290,7 +293,6 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
             params['is_image'] = True
         if is_text:
             params['is_text'] = True
-        print(params)
 
         start_offset = (page_no - 1) * 16
 
@@ -332,6 +334,7 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
         return_data['questions'] = serializer_questions.data
         
         return Response(return_data)
+
     def get_queryset(self):
         queryset = LearningObject.objects.all().order_by('id')
         is_image = self.request.query_params.get('is_image', None)
@@ -349,7 +352,11 @@ class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = (DocumentsPermission, )
 
     def get_queryset(self):
-        queryset = Document.objects.filter(owner=self.request.user, disabled=False)
+        queryset = Document.objects.get_questions_prefetched().filter(owner=self.request.user, disabled=False)
+        if (self.action=='generate_list'):
+            queryset = Document.objects.get_generate_document().filter(owner=self.request.user, disabled=False)
+        if self.action == 'add_question' or self.action == 'remove_question' or self.action == 'update' or self.action == 'partial_update':
+            queryset = Document.objects.filter(owner=self.request.user, disabled=False)
         return queryset
 
     def get_serializer_class(self):
@@ -377,9 +384,11 @@ class DocumentViewSet(viewsets.ModelViewSet):
         obj.name = obj.name + ' (Cópia)'
         obj.save()
 
+        new_questions = []
         for count, q in enumerate(questions):
             if q.disabled == False:
-                dq = DocumentQuestion.objects.create(document=obj, question=q, order=count) 
+                new_questions.append(DocumentQuestion(document=obj, question=q, order=count))
+        DocumentQuestion.objects.bulk_create(new_questions) 
        
         serializer = serializers.DocumentCreatesSerializer(obj)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -390,6 +399,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
         serializer = serializers.DocumentQuestionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         document_question = serializer.save(document=document)
+
+        document_question = DocumentQuestion.objects.get_questions_prefetched().get(id=document_question.id)
+        
         list_document = serializers.DocumentQuestionListDetailSerializer(document_question)
         headers = self.get_success_headers(list_document.data)
         
@@ -398,7 +410,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @detail_route(methods=['post'])
     def remove_question(self, request, pk=None):
         document = self.get_object()
-        request.data['order'] = 0
         serializer = serializers.DocumentQuestionDestroySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         question = serializer.validated_data['question']
@@ -443,31 +454,11 @@ class DocumentViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    # @detail_route(methods=['get'])
-    # def get_list(self, request, pk=None):
-    #     """
-    #     Generate a docx file containing all the list.
-    #     """
-    #     document = self.get_object()
-    #     document_name = document.name
-    #     docx_name = pk + document_name + '.docx'
-
-    #     data = open(docx_name, "rb").read()
-
-    #     response = HttpResponse(
-    #         data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    #     )
-    #     response['Content-Disposition'] = 'attachment; filename="' + document_name + '.docx"'
-    #     # Apaga o arquivo temporario criado
-    #     os.remove(docx_name)
-    #     return response
-
     @detail_route(methods=['get'])
     def generate_list(self, request, pk=None):
         """
         Generate a docx file containing all the list.
         """
-        
         document = self.get_object()
         document_generator = DocxGeneratorAWS()
 
@@ -478,7 +469,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
             DocumentDownload.objects.create(user=self.request.user, 
                                             document=document, 
-                                            answers=('answers' in flags and flags['answers'] == 'True'))
+                                            answers=answers)
 
             response = FileResponse(
                 open(document_generator.docx_name + '.docx', "rb"), content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'

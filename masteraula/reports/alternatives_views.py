@@ -26,7 +26,8 @@ class AlternativesAllFilter(DisciplineReportsBaseView):
             report_functions.process_super_sub,
             report_functions.process_line_heigth,
             report_functions.process_tags_p_inside_p,
-            report_functions.process_empty_p_tags
+            report_functions.process_empty_p_tags,
+            report_functions.process_tags_p_space
         ]
         all_res = [func(ids, texts) for func in all_res]
         ids = list(set([item for sublist, _, _ in all_res for item in sublist]))
@@ -46,7 +47,8 @@ class AlternativesAllFilter(DisciplineReportsBaseView):
             report_functions.process_super_sub,
             report_functions.process_line_heigth,
             report_functions.process_tags_p_inside_p,
-            report_functions.process_empty_p_tags
+            report_functions.process_empty_p_tags,
+            report_functions.process_tags_p_space
         ]
 
         clean = texts
@@ -167,3 +169,16 @@ class AlternativesWithPInsideP(DisciplineReportsBaseView):
 
     def report_function(self, *args, **kwargs):
         return report_functions.process_tags_p_inside_p(*args, **kwargs)
+
+class AlternativesTagsPSpace(DisciplineReportsBaseView):
+    template_name = 'reports/edit_alternative_text.html'
+    header = 'Alternativas com tags <p> sem espaço'
+
+    def queryset(self, disciplines):
+        questions = Alternative.objects.filter(question__disciplines__in=disciplines).filter(text__contains='</p><p>').order_by('id')
+        if alternatives.count() > 0:
+            return zip(*[(a.id, a.text) for a in alternatives])
+        return None
+
+    def report_function(self, *args, **kwargs):
+        return report_functions.process_tags_p_space(*args, **kwargs)

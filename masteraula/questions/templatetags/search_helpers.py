@@ -40,18 +40,9 @@ def stripaccents(value):
 
 def prepare_document(value):
     if value is not None:
-        value = re.sub('<.*?>', '', value.lower())
-        value = stripaccents(value)
-        return ' '.join(list(set(re.findall('[a-z0-9]{3,}', value))))
-    return ''
-
-def only_key_words(value):
-    def cmp(str1):
-        return len(str1)
-
-    value = prepare_document(value)
-    if value is not None:
-        return ' '.join(keyword for keyword in sorted(value.split(), key=cmp) if keyword not in connectives)
+        value = re.sub('<.*?>', ' ', value.lower())
+        value = ' '.join(list(set(re.findall('\w\w\w+', value))))
+        return ''.join((c for c in unicodedata.normalize('NFD', value) if unicodedata.category(c) != 'Mn'))
     return ''
 
 register = template.Library()

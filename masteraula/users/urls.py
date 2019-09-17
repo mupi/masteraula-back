@@ -1,17 +1,22 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
 
+from django.conf import settings
 from django.conf.urls import url, include
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import DefaultRouter, SimpleRouter
 from rest_auth.registration.views import (
     SocialAccountListView, SocialAccountDisconnectView
 )
 
 from . import views
 
-router = DefaultRouter()
+router = SimpleRouter()
+if settings.DEBUG: 
+    router = DefaultRouter()
+
 router.register(r'cities', views.CityViewSet, base_name='cities-list')
 router.register(r'states', views.StateViewSet, base_name='states-list')
+router.register(r'school', views.SchoolViewSet, base_name='school')
 
 urlpatterns = [
     url(r'^', include(router.urls)),

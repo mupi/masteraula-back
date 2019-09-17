@@ -213,11 +213,15 @@ URL_FRONT = env('DJANGO_URL_FRONT')
 CORS_ORIGIN_WHITELIST = env('DJANGO_CORS_ORIGIN_WHITELIST')
 CORS_ORIGIN_ALLOW_ALL = env.bool('DJANGO_CORS_ALLOW_ALL')
 HAYSTACK_CONNECTIONS = {
-    'default': {
-        'ENGINE': 'haystack.backends.elasticsearch2_backend.Elasticsearch2SearchEngine',
-        'URL': env('DJANGO_HAYSTACK_URL'),
-        'INDEX_NAME': env('DJANGO_HAYSTACK_INDEX_NAME'),
-    },
+    'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+    'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
+    'SILENTLY_FAIL' : False,
+    # 'default': {
+    #     'ENGINE': 'haystack.backends.elasticsearch2_backend.Elasticsearch2SearchEngine',
+    #     'URL': env('DJANGO_HAYSTACK_URL'),
+    #     'INDEX_NAME': env('DJANGO_HAYSTACK_INDEX_NAME'),
+    #     'SILENTLY_FAIL' : env('DJANGO_HAYSTACK_SILENTLY_FAIL'),
+    # },
 }
 
 # Celery

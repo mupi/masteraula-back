@@ -19,8 +19,9 @@ urlpatterns = [
     url(r'^statements_with_strong_em/$', statements_views.StatementsWithBoldItalic.as_view(), name='statements_with_strong_em'),
     url(r'^statements_with_sup_sub/$', statements_views.StatementsWithSupSub.as_view(), name='statements_with_sup_sub'),
     url(r'^statements_with_line_height/$', statements_views.StatementsWithLineHeight.as_view(), name='statements_with_line_height'),
+    url(r'^statements_tags_p_space/$', statements_views.StatementsTagsPSpace.as_view(), name='statements_tags_p_space'),
     url(r'^statements_all/$', statements_views.StatementsAllFilter.as_view(), name='statements_all'),
-
+   
     url(r'^has_learning_object/$', views.StatementLearningObject.as_view(), name='has_learning_object'),
     url(r'^objects_without_source/$', views.ObjectsWithoutSource.as_view(), name='objects_without_source'),
 
@@ -32,6 +33,7 @@ urlpatterns = [
     url(r'^objects_with_strong_em/$', objects_views.ObjectsWithBoldItalic.as_view(), name='objects_with_strong_em'),
     url(r'^objects_with_sup_sub/$', objects_views.ObjectsWithSupSub.as_view(), name='objects_with_sup_sub'),
     url(r'^objects_with_line_height/$', objects_views.ObjectsWithLineHeight.as_view(), name='objects_with_line_height'),
+    url(r'^objects_tags_p_space/$', objects_views.ObjectsTagsPSpace.as_view(), name='objects_tags_p_space'),
     url(r'^objects_all/$', objects_views.ObjectsAllFilter.as_view(), name='objects_all'),
 
     # url(r'^objects_with_div/$', objects_views.ObjectsWithDivView.as_view(), name='objects_with_div'),

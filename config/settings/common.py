@@ -281,6 +281,7 @@ HAYSTACK_CONNECTIONS = {
     'default': {
      'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
      'PATH': os.path.join(os.path.dirname(__file__), 'whoosh_index'),
+     'SILENTLY_FAIL' : False,
     },
     # 'default': {
     #     'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
@@ -299,8 +300,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         #'rest_framework.authentication.SessionAuthentication',
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
-    )   
-    
+    ),
 }
 
 ACCOUNT_SIGNUP_FORM_CLASS = 'masteraula.users.forms.SignupForm'

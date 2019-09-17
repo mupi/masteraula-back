@@ -6,3 +6,13 @@
 {% for tag in object.tags.all %}
     {{ tag.name|stripaccents }}
 {% endfor %}
+
+{% for question in object.questions.all %}
+    {% for tag in question.tags.all %}
+        {{ tag.name|stripaccents }}
+    {% endfor %}
+
+    {% for topic in question.get_all_topics %}
+        {{ topic.name|stripaccents }}
+    {% endfor %}
+{% endfor %}

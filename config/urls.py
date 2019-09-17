@@ -48,6 +48,8 @@ if settings.DEBUG:
         url(r'^500/$', default_views.server_error),
         url(r'^search/', include('haystack.urls')),
     ]
+    if  'silk' in settings.INSTALLED_APPS:
+        urlpatterns += [url(r'^silk/', include('silk.urls', namespace='silk'))]
     if 'debug_toolbar' in settings.INSTALLED_APPS:
         import debug_toolbar
 
