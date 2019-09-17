@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h1>Informações dos usuários por escola</h1>
+<br>
+
+<form method="POST">
+    {% csrf_token %}
+    <br>               
+    <strong> Selecione a escola para exportar as informações dos usuários </strong><br>
+    <br> 
+    <label for="user"> Escola: </label>
+   
+    <select name="id_school">
+        <option selected="selected" disabled>Selecione</option>
+        {% for school in data %}
+            <option value="{{school.id}}">{{school.name}}</option>
+        {% endfor %} 
+      </select>
+      
+    <br>
+    <br>
+    <strong> Insira os IDs para exportar os dados de usuários específicos ou deixe em branco para exportar todos</strong><br>
+    
+    <br>  
+    Usuário: <input id="user" type="text" name="id_users"> 
+    <h7>*Separados por vírgulas e sem espaço</h7>
+  
+    <br> 
+    {% if not_found %}
+    <br>
+        <div class="alert alert-danger">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            Usuário inexistente {{users}}            
+
+        </div>
+        
+    {% endif %}
+    <br>
+    <br>    
+    <input type="submit" value="Enviar">
+</form>
+
+{% endblock %}

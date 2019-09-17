@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^$', views.ReportsView.as_view(), name='reports_home'),
     url(r'^uncategorized_questions/$', views.UncategorizedTagsView.as_view(), name='uncategorized_questions'),
     url(r'^number_documents/$', views.NumberDocumentsView.as_view(), name='number_documents'),
+    url(r'^data_users_school/$', views.DataSchoolView.as_view(), name='data_users_school'),
 
     url(r'^statements_with_div/$', statements_views.StatementsWithDivView.as_view(), name='statements_with_div'),
     url(r'^statements_with_texto_associado/$', statements_views.StatementsWithTextoAssociado.as_view(), name='statements_with_texto_associado'),
