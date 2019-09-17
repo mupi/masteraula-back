@@ -24,13 +24,6 @@ class City (models.Model):
     def __str__(self):
         return self.uf.uf + " " + self.name
 
-class School (models.Model):
-    name = models.CharField(max_length=80)
-    city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
-
-    def __str__(self):
-        return self.name
-
 @python_2_unicode_compatible
 class User(AbstractUser):
 
@@ -50,7 +43,6 @@ class User(AbstractUser):
     email = models.EmailField(blank=False, null=False)
     about = models.TextField(blank=True)
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
-    school = models.ManyToManyField(School, blank=True)
     disciplines = models.ManyToManyField('questions.Discipline', related_name="users_discipline")
     profile_pic = models.ImageField(null=True, upload_to='profile_pics', validators=[validate_image])
 

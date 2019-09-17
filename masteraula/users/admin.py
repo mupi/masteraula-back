@@ -6,27 +6,17 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as AuthUserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from django.utils.translation import ugettext_lazy as _
-from .models import *
+from .models import User
 
 from import_export.admin import ExportMixin
 from import_export import resources, widgets
 from import_export.fields import Field
 from import_export.formats import base_formats
 
-class SchoolInline(admin.TabularInline):
-    model = School
-
-class SchoolModelAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'city')
-    search_fields = ['id', 'name',]
-    list_per_page = 100
-
-    inlines = [SchoolInline,]
-
 class MyUserAdminResource(resources.ModelResource):
     class Meta:
         model = User
-        fields = ('id','name', 'username', 'email', 'about', 'city', 'school', 'disciplines', 'date_joined')
+        fields = ('id','name', 'username', 'email', 'about', 'city', 'disciplines', 'date_joined')
         export_order = fields
         widgets = {
                 'date_joined': {'format': '%d/%m/%Y'},
@@ -41,14 +31,6 @@ class MyUserAdminResource(resources.ModelResource):
         list_disciplines = []
         for i in itens:
             list_disciplines.append(i.name)
-
-        return(', '.join(list_disciplines))
-
-    def dehydrate_school(self,user):
-        itens = user.school.all()
-        list_school = []
-        for i in itens:
-            list_school.append(i.name)
 
         return(', '.join(list_disciplines))
 
@@ -79,12 +61,12 @@ class MyUserAdmin(ExportMixin, AuthUserAdmin):
     resource_class =  MyUserAdminResource
     form = MyUserChangeForm
     add_form = MyUserCreationForm
-    raw_id_fields = ('city', 'school')
+    raw_id_fields = ('city',)
     fieldsets = (
-            ('User Profile', {'fields': ('name', 'city', 'school', 'disciplines',)}),
+            ('User Profile', {'fields': ('name', 'city', 'disciplines',)}),
     ) + AuthUserAdmin.fieldsets
     list_display = ('id', 'username', 'name', 'is_superuser', 'date_joined')
-    search_fields = ['id', 'name', 'email', 'disciplines__name', 'school__name', 'date_joined']
+    search_fields = ['id', 'name', 'email', 'disciplines__name', 'date_joined']
     
     def get_export_formats(self):
         
@@ -96,5 +78,3 @@ class MyUserAdmin(ExportMixin, AuthUserAdmin):
                 base_formats.HTML,
         )
         return [f for f in formats if f().can_export()]
-
-admin.site.register(School, )

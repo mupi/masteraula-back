@@ -18,8 +18,8 @@ from rest_framework.permissions import AllowAny
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from .models import User, City, State, School
-from .serializers import CitySerializer, StateSerializer, SchoolSerializer,ResendConfirmationEmailSerializer, SocialOnlyLoginSerializer
+from .models import User, City, State
+from .serializers import CitySerializer, StateSerializer, ResendConfirmationEmailSerializer, SocialOnlyLoginSerializer
 
 
 class CityViewSet(viewsets.ReadOnlyModelViewSet):
@@ -40,11 +40,6 @@ class StateViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = StateSerializer
     queryset = State.objects.all()
     
-class SchoolViewSet(viewsets.ModelViewSet):
-    pagination_class = None
-    serializer_class = SchoolSerializer
-    queryset = School.objects.all()
-
 class UserConfirmationEmailView(GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class = ResendConfirmationEmailSerializer

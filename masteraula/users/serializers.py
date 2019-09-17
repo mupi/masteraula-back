@@ -22,7 +22,7 @@ from rest_framework import serializers, exceptions
 
 from requests.exceptions import HTTPError
 
-from .models import User, Profile, City, State, School
+from .models import User, Profile, City, State
 from masteraula.questions.models import Discipline
 
 class CitySerializer(serializers.ModelSerializer):
@@ -43,10 +43,6 @@ class StateSerializer(serializers.ModelSerializer):
         model = State
         fields = ('uf' ,'name',)
 
-class SchoolSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = School
-        fields = '__all__'
 
 class CityEditSerializer(serializers.Field):
     def to_internal_value(self, data):
@@ -83,7 +79,6 @@ class DisciplineSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     city = CityEditSerializer(required=False, allow_null=True)
-    school = SchoolSerializer(many = True, required=False)
     disciplines = DisciplineSerializer(many = True, required = False)
     groups = serializers.SerializerMethodField()
     socialaccounts = serializers.SerializerMethodField()
@@ -106,7 +101,6 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'about',
             'city',
-            'school',
             'disciplines',
             'profile_pic',
             'groups',

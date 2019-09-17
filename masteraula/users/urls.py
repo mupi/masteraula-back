@@ -16,7 +16,6 @@ if settings.DEBUG:
 
 router.register(r'cities', views.CityViewSet, base_name='cities-list')
 router.register(r'states', views.StateViewSet, base_name='states-list')
-router.register(r'school', views.SchoolViewSet, base_name='school')
 
 urlpatterns = [
     url(r'^', include(router.urls)),
