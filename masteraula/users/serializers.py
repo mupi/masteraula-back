@@ -83,7 +83,7 @@ class DisciplineSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     city = CityEditSerializer(required=False, allow_null=True)
-    schools = SchoolSerializer(many = True, required=False)
+    schools = SchoolSerializer(many = True, required=False, read_only=True)
     disciplines = DisciplineSerializer(many = True, required = False)
     groups = serializers.SerializerMethodField()
     socialaccounts = serializers.SerializerMethodField()
