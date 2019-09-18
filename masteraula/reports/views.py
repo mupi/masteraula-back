@@ -237,7 +237,7 @@ class UncategorizedTagsView(DisciplineReportsBaseView):
         data = ''
         for question in questions:
             if question.tags.count() == 0:
-                data = data + '%d, https://masteraula.com.br/#/edit-question/%d\n' % (question.id, question.id)
+                data = data + '%d, https://masteraula.com.br/edit-question/%d\n' % (question.id, question.id)
     
         response = HttpResponse(
             data, 'text/csv'
