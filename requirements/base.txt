@@ -58,4 +58,5 @@ djangorestframework-recursive==0.1.2
 django-import-export==1.2.0
 celery==4.2.1
 beautifulsoup4==4.7.1
+fuzzywuzzy==0.17.0
 django-silk==3.0.2
