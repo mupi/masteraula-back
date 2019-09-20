@@ -18,7 +18,7 @@ from masteraula.users.models import User
 from masteraula.questions.templatetags.search_helpers import stripaccents
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
-                    Year, Source, Topic, LearningObject, Search, DocumentDownload)
+                    Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication)
 
 from .templatetags.search_helpers import stripaccents
 from .docx_parsers import Question_Parser
@@ -484,6 +484,25 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 os.remove(document_generator.docx_name + '.html')
 
             return response
+
+class DocumentPublicationViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+
+    def get_queryset(self):
+        return DocumentPublication.objects.filter(document__disabled=False)
+
+    def get_serializer_class(self):
+        return serializers.DocumentDetailPublicationSerializer
+
+    def retrieve(self, request, pk=None):
+        publication = self.get_object()
+        document = Document.objects.get_questions_prefetched().get(id=publication.document_id)
+        document_data = self.get_serializer_class()(document).data
+
+        if not self.request.user.is_authenticated:
+            for question in document_data['questions']:
+                question['question'].pop('alternatives', None)
+    
+        return Response(document_data)
 
 class HeaderViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.HeaderSerializer
