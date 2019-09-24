@@ -18,14 +18,21 @@
             <option value="{{school.id}}">{{school.name}}</option>
         {% endfor %} 
       </select>
-      
     <br>
+    <br>  
+    Data: 
+    <input type="text" size="1" name="day"> /  
+    <input type="text" size="1" required="required" name="month">  / 
+    <input type="text" size="2" required="required" name="year"> 
+    <br>
+    <h6>*Para filtrar por mês, deixe em branco o dia (dd/mm/aaaa)</h6>
+    <br> 
     <br>
     <strong> Insira os IDs para exportar os dados de usuários específicos ou deixe em branco para exportar todos</strong><br>
     
     <br>  
     Usuário: <input id="user" type="text" name="id_users"> 
-    <h7>*Separados por vírgulas e sem espaço</h7>
+    <h6>*Separados por vírgulas e sem espaço</h6>
   
     <br> 
     {% if not_found %}
