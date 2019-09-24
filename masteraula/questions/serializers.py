@@ -206,7 +206,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     def all_topics_serializer(self, question):
         return TopicSimpleSerializer(question.get_all_topics(), many=True).data
 
-    alternatives = AlternativeSerializer(many=True, read_only=False)
+    alternatives = AlternativeSerializer(many=True, read_only=False, required=False)
     tags = TagListSerializer(read_only=False) 
     year = serializers.IntegerField(read_only=False, required=False, allow_null=True)
     difficulty = serializers.CharField(read_only=False, required=True)
@@ -311,6 +311,10 @@ class QuestionSerializer(serializers.ModelSerializer):
         if alternatives != None:
             for alt in alternatives:
                 Alternative.objects.create(question=question, **alt)
+        
+        if 'resolution' not in validated_data:
+            if 'alternatives' not in validated_data:
+                raise serializers.ValidationError(_("At least 3 alternatives"))
 
         return Question.objects.get_questions_prefetched().get(id=question.id)
 
