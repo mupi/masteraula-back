@@ -18,7 +18,6 @@ from masteraula.users.models import School
 from .serializers import QuestionStatementEditSerializer, LearningObjectEditSerializer, AlternativeEditSerializer
 
 from bs4 import BeautifulSoup as bs
-from datetime import datetime
 
 import json
 import re
