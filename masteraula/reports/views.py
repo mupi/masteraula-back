@@ -18,6 +18,7 @@ from masteraula.users.models import School
 from .serializers import QuestionStatementEditSerializer, LearningObjectEditSerializer, AlternativeEditSerializer
 
 from bs4 import BeautifulSoup as bs
+from datetime import datetime
 
 import json
 import re
@@ -132,10 +133,8 @@ class DataSchoolView(SuperuserMixin, TemplateView):
         data = 'Usuário,Email,Disciplinas,Qtde de Provas,Qtde de Provas Inativas,Qtde de Questões,Qtde de downloads (provas),Qtde de downloads (questões),IDs das Provas baixadas + de uma vez,IDs das Questões baixadas + de uma vez\n'  
         id_users =  request.POST.get('id_users', None)
         id_school = request.POST.get('id_school', None)
-        day = request.POST.get('day', None)
-        month = request.POST.get('month', None)
-        year = request.POST.get('year', None)
-
+        date = self.request.POST.get('date')    
+        
         try:
             if id_users:
                 users = User.objects.filter(id__in=id_users.split(','))
@@ -151,12 +150,12 @@ class DataSchoolView(SuperuserMixin, TemplateView):
             users = users.filter(schools__id=id_school)
 
         for user in users:
-            if not day:  
-                documents = Document.objects.filter(owner=user).prefetch_related('questions').filter(create_date__year=int(year), create_date__month=int(month))
-                doc_downloads = DocumentDownload.objects.filter(user=user).select_related('document').prefetch_related('document__questions').filter(download_date__year=int(year), download_date__month=int(month))
+            if date:  
+                documents = Document.objects.filter(owner=user).prefetch_related('questions').filter(create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
+                doc_downloads = DocumentDownload.objects.filter(user=user).select_related('document').prefetch_related('document__questions').filter(download_date__year=int(date.split('-')[0]), download_date__month=int(date.split('-')[1]))
             else:
-                documents = Document.objects.filter(owner=user).prefetch_related('questions').filter(create_date__year=int(year), create_date__month=int(month), create_date__day=int(day))
-                doc_downloads = DocumentDownload.objects.filter(user=user).select_related('document').prefetch_related('document__questions').filter(download_date__year=int(year), download_date__month=int(month), download_date__day=int(day))
+                documents = Document.objects.filter(owner=user).prefetch_related('questions')
+                doc_downloads = DocumentDownload.objects.filter(user=user).select_related('document').prefetch_related('document__questions')
 
             q_downloads = 0
             check_doc = []
