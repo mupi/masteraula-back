@@ -206,7 +206,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     def all_topics_serializer(self, question):
         return TopicSimpleSerializer(question.get_all_topics(), many=True).data
 
-    alternatives = AlternativeSerializer(many=True, read_only=False)
+    alternatives = AlternativeSerializer(many=True, read_only=False, required=False, allow_null=True)
     tags = TagListSerializer(read_only=False) 
     year = serializers.IntegerField(read_only=False, required=False, allow_null=True)
     difficulty = serializers.CharField(read_only=False, required=True)
@@ -250,14 +250,15 @@ class QuestionSerializer(serializers.ModelSerializer):
         depth = 1
 
     def validate_alternatives(self, value):
-        if len(value) < 3:
-            raise serializers.ValidationError(_("At least 3 alternatives"))
-        number_of_corrects = 0
-        for alternative in value:
-            if 'is_correct' in alternative and alternative['is_correct']:
-                number_of_corrects += 1
-        if number_of_corrects != 1:
-            raise serializers.ValidationError(_("Should contan at least 1 correct alternative"))
+        if value != None:
+            if len(value) < 3:
+                raise serializers.ValidationError(_("At least 3 alternatives"))
+            number_of_corrects = 0
+            for alternative in value:
+                if 'is_correct' in alternative and alternative['is_correct']:
+                    number_of_corrects += 1
+            if number_of_corrects != 1:
+                raise serializers.ValidationError(_("Should contan at least 1 correct alternative"))
         return value
 
     def validate_disciplines_ids(self, value):
@@ -293,6 +294,10 @@ class QuestionSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         alternatives = validated_data.pop('alternatives', None)
 
+        if 'resolution' not in validated_data:
+            if alternatives == None:
+                raise serializers.ValidationError(_("Should contain alternatives or resolution"))
+
         if 'year' not in validated_data or not validated_data['year']:
             validated_data['year'] =  datetime.date.today().year
 
@@ -319,6 +324,10 @@ class QuestionSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         alternatives = validated_data.pop('alternatives', None)
 
+        if 'resolution' not in validated_data:
+            if alternatives == None:
+                raise serializers.ValidationError(_("Should contain alternatives or resolution"))
+
         for key in list(validated_data.keys()):
             if key.endswith('_ids'):
                 validated_data[key[:-4]] = validated_data.pop(key)
@@ -334,7 +343,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             question.alternatives.all().delete()
             for alt in alternatives:
                 Alternative.objects.create(question=question, **alt)
-
+                
         return Question.objects.get_questions_prefetched().get(id=question.id)
 
 class QuestionTagEditSerializer(serializers.ModelSerializer):
