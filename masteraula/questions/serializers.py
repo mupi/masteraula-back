@@ -313,7 +313,7 @@ class QuestionSerializer(serializers.ModelSerializer):
                 Alternative.objects.create(question=question, **alt)
         
         if 'resolution' not in validated_data:
-            if 'alternatives' not in validated_data:
+            if alternatives == None:
                 raise serializers.ValidationError(_("At least 3 alternatives"))
 
         return Question.objects.get_questions_prefetched().get(id=question.id)
@@ -339,6 +339,10 @@ class QuestionSerializer(serializers.ModelSerializer):
             for alt in alternatives:
                 Alternative.objects.create(question=question, **alt)
 
+        if 'resolution' not in validated_data:
+            if alternatives == None:
+                raise serializers.ValidationError(_("At least 3 alternatives"))
+                
         return Question.objects.get_questions_prefetched().get(id=question.id)
 
 class QuestionTagEditSerializer(serializers.ModelSerializer):
