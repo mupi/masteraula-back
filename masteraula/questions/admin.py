@@ -202,7 +202,9 @@ class DocumentPublicationModelAdmin(admin.ModelAdmin):
     list_per_page = 100
 
     def user__name(self, obj):
-        return obj.user.name
+        if obj.user:
+            return obj.user.name
+        return ""
 
     def document__name(self, obj):
         return obj.document.name

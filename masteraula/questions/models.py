@@ -362,6 +362,6 @@ class DocumentDownload(models.Model):
 
 class DocumentPublication(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL)
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
     create_date = models.DateTimeField(auto_now_add=True)
