@@ -18,14 +18,18 @@
             <option value="{{school.id}}">{{school.name}}</option>
         {% endfor %} 
       </select>
-      
     <br>
+    <br>  
+    Data: 
+    <input type="month" name="date"> 
+    
+    <br> 
     <br>
     <strong> Insira os IDs para exportar os dados de usuários específicos ou deixe em branco para exportar todos</strong><br>
     
     <br>  
     Usuário: <input id="user" type="text" name="id_users"> 
-    <h7>*Separados por vírgulas e sem espaço</h7>
+    <h6>*Separados por vírgulas e sem espaço</h6>
   
     <br> 
     {% if not_found %}

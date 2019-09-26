@@ -129,10 +129,11 @@ class DataSchoolView(SuperuserMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):      
-        data = 'Usuário,Email,Quantidade de Provas,Quantidade de Questões,Quantidade de downloads (provas),Quantidade de downloads (questões),IDs das Provas baixadas + de uma vez,IDs das Questões baixadas + de uma vez\n'  
+        data = 'Usuário,Email,Disciplinas,Qtde de Provas,Qtde de Provas Inativas,Qtde de Questões,Qtde de downloads (provas),Qtde de downloads (questões),IDs das Provas baixadas + de uma vez,IDs das Questões baixadas + de uma vez\n'  
         id_users =  request.POST.get('id_users', None)
         id_school = request.POST.get('id_school', None)
-
+        date = self.request.POST.get('date')    
+        
         try:
             if id_users:
                 users = User.objects.filter(id__in=id_users.split(','))
@@ -148,7 +149,13 @@ class DataSchoolView(SuperuserMixin, TemplateView):
             users = users.filter(schools__id=id_school)
 
         for user in users:
-            documents = Document.objects.filter(owner=user).prefetch_related('questions')
+            if date:  
+                documents = Document.objects.filter(owner=user).prefetch_related('questions').filter(create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
+                doc_downloads = DocumentDownload.objects.filter(user=user).select_related('document').prefetch_related('document__questions').filter(download_date__year=int(date.split('-')[0]), download_date__month=int(date.split('-')[1]))
+            else:
+                documents = Document.objects.filter(owner=user).prefetch_related('questions')
+                doc_downloads = DocumentDownload.objects.filter(user=user).select_related('document').prefetch_related('document__questions')
+
             q_downloads = 0
             check_doc = []
             check_question = []
@@ -158,13 +165,10 @@ class DataSchoolView(SuperuserMixin, TemplateView):
             dup_doc_group = []
             dup_questions_group = []
            
-
             for doc in documents:
                 for q in doc.questions.all():
                     if q.id not in check_dup_questions:
                         check_dup_questions.append(q.id)
-
-            doc_downloads = DocumentDownload.objects.filter(user=user).select_related('document').prefetch_related('document__questions')
 
             for doc in doc_downloads:
                 check = False
@@ -193,7 +197,6 @@ class DataSchoolView(SuperuserMixin, TemplateView):
                                     continue    
                             if check == False:
                                 dup_questions.append((q.id, 2))    
-                            
                             continue 
                         else:
                             check_question.append(q.id)
@@ -208,16 +211,19 @@ class DataSchoolView(SuperuserMixin, TemplateView):
                     dup_questions_group += '"'
                 dup_questions_group += '\"' + str(dup[0]) + '" ' + str(dup[1]) + ' vezes "'  
             
-            documents_active = documents.filter(disabled = False)
-            data = data + str(user) \
+            disciplines = '-'.join([disciplines.name for disciplines in user.disciplines.all()])
+
+            doc_inative = documents.filter(disabled=True)
+            data = data + user.name \
                 + ',' + user.email \
+                + ',' + str(disciplines) \
                 + ',' + str(documents.count()) \
+                + ',' + str(doc_inative.count()) \
                 + ',' + str(len(check_dup_questions)) \
                 + ',' + str(len(check_doc)) \
                 + ',' + str(len(check_question)) \
                 + ',' + str(''.join(dup_doc_group)) \
-                + ',' + str(''.join( dup_questions_group)) + '\n'
-
+                + ',' + str(''.join(dup_questions_group)) + '\n'
 
         response = HttpResponse(data, 'text/csv')
         response['Content-Disposition'] = 'attachment; filename="relatorio_escola.csv"'

@@ -179,8 +179,8 @@ class SearchModelAdmin(ExportMixin, admin.ModelAdmin):
 class DocumentDownloadModelAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = DocumentResource
     raw_id_fields = ('user',)
-    list_display = ('id', 'user_id', 'user', 'document')
-    search_fields = ['id', 'user__name', 'user__id', 'document__name']
+    list_display = ('id', 'user_id', 'user', 'document', 'download_date')
+    search_fields = ['id', 'user__name', 'user__id', 'document__name', 'download_date']
     list_per_page = 100
 
     def get_export_formats(self):
