@@ -381,10 +381,11 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @detail_route(methods=['post'])
     def copy_document(self, request, pk=None):
         obj = self.get_object()
-        questions = obj.questions.all()
+        questions = [dq.question for dq in obj.documentquestion_set.all().order_by('order')]
                                        
         obj.pk = None
         obj.name = obj.name + ' (Cópia)'
+        obj.owner = self.request.user
         obj.save()
 
         new_questions = []
