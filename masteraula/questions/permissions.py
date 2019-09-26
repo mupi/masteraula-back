@@ -31,6 +31,8 @@ class DocumentsPermission(permissions.BasePermission):
             return True
 
     def has_object_permission(self, request, view, obj):
+        if view.action == 'copy_document':
+            return True
         if request.user.is_superuser:
            return True
         return obj.owner == request.user
