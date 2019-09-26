@@ -339,8 +339,8 @@ class QuestionSerializer(serializers.ModelSerializer):
             tags = [tag for tag in tags if tag.strip() != '']
             question.tags.set(*tags, clear=True)
 
+        question.alternatives.all().delete()
         if alternatives != None:
-            question.alternatives.all().delete()
             for alt in alternatives:
                 Alternative.objects.create(question=question, **alt)
                 
