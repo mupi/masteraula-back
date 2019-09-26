@@ -48,30 +48,29 @@ class DocxGeneratorAWS():
 
 
     def write_answers(self, questions):
-        self.html_file.write('<h2> Gabarito </h2>')
-        self.html_file.write('<table>')
-        self.html_file.write('<tr><th><b> Questão </b></th><th><b> Resposta </b></th></tr>')
-
+        self.html_file.write('<h2>Soluções</h2>')
         for question_counter, question in enumerate(questions):
-            self.html_file.write('<tr><td>{}</td>'.format(question_counter + 1))
+            self.html_file.write('<p><strong>{} - </strong>'.format(question_counter + 1))
 
             question_item = 'a'
             answered = False
             for answer in question.alternatives.all():
                 if answer.is_correct:
-                    self.html_file.write('<td>{}</td></tr>'.format(question_item))
+                    self.html_file.write(' {}</p>'.format(question_item))
                     answered = True
                 question_item = chr(ord(question_item) + 1)
+           
+            if question.resolution: 
+                if answered:
+                    self.html_file.write('<p>{} </p>'.format(question.resolution))
+                else:
+                    self.html_file.write('{} </p>'.format(question.resolution))
 
-            if not answered:
-                self.html_file.write('<td> Sem resposta </td></tr>')
-        
-        self.html_file.write('</table>')
-
+            if not question.resolution and not answered:
+                self.html_file.write('Sem reposta </p>')
 
     def close_html_file(self):
         self.html_file.close()
-
 
     def generate_document(self, document, answers=False):
         if not document.questions:
