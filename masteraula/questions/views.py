@@ -358,7 +358,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if self.action == 'add_question' or self.action == 'remove_question' or self.action == 'update' or self.action == 'partial_update':
             queryset = Document.objects.filter(owner=self.request.user, disabled=False)
         if self.action == 'copy_document':
-            queryset = Document.objects.filter(documentpublication__isnull=False, disabled=False)
+            queryset = Document.objects.get_questions_prefetched() \
+                .filter(Q(documentpublication__isnull=False)|Q(owner=self.request.user)).filter(disabled=False).distinct()
         return queryset
 
     def get_serializer_class(self):
