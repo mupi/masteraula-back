@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
+import uuid
 from django.db import models
 from django.db.models import Prefetch
 from django.utils.translation import ugettext_lazy as _
@@ -354,8 +355,13 @@ class Search(models.Model):
         verbose_name_plural = "Searches"
 
 class DocumentDownload(models.Model):
-
     user = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL)
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
     download_date = models.DateTimeField(auto_now_add=True)
     answers = models.BooleanField(default=False)
+
+class DocumentPublication(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    document = models.ForeignKey(Document, on_delete=models.CASCADE)
+    create_date = models.DateTimeField(auto_now_add=True)

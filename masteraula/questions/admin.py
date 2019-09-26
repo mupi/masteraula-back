@@ -6,7 +6,7 @@ from import_export.formats import base_formats
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
                      Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, Search,
-                     DocumentDownload)
+                     DocumentDownload, DocumentPublication)
 
 class SearchResource(resources.ModelResource):
     
@@ -194,6 +194,21 @@ class DocumentDownloadModelAdmin(ExportMixin, admin.ModelAdmin):
         )
         return [f for f in formats if f().can_export()]
 
+class DocumentPublicationModelAdmin(admin.ModelAdmin):
+    raw_id_fields = ('user', 'document')
+    list_display = ('id', 'document__name', 'user__name', 'create_date',)
+    search_fields = ['id', 'document__name', 'user__name', 'create_date']
+
+    list_per_page = 100
+
+    def user__name(self, obj):
+        if obj.user:
+            return obj.user.name
+        return ""
+
+    def document__name(self, obj):
+        return obj.document.name
+
 admin.site.register(Discipline, DisciplineModelAdmin)
 admin.site.register(Descriptor, DescriptorModelAdmin)
 admin.site.register(TeachingLevel, TeachingLeveltModelAdmin)
@@ -207,3 +222,4 @@ admin.site.register(Document, DocumentModelAdmin)
 admin.site.register(Header, HeaderModelAdmin)
 admin.site.register(Search, SearchModelAdmin)
 admin.site.register(DocumentDownload, DocumentDownloadModelAdmin)
+admin.site.register(DocumentPublication, DocumentPublicationModelAdmin)

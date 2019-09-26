@@ -580,6 +580,20 @@ class HeaderListSerializer(serializers.ModelSerializer):
             'name',
         )
 
+class DocumentDetailPublicationSerializer(serializers.ModelSerializer):
+    questions = DocumentQuestionListDetailSerializer(many=True, source='documentquestion_set', read_only=True)
+  
+    class Meta:
+        model = Document
+        fields = (
+            'id',
+            'name',
+            'questions',
+        )
+        extra_kwargs = {
+            'documentquestion_set' : { 'read_only' : True}
+        }
+
 class SearchSerializer(serializers.ModelSerializer):
     user = UserDetailsSerializer(read_only=True)
     difficulty = serializers.CharField()
