@@ -294,7 +294,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         alternatives = validated_data.pop('alternatives', None)
 
-        if 'resolution' not in validated_data:
+        if validated_data['resolution'] == None:
             if alternatives == None:
                 raise serializers.ValidationError(_("Should contain alternatives or resolution"))
 
@@ -324,7 +324,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         alternatives = validated_data.pop('alternatives', None)
 
-        if 'resolution' not in validated_data:
+        if validated_data['resolution'] == None:
             if alternatives == None:
                 raise serializers.ValidationError(_("Should contain alternatives or resolution"))
 
