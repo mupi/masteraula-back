@@ -323,23 +323,24 @@ class QuestionSerializer(serializers.ModelSerializer):
         # m2m
         tags = validated_data.pop('tags', None)
         alternatives = validated_data.pop('alternatives', None)
+        question = super().update(instance, validated_data)
 
-        if validated_data['resolution'] == None:
-            if alternatives == None:
-                raise serializers.ValidationError(_("Should contain alternatives or resolution"))
+        if 'resolution' in validated_data:
+            question.alternatives.all().delete()
+            if validated_data['resolution'] == None:
+                if alternatives == None:
+                    raise serializers.ValidationError(_("Should contain alternatives or resolution"))
 
         for key in list(validated_data.keys()):
             if key.endswith('_ids'):
                 validated_data[key[:-4]] = validated_data.pop(key)
             if key.endswith('_id'):
                 validated_data[key[:-3]] = validated_data.pop(key)
-        question = super().update(instance, validated_data)
 
         if tags != None:
             tags = [tag for tag in tags if tag.strip() != '']
             question.tags.set(*tags, clear=True)
 
-        question.alternatives.all().delete()
         if alternatives != None:
             for alt in alternatives:
                 Alternative.objects.create(question=question, **alt)
