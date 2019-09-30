@@ -250,7 +250,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         depth = 1
 
     def validate_alternatives(self, value):
-        if value != None:
+        if value:
             if len(value) < 3:
                 raise serializers.ValidationError(_("At least 3 alternatives"))
             number_of_corrects = 0
@@ -294,9 +294,8 @@ class QuestionSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         alternatives = validated_data.pop('alternatives', None)
 
-        if validated_data['resolution'] == None:
-            if alternatives == None:
-                raise serializers.ValidationError(_("Should contain alternatives or resolution"))
+        if not validated_data['resolution'] and not alternatives:
+            raise serializers.ValidationError(_("Should contain alternatives or resolution"))
 
         if 'year' not in validated_data or not validated_data['year']:
             validated_data['year'] =  datetime.date.today().year
@@ -323,25 +322,24 @@ class QuestionSerializer(serializers.ModelSerializer):
         # m2m
         tags = validated_data.pop('tags', None)
         alternatives = validated_data.pop('alternatives', None)
-        question = super().update(instance, validated_data)
 
         if 'resolution' in validated_data:
-            question.alternatives.all().delete()
-            if validated_data['resolution'] == None:
-                if alternatives == None:
-                    raise serializers.ValidationError(_("Should contain alternatives or resolution"))
+            if not alternatives and not validated_data['resolution']:
+                raise serializers.ValidationError(_("Should contain alternatives or resolution"))
 
         for key in list(validated_data.keys()):
             if key.endswith('_ids'):
                 validated_data[key[:-4]] = validated_data.pop(key)
             if key.endswith('_id'):
                 validated_data[key[:-3]] = validated_data.pop(key)
+        question = super().update(instance, validated_data)
 
         if tags != None:
             tags = [tag for tag in tags if tag.strip() != '']
             question.tags.set(*tags, clear=True)
 
         if alternatives != None:
+            question.alternatives.all().delete()
             for alt in alternatives:
                 Alternative.objects.create(question=question, **alt)
                 
