@@ -250,7 +250,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         depth = 1
 
     def validate_alternatives(self, value):
-        if value != None:
+        if value:
             if len(value) < 3:
                 raise serializers.ValidationError(_("At least 3 alternatives"))
             number_of_corrects = 0
@@ -294,9 +294,8 @@ class QuestionSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         alternatives = validated_data.pop('alternatives', None)
 
-        if 'resolution' not in validated_data:
-            if alternatives == None:
-                raise serializers.ValidationError(_("Should contain alternatives or resolution"))
+        if not validated_data['resolution'] and not alternatives:
+            raise serializers.ValidationError(_("Should contain alternatives or resolution"))
 
         if 'year' not in validated_data or not validated_data['year']:
             validated_data['year'] =  datetime.date.today().year
@@ -324,8 +323,8 @@ class QuestionSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags', None)
         alternatives = validated_data.pop('alternatives', None)
 
-        if 'resolution' not in validated_data:
-            if alternatives == None:
+        if 'resolution' in validated_data:
+            if not alternatives and not validated_data['resolution']:
                 raise serializers.ValidationError(_("Should contain alternatives or resolution"))
 
         for key in list(validated_data.keys()):
