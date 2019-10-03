@@ -3,13 +3,10 @@ from django.contrib import admin
 from import_export import resources, widgets
 from import_export.fields import Field
 from import_export.formats import base_formats
-from import_export.widgets import ManyToManyWidget
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
                      Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, Search,
                      DocumentDownload, DocumentPublication)
-
-from masteraula.users.models import User
 
 class SearchResource(resources.ModelResource):
     
@@ -55,7 +52,6 @@ class DocumentResource(resources.ModelResource):
         return '{}'.format(documentDownload.document.questions.count())
 
 class QuestionResource(resources.ModelResource):
-
     class Meta:
         model = Question
         exclude = ('tags', 'learning_objects')
@@ -164,6 +160,9 @@ class QuestionModelAdmin(ImportMixin, admin.ModelAdmin):
 
     def tag_list(self, obj):
         return u", ".join(o.name for o in obj.tags.all())
+    
+    def get_import_formats(self):
+        return [base_formats.JSON]
     
 class AlternativeModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('question', )
