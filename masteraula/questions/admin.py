@@ -1,4 +1,4 @@
-from import_export.admin import ExportMixin
+from import_export.admin import ExportMixin, ImportMixin
 from django.contrib import admin
 from import_export import resources, widgets
 from import_export.fields import Field
@@ -51,7 +51,38 @@ class DocumentResource(resources.ModelResource):
     def dehydrate_question_counter(self, documentDownload):
         return '{}'.format(documentDownload.document.questions.count())
 
+class QuestionResource(resources.ModelResource):
+    class Meta:
+        model = Question
+        exclude = ('tags', 'learning_objects')
 
+    def after_import_row(self, row, row_result, **kwargs):
+            instance = self._meta.model.objects.get(pk=row_result.object_id)
+            
+            if 'tags' in row:
+                for item in row['tags']:
+                    instance.tags.add(item)
+
+            if 'alternatives' in row:
+                is_correct = False
+                for i, item in enumerate(row['alternatives']):
+                    is_correct = False
+
+                    if int(row['resposta']) == (i + 1):
+                        is_correct = True
+                    Alternative.objects.create(text=item, is_correct=is_correct, question_id=instance.id)
+            
+            if 'learning_object' in row:
+                if not isinstance(row['learning_object'], int):
+                    learning_object = LearningObject.objects.create(owner_id=1, text=row['learning_object'])
+                                
+                    if row['object_source']:
+                        learning_object.source = row["object_source"]
+                    instance.learning_objects.add(learning_object.id)
+
+                else:
+                    instance.learning_objects.add(row['learning_object'])
+                
 class LearningObjectQuestionsInline(admin.TabularInline):
     model = Question.learning_objects.through
     raw_id_fields = ('question',)
@@ -114,7 +145,8 @@ class LearningObjectModelAdmin(admin.ModelAdmin):
     def tag_list(self, obj):
         return u", ".join(o.name for o in obj.tags.all())
 
-class QuestionModelAdmin(admin.ModelAdmin):
+class QuestionModelAdmin(ImportMixin, admin.ModelAdmin):
+    resource_class = QuestionResource
     raw_id_fields = ('author', 'learning_objects', 'topics')
     list_display = ('id', 'statement', 'year', 'source', 'tag_list','disabled',)
     search_fields = ['id', 'year', 'source', 'statement', 'tags__name']
@@ -128,6 +160,9 @@ class QuestionModelAdmin(admin.ModelAdmin):
 
     def tag_list(self, obj):
         return u", ".join(o.name for o in obj.tags.all())
+    
+    def get_import_formats(self):
+        return [base_formats.JSON]
     
 class AlternativeModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('question', )
