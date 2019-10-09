@@ -51,7 +51,7 @@ class MyUserAdminResource(resources.ModelResource):
         for i in itens:
             list_schools.append(i.name)
 
-        return(', '.join(list_disciplines))
+        return(', '.join(list_schools))
 
 class MyUserChangeForm(UserChangeForm):
     class Meta(UserChangeForm.Meta):
