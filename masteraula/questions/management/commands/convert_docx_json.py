@@ -76,10 +76,7 @@ class Command(BaseCommand):
                 alternatives = "".join(re.findall(reg, item.replace("\n", ""), flags=0)).strip().split(',')
 
                 if len(alternatives) < 2:
-                    print("entrei")
                     alternatives = ""
-
-                print(len(alternatives))
                    
                 answer = "".join(re.split('Resposta:', item.replace("\n", ""))[-1])
                 answer = "".join(re.findall(r"[0-9]", answer))
