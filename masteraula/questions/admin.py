@@ -68,8 +68,9 @@ class QuestionResource(resources.ModelResource):
                 for i, item in enumerate(row['alternatives']):
                     is_correct = False
 
-                    if int(row['resposta']) == (i + 1):
-                        is_correct = True
+                    if row['resposta']:
+                        if int(row['resposta']) == (i + 1):
+                            is_correct = True
                     Alternative.objects.create(text=item, is_correct=is_correct, question_id=instance.id)
             
             if 'learning_object' in row:

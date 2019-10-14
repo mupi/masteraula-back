@@ -12,6 +12,8 @@ import datetime
 class Command(BaseCommand):
     help = 'populate data from docx (teachers)'
 
+    #Example: python manage.py convert_docx_json teste_prof.docx img_dir Português
+
     def add_arguments(self, parser):
         parser.add_argument('filename')
         parser.add_argument('img_dir')
@@ -29,15 +31,15 @@ class Command(BaseCommand):
 
         text = docx2txt.process(filename, img_dir)
         obj = re.split('Objeto:', text)
+       
         reg = r"Nome:(.*?)Objeto:"
-        owner = "".join(re.findall(reg, text.replace("\n", ""), flags=0))
+        owner = "".join(re.findall(reg, text.replace("\n", ""), flags=0)).strip()
         obj.pop(0)
         jsdata = []
         count = 0
         null = None
 
         for o in obj:
-
             reg = r"Texto:(.*?)Imagem:"
             obj_text = "".join(re.findall(reg, o.replace("\n", ""), flags=0))
             reg = r"Imagem:(.*?)Tags:"
@@ -54,13 +56,13 @@ class Command(BaseCommand):
                 count = count + 1
                 name = [filename for filename in os.listdir(img_dir) if filename.startswith("image" + str(count))]
 
-                learning_object.image.save("image" + str(count), File(open(img_dir + "/" + "".join(name), 'rb')))
+                learning_object.image.save("img_" + owner + str(count), File(open(img_dir + "/" + "".join(name), 'rb')))
 
             for tag in obj_tags:
                 learning_object.tags.add("".join(tag))
                 learning_object.save()
 
-            question = re.split('Questão:', text)
+            question = re.split('Questão:', o)
             question.pop(0)
 
             for item in question:
@@ -73,26 +75,31 @@ class Command(BaseCommand):
                 reg = r"Alternativas:(.*?)Resposta:"
                 alternatives = "".join(re.findall(reg, item.replace("\n", ""), flags=0)).strip().split(',')
 
-                if len(alternatives) < 0:
-                    alternatives = null
+                if len(alternatives) < 2:
+                    print("entrei")
+                    alternatives = ""
 
+                print(len(alternatives))
+                   
                 answer = "".join(re.split('Resposta:', item.replace("\n", ""))[-1])
+                answer = "".join(re.findall(r"[0-9]", answer))
 
                 jsdata.append({"id": null,
-                               "author": 1,
-                               "statement": statement,
-                               "difficulty": "M",
-                               "resolution": resolution,
-                               "year": datetime.datetime.now().year,
-                               "disciplines": discipline.id,
-                               "teaching_levels": 4,
-                               "souce": owner,
-                               "tags": tags,
-                               "alternatives": alternatives,
-                               "resposta": answer,
-                               "learning_object": learning_object.id,
-                               "object_source": null
-                               })
+                                "author": 1,
+                                "authorship": owner,
+                                "statement": statement,
+                                "difficulty": "M",
+                                "resolution": resolution,
+                                "year": datetime.datetime.now().year,
+                                "disciplines": discipline.id,
+                                "teaching_levels": 4,
+                                "souce": "",
+                                "tags": tags,
+                                "alternatives": alternatives,
+                                "resposta": answer,
+                                "learning_object": learning_object.id,
+                                "object_source": null
+                                })   
 
-        with open('question.json', 'w', encoding='utf-8') as outfile:
+        with open('questions.json', 'w', encoding='utf-8') as outfile:
             json.dump(jsdata, outfile, ensure_ascii=False, indent=2)
