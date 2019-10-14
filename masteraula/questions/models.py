@@ -90,6 +90,7 @@ class Question(models.Model):
     )
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
+    authorship = models.CharField(max_length=255, null=True, blank=True)
     create_date = models.DateTimeField(auto_now_add=True)
 
     statement = models.TextField()
