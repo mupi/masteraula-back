@@ -4,6 +4,7 @@
 
 {{ object.year }}
 {{ object.source|prepare_document }}
+{{ object.authorship|prepare_document }}
 
 {% for tag in object.tags.all %}
     {{ tag.name|stripaccents }}

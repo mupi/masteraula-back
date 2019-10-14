@@ -87,6 +87,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         years = self.request.query_params.getlist('years', None)
         sources = self.request.query_params.getlist('sources', None)
         author = self.request.query_params.get('author', None)
+        authorship = self.request.query_params.get('authorship', None)
 
         params = {'disabled' : 'false'}
         if disciplines:
@@ -108,6 +109,8 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             params['source__in'] = sources
         if author:
             params['author__id'] = author
+        if authorship:
+            params['authorship__in'] = authorship
 
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
