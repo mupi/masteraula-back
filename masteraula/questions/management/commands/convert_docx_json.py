@@ -41,7 +41,7 @@ class Command(BaseCommand):
 
         for o in obj:
             reg = r"Texto:(.*?)Imagem:"
-            obj_text = "".join(re.findall(reg, o.replace("\n", ""), flags=0))
+            obj_text = "".join(re.findall(reg, o.replace("\n", ""), flags=0)).strip()
             reg = r"Imagem:(.*?)Tags:"
             obj_img = "".join(re.findall(reg, o.replace("\n", ""), flags=0))
 
@@ -49,15 +49,20 @@ class Command(BaseCommand):
             obj_tags = re.findall(reg, o.replace("\n", ""), flags=0)
             reg = r"Fonte:(.*?)Questão:"
             obj_source = "".join(re.findall(reg, o.replace("\n", ""), flags=0))
-
-            learning_object = LearningObject.objects.create(owner_id=1, source=obj_source, text=obj_text)
+            
+            if len(obj_text) > 0 or "sim" in obj_img.lower():
+                learning_object = LearningObject.objects.create(owner_id=1, source=obj_source, text=obj_text)
+                id_object = learning_object.id
+            else:
+                id_object = null
 
             if "sim" in obj_img.lower():
                 count = count + 1
                 name = [filename for filename in os.listdir(img_dir) if filename.startswith("image" + str(count))]
 
                 learning_object.image.save("img_" + owner + str(count), File(open(img_dir + "/" + "".join(name), 'rb')))
-
+                os.remove(img_dir + '/' + "".join(name))
+                
             for tag in obj_tags:
                 learning_object.tags.add("".join(tag))
                 learning_object.save()
@@ -94,7 +99,7 @@ class Command(BaseCommand):
                                 "tags": tags,
                                 "alternatives": alternatives,
                                 "resposta": answer,
-                                "learning_object": learning_object.id,
+                                "learning_object": id_object,
                                 "object_source": null
                                 })   
 
