@@ -36,11 +36,6 @@ class Migration(migrations.Migration):
             model_name='learningobject',
             name='type_object',
         ),
-        migrations.AlterField(
-            model_name='documentpublication',
-            name='user',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),
-        ),
         migrations.AddField(
             model_name='learningobject',
             name='object_types',
