@@ -222,6 +222,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'author',
+            'authorship',
             'create_date',
 
             'statement',
