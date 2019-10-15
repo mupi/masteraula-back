@@ -109,7 +109,7 @@ class SourceSerializer(serializers.ModelSerializer):
         )
 
 class LearningObjectSerializer(serializers.ModelSerializer):
-    tags = TagListSerializer(read_only=False, required=False) 
+    tags = TagListSerializer(read_only=False, required=False)
 
     class Meta:
         model = LearningObject
@@ -120,6 +120,7 @@ class LearningObjectSerializer(serializers.ModelSerializer):
             'image',
             'text',
             'tags',
+            'object_types',
         )
 
         extra_kwargs = {
@@ -127,6 +128,7 @@ class LearningObjectSerializer(serializers.ModelSerializer):
             'source': { 'read_only' : True },
             'image': { 'read_only' : True },
             'text': { 'read_only' : True },
+            'object_types': { 'read_only' : True },
         }            
 
     def create(self, validated_data):
