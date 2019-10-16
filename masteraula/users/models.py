@@ -71,3 +71,8 @@ class QuestionTransaction(models.Model):
     user = models.ForeignKey('Profile', on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     create_date = models.DateTimeField(auto_now_add=True)
+
+class Subscribe(models.Model):
+    user = models.ForeignKey('Profile', on_delete=models.CASCADE)
+    subscribe_date = models.DateTimeField(auto_now_add=True)
+    note = models.TextField(null=True, blank=True)

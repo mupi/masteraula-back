@@ -22,7 +22,7 @@ from rest_framework import serializers, exceptions
 
 from requests.exceptions import HTTPError
 
-from .models import User, Profile, City, State, School
+from .models import User, Profile, City, State, School, Subscribe
 from masteraula.questions.models import Discipline
 
 class CitySerializer(serializers.ModelSerializer):
@@ -139,7 +139,19 @@ class UserSerializer(serializers.ModelSerializer):
         instance.disciplines = disciplines
         instance.save()
         return instance
-            
+
+class SubscribeSerializer(serializers.ModelSerializer):      
+    user = UserSerializer(many = True, read_only=True)
+
+    class Meta:
+        model = Subscribe
+        fields = (
+            'id',
+            'user',
+            'subscribe_date',
+            'note',
+        )
+
 # django-rest-auth custom serializers
 class RegisterSerializer(auth_register_serializers.RegisterSerializer):
     name = serializers.CharField(required=True, validators=[
