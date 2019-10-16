@@ -22,7 +22,7 @@ from rest_framework import serializers, exceptions
 
 from requests.exceptions import HTTPError
 
-from .models import User, Profile, City, State, School, Subscribe
+from .models import User, Profile, City, State, School, Subscription
 from masteraula.questions.models import Discipline
 
 class CitySerializer(serializers.ModelSerializer):
@@ -140,15 +140,16 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-class SubscribeSerializer(serializers.ModelSerializer):      
+class SubscriptionSerializer(serializers.ModelSerializer):      
     user = UserSerializer(many = True, read_only=True)
 
     class Meta:
-        model = Subscribe
+        model = Subscription
         fields = (
             'id',
             'user',
-            'subscribe_date',
+            'start_date',
+            'expiration_date',
             'note',
         )
 
