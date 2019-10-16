@@ -30,6 +30,7 @@ from . import serializers as serializers
 
 import os
 import time
+import datetime
 import operator
 from functools import reduce
 
@@ -484,6 +485,15 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 os.remove(document_generator.docx_name + '.html')
 
             return response
+
+class DocumentDownloadViewSet(viewsets.ModelViewSet):
+    def get_queryset(self): 
+        date = datetime.datetime.now()
+        return DocumentDownload.objects.filter(user=self.request.user).filter(download_date__month=date.month)
+
+    def get_serializer_class(self):
+        return serializers.DocumentDownloadSerializer
+
 
 class DocumentPublicationViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
