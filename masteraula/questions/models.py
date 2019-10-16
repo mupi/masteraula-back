@@ -4,6 +4,7 @@ import uuid
 from django.db import models
 from django.db.models import Prefetch
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.postgres.fields import ArrayField
 
 from taggit.managers import TaggableManager
 
@@ -132,6 +133,13 @@ class LearningObjectManager(models.Manager):
         )
 
 class LearningObject(models.Model):
+    TYPE_CHOICES = (
+        ('I', _('Image')),
+        ('T', _('Text')),
+        ('A', _('Audio')),
+        ('V', _('Video')),
+    )
+
     def get_upload_file_name(learning_object,filename):
         folder_name = learning_object.folder_name if learning_object.folder_name else 'default'
         return u'masteraula/%s/%s' % (folder_name, filename)
@@ -143,7 +151,9 @@ class LearningObject(models.Model):
     image = models.ImageField(null=True, blank=True, upload_to=get_upload_file_name)
     folder_name = models.CharField(max_length=100, null=True, blank=True)
     text = models.TextField(null=True, blank=True)
-    type_object = models.TextField(null=True, blank=True)
+    object_types = ArrayField(
+        models.CharField(max_length=1, choices = TYPE_CHOICES, blank=True)
+    )
 
     tags = TaggableManager(blank=True)
 

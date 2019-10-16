@@ -271,8 +271,7 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         page = self.request.GET.get('page', None)
         text = self.request.GET.get('text', None)
-        is_image = self.request.GET.get('is_image', None)
-        is_text = self.request.GET.get('is_text', None)
+        filters = self.request.GET.getlist('filters', None)
 
         try:
             page_no = int(self.request.GET.get('page', 1))
@@ -292,10 +291,8 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
             raise FieldError("Invalid search text")
 
         params = {}
-        if is_image:
-            params['is_image'] = True
-        if is_text:
-            params['is_text'] = True
+        if filters:
+            params['object_types__contains'] = filters
 
         start_offset = (page_no - 1) * 16
 
@@ -328,7 +325,7 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         learning_object = get_object_or_404(self.get_queryset(), pk=pk)
-        serializer_learningobject = self.serializer_class(learning_object)
+        serializer_learningobject = self.serializer_class(learning_object, context={'request': request})
 
         questions_object = Question.objects.filter(learning_objects__id=pk).filter(disabled=False).order_by('-create_date')
         serializer_questions = serializers.QuestionSerializer(questions_object, many = True)
@@ -340,14 +337,10 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = LearningObject.objects.all().order_by('id')
-        is_image = self.request.query_params.get('is_image', None)
-        is_text = self.request.query_params.get('is_text', None)
+        filters = self.request.query_params.getlist('filters', None)
        
-        if is_image:
-            queryset = queryset.filter(image__isnull=False).exclude(image='')
-
-        if is_text:
-            queryset = queryset.filter(text__isnull=False).exclude(text='')
+        if filters:
+            queryset = queryset.filter(object_types__contains=filters)
             
         return queryset.filter()
 
