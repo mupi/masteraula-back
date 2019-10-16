@@ -25,7 +25,7 @@ from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
-from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission
+from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission
 from . import serializers as serializers
 
 import os
@@ -455,7 +455,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    @detail_route(methods=['get'])
+    @detail_route(methods=['get'], permission_classes=[DocumentDownloadPermission, ])
     def generate_list(self, request, pk=None):
         """
         Generate a docx file containing all the list.
