@@ -371,6 +371,9 @@ class DocumentDownload(models.Model):
     download_date = models.DateTimeField(auto_now_add=True)
     answers = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ['id']
+
 class DocumentPublication(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
