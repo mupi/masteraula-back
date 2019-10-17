@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.http import HttpResponse, FileResponse, HttpResponseBadRequest
 from haystack.query import SearchQuerySet, SQ, AutoQuery
+from haystack.inputs import Clean
 
 from rest_framework import (generics, response, viewsets, status, mixins, 
                     exceptions, pagination, permissions)
@@ -10,17 +11,15 @@ from rest_framework.response import Response
 
 from django.db.models import Count, Q, Case, When
 from django.shortcuts import get_object_or_404
-from django.core.exceptions import FieldError
 
 from taggit.models import Tag
 
 from masteraula.users.models import User
-from masteraula.questions.templatetags.search_helpers import stripaccents
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication)
 
-from .templatetags.search_helpers import stripaccents
+from .templatetags.search_helpers import prepare_document
 from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
@@ -75,11 +74,12 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         text = self.request.GET.get('text', None)
         if not text:
-            raise FieldError("Invalid search text")
-        text = stripaccents(text)
+            raise exceptions.ValidationError("Invalid search text")
+        text = prepare_document(text)
         text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
+        
         if not text:
-            raise FieldError("Invalid search text")
+            raise exceptions.ValidationError("Invalid search text")
 
         disciplines = self.request.query_params.getlist('disciplines', None)
         teaching_levels = self.request.query_params.getlist('teaching_levels', None)
@@ -113,20 +113,20 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             params['authorship__in'] = authorship
 
         # The following queries are to apply the weights of haystack boost
-        queries = [SQ(tags=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         query = queries.pop()
         for item in queries:
             query |= item
-        queries = [SQ(topics=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        queries = [SQ(topics=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         for item in queries:
             query |= item
-        queries = [SQ(statement=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        queries = [SQ(statement=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         for item in queries:
             query |= item
 
         search_queryset = SearchQuerySet().models(Question).filter_and(**params)
-        search_queryset = search_queryset.filter(SQ(content=AutoQuery(text)) | (
-            SQ(content=AutoQuery(text)) & query
+        search_queryset = search_queryset.filter(SQ(content=Clean(text)) | (
+            SQ(content=Clean(text)) & query
         ))
 
         #Salvar os dados de busca	        
@@ -254,20 +254,14 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.LearningObjectSerializer
     permission_classes = (permissions.IsAuthenticated, LearningObjectPermission, )
 
-    def gen_queryset(self, search_qs, page_start):
-        search_qs = search_qs.load_all()
-        queryset = [None] * len(search_qs)
-        count = 0
-        results = search_qs[page_start:page_start+16]
-        for i in range(page_start, min(page_start + 16, len(queryset))):
-            if len(results) == 0:
-                break
-            res = results.pop(0)
-            queryset[i] = res.object
-            count += 1
-            
-        return queryset[:count]
-    
+    def paginate_queryset(self, search_queryset):
+        search_queryset = search_queryset.load_all()
+
+        page = super().paginate_queryset(search_queryset)
+        queryset = [res.object for res in page]
+
+        return queryset
+
     def get_queryset(self):
         page = self.request.GET.get('page', None)
         text = self.request.GET.get('text', None)
@@ -276,19 +270,19 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
         try:
             page_no = int(self.request.GET.get('page', 1))
         except (TypeError, ValueError):
-            raise FieldError("Not a valid number for page.")
+            raise exceptions.ValidationError("Not a valid number for page.")
 
         if page_no < 1:
-            raise FieldError("Pages should be 1 or greater.")
+            raise exceptions.ValidationError("Pages should be 1 or greater.")
 
         if not text:
-            raise FieldError("Invalid search text")
+            raise exceptions.ValidationError("Invalid search text")
 
-        text = stripaccents(text)
+        text = prepare_document(text)
         text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
         
         if not text:
-            raise FieldError("Invalid search text")
+            raise exceptions.ValidationError("Invalid search text")
 
         params = {}
         if filters:
@@ -297,22 +291,23 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
         start_offset = (page_no - 1) * 16
 
         # The following queries are to apply the weights of haystack boost
-        queries = [SQ(tags=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         query = queries.pop()
         for item in queries:
             query |= item
-        queries = [SQ(source=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        queries = [SQ(source=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         for item in queries:
             query |= item
-        queries = [SQ(text_object=AutoQuery(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        queries = [SQ(text_object=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         for item in queries:
             query |= item
 
-        search_queryset = SearchQuerySet().models(LearningObject).filter(**params).filter(SQ(content=AutoQuery(text)) | (
-            SQ(content=AutoQuery(text)) & query
+        search_queryset = SearchQuerySet().models(LearningObject).filter(**params).filter(SQ(content=Clean(text)) | (
+            SQ(content=Clean(text)) & query
         ))
 
-        return self.gen_queryset(search_queryset, start_offset)
+        # return self.gen_queryset(search_queryset, start_offset)
+        return search_queryset
 
 class LearningObjectViewSet(viewsets.ModelViewSet):
     queryset = LearningObject.objects.all()

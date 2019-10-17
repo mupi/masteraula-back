@@ -350,7 +350,7 @@ class Header(models.Model):
 
 class Search(models.Model):
    
-    term = models.CharField(max_length=100, null=False, blank=False)
+    term = models.TextField(null=False, blank=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE) 
 
     disciplines = models.ManyToManyField(Discipline, blank=True)
