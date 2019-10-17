@@ -87,6 +87,7 @@ class UserSerializer(serializers.ModelSerializer):
     disciplines = DisciplineSerializer(many = True, required = False)
     groups = serializers.SerializerMethodField()
     socialaccounts = serializers.SerializerMethodField()
+    subscription = serializers.SerializerMethodField()
     
     def get_groups(self, obj):
         groups = [group.name for group in obj.groups.all()]
@@ -96,7 +97,14 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_socialaccounts(self, obj):
         return SocialAccountSerializer(SocialAccount.objects.filter(user=obj), many=True).data
-    
+
+    def get_subscription(self, obj):
+        subscription = Subscription.objects.filter(user=obj)
+
+        if subscription:
+            return True
+        return False
+        
     class Meta:
         model = User
         fields = (
@@ -111,6 +119,7 @@ class UserSerializer(serializers.ModelSerializer):
             'profile_pic',
             'groups',
             'socialaccounts',
+            'subscription',
         )
         read_only_fields = ('username', 'email', 'groups'),
         extra_kwargs = {
