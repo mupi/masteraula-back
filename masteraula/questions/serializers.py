@@ -22,7 +22,7 @@ from masteraula.users.models import User, Profile
 from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Question,
-                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, LearningObject, Search)
+                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, LearningObject, Search, DocumentDownload)
 
 import unicodedata
 import ast
@@ -580,6 +580,18 @@ class HeaderListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
+        )
+
+class DocumentDownloadSerializer(serializers.ModelSerializer):
+    document = ListDocumentQuestionSerializer()
+  
+    class Meta:
+        model = DocumentDownload
+        fields = (
+            'id',
+            'document',
+            'download_date',
+            'answers',
         )
 
 class DocumentDetailPublicationSerializer(serializers.ModelSerializer):

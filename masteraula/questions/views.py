@@ -24,11 +24,12 @@ from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
-from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission
+from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission
 from . import serializers as serializers
 
 import os
 import time
+import datetime
 import operator
 from functools import reduce
 
@@ -449,7 +450,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    @detail_route(methods=['get'])
+    @detail_route(methods=['get'], permission_classes=[DocumentDownloadPermission, ])
     def generate_list(self, request, pk=None):
         """
         Generate a docx file containing all the list.
@@ -479,6 +480,15 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 os.remove(document_generator.docx_name + '.html')
 
             return response
+
+class DocumentDownloadViewSet(viewsets.ModelViewSet):
+    def get_queryset(self): 
+        date = datetime.datetime.now()
+        return DocumentDownload.objects.filter(user=self.request.user).filter(download_date__month=date.month)
+
+    def get_serializer_class(self):
+        return serializers.DocumentDownloadSerializer
+
 
 class DocumentPublicationViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 

@@ -97,3 +97,8 @@ class MyUserAdmin(ExportMixin, AuthUserAdmin):
                 base_formats.HTML,
         )
         return [f for f in formats if f().can_export()]
+
+@admin.register(Subscription)
+class SubscriptionModelAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'start_date', 'expiration_date')
+    search_fields = ['id', 'user',]

@@ -6,6 +6,9 @@ from django.core import validators
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
+import datetime
+from dateutil import relativedelta
+
 
 #populated by fixture
 class State (models.Model):
@@ -71,3 +74,12 @@ class QuestionTransaction(models.Model):
     user = models.ForeignKey('Profile', on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     create_date = models.DateTimeField(auto_now_add=True)
+
+def next_month():
+    return datetime.datetime.now() + relativedelta.relativedelta(months=1)
+
+class Subscription(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    start_date = models.DateTimeField(auto_now_add=True)
+    expiration_date = models.DateTimeField(default=next_month)
+    note = models.TextField(null=True, blank=True)

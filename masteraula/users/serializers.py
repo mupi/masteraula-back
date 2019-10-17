@@ -22,7 +22,7 @@ from rest_framework import serializers, exceptions
 
 from requests.exceptions import HTTPError
 
-from .models import User, Profile, City, State, School
+from .models import User, Profile, City, State, School, Subscription
 from masteraula.questions.models import Discipline
 
 class CitySerializer(serializers.ModelSerializer):
@@ -87,6 +87,7 @@ class UserSerializer(serializers.ModelSerializer):
     disciplines = DisciplineSerializer(many = True, required = False)
     groups = serializers.SerializerMethodField()
     socialaccounts = serializers.SerializerMethodField()
+    subscription = serializers.SerializerMethodField()
     
     def get_groups(self, obj):
         groups = [group.name for group in obj.groups.all()]
@@ -96,7 +97,14 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_socialaccounts(self, obj):
         return SocialAccountSerializer(SocialAccount.objects.filter(user=obj), many=True).data
-    
+
+    def get_subscription(self, obj):
+        subscription = Subscription.objects.filter(user=obj)
+
+        if subscription:
+            return True
+        return False
+        
     class Meta:
         model = User
         fields = (
@@ -111,6 +119,7 @@ class UserSerializer(serializers.ModelSerializer):
             'profile_pic',
             'groups',
             'socialaccounts',
+            'subscription',
         )
         read_only_fields = ('username', 'email', 'groups'),
         extra_kwargs = {
@@ -139,7 +148,20 @@ class UserSerializer(serializers.ModelSerializer):
         instance.disciplines = disciplines
         instance.save()
         return instance
-            
+
+class SubscriptionSerializer(serializers.ModelSerializer):      
+    user = UserSerializer(many = True, read_only=True)
+
+    class Meta:
+        model = Subscription
+        fields = (
+            'id',
+            'user',
+            'start_date',
+            'expiration_date',
+            'note',
+        )
+
 # django-rest-auth custom serializers
 class RegisterSerializer(auth_register_serializers.RegisterSerializer):
     name = serializers.CharField(required=True, validators=[
