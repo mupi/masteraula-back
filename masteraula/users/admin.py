@@ -102,3 +102,4 @@ class MyUserAdmin(ExportMixin, AuthUserAdmin):
 class SubscriptionModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'start_date', 'expiration_date')
     search_fields = ['id', 'user',]
+    raw_id_fields = ('user',)
