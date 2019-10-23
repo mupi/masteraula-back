@@ -461,7 +461,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
         try:
             flags = request.query_params
             answers = 'answers' in flags and flags['answers'] == 'True'
-            document_generator.generate_document(document, answers)
+            sources = 'sources' in flags and flags['sources'] == 'True'
+
+            document_generator.generate_document(document, answers, sources)
 
             DocumentDownload.objects.create(user=self.request.user, 
                                             document=document, 

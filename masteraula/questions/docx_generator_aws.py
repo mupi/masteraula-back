@@ -34,9 +34,16 @@ class DocxGeneratorAWS():
                 self.html_file.write('<p>%s</p>' % learning_object.source)
 
 
-    def write_question(self, question, question_counter):
-        self.html_file.write('<h3>Questão %d</h3>\n' % (question_counter + 1))
+    def write_question(self, question, question_counter, source=True):
+        if source and question.source:
+            if question.year:
+                header = '<h3>Questão {} ({} | {})</h3>\n'.format(question_counter + 1, question.source, question.year)
+            else:
+                header = '<h3>Questão {} ({})</h3>\n'.format(question_counter + 1, question.source)
+        else:
+            header = '<h3>Questão {}</h3>\n'.format(question_counter + 1)
 
+        self.html_file.write(header)
         self.html_file.write(question.statement)
     
 
@@ -72,7 +79,7 @@ class DocxGeneratorAWS():
     def close_html_file(self):
         self.html_file.close()
 
-    def generate_document(self, document, answers=False):
+    def generate_document(self, document, answers=False, sources=True):
         if not document.questions:
             raise exceptions.ValidationError('Can not generate an empty list')
 
@@ -110,7 +117,7 @@ class DocxGeneratorAWS():
                     
                     self.write_learning_objects(current_learning_objects, first_question_counter, last_question_counter)
                         
-            self.write_question(question, question_counter)
+            self.write_question(question, question_counter, sources)
 
             self.write_alternatives(question)
 
