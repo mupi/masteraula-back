@@ -460,8 +460,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
 
         try:
             flags = request.query_params
-            answers = 'answers' in flags and flags['answers'] == 'True'
-            sources = 'sources' in flags and flags['sources'] == 'True'
+            answers = 'answers' in flags and flags['answers'] == 'true'
+            sources = 'sources' in flags and flags['sources'] == 'true'
 
             document_generator.generate_document(document, answers, sources)
 
