@@ -1,17 +1,23 @@
 # -*- coding: utf-8 -*-
-from django.http import HttpResponse, FileResponse, HttpResponseBadRequest
+import os
+import time
+import datetime
+import operator
+
+from functools import reduce
+
 from haystack.query import SearchQuerySet, SQ, AutoQuery
 from haystack.inputs import Clean
 
 from rest_framework import (generics, response, viewsets, status, mixins, 
                     exceptions, pagination, permissions)
-
 from rest_framework.decorators import detail_route, list_route, permission_classes
 from rest_framework.response import Response
 
 from django.db.models import Count, Q, Case, When
+from django.http import HttpResponse, FileResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
-
+from django.template.response import TemplateResponse
 from taggit.models import Tag
 
 from masteraula.users.models import User
@@ -26,12 +32,6 @@ from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
 from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission
 from . import serializers as serializers
-
-import os
-import time
-import datetime
-import operator
-from functools import reduce
 
 current_milli_time = lambda: int(round(time.time() * 1000))
 
@@ -88,7 +88,6 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         years = self.request.query_params.getlist('years', None)
         sources = self.request.query_params.getlist('sources', None)
         author = self.request.query_params.get('author', None)
-        authorship = self.request.query_params.get('authorship', None)
 
         params = {'disabled' : 'false'}
         if disciplines:
@@ -110,8 +109,6 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             params['source__in'] = sources
         if author:
             params['author__id'] = author
-        if authorship:
-            params['authorship__in'] = authorship
 
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
@@ -510,6 +507,16 @@ class DocumentPublicationViewSet(mixins.RetrieveModelMixin, viewsets.GenericView
                 question['question'].pop('alternatives', None)
     
         return Response(document_data)
+
+    @detail_route(methods=['get'])
+    def share(self, request, pk=None):
+        """
+        Generate a docx file containing all the list.
+        """
+        publication = self.get_object()
+        document = Document.objects.get_questions_prefetched().get(id=publication.document_id)
+
+        return TemplateResponse(request, 'questions/share_publication.html', {'document' : document, 'slug': publication.id }) 
 
 class HeaderViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.HeaderSerializer

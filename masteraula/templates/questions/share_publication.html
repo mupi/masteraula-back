@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block metatags %}
+<meta property="og:url"           content="https://masteraula.com.br/view-list/{{slug}}" />
+<meta property="og:type"          content="website" />
+<meta property="og:title"         content="Masteraula" />
+<meta property="og:description"   content="{{ document.name }}" />
+<meta property="og:image"         content="{% static 'images/coruja-avatar.png' %}" />
+<!-- <script>window.location.href='https://masteraula.com.br/view-list/{{slug}}' </script> -->
+{% endblock metatags %}
+
+{% block content %}
+<marquee>oi</marquee>
+<img src="{% static 'images/coruja-avatar.png' %}" />
+{% endblock content %}
