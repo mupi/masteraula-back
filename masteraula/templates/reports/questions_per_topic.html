@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h1>Questões por tópico</h1>
+<br>
+
+<form method="POST">
+    {% csrf_token %}
+    {% for discipline in disciplines %}
+        <input type="checkbox" name="disciplines" value="{{discipline.id}}">
+            {{discipline.name}}
+        </input><br>
+    {% endfor %}
+    <br>
+    <input type="checkbox" name="empty_only" value="1"> Somente tópicos sem questões (folhas)
+    <input type="submit" value="Enviar">
+</form>
+
+{% for discipline_topic in disciplines_topics %}
+    <h1>{{ discipline_topic.discipline.name }}</h1>
+    <ul>
+    {% for topic in discipline_topic.topics %}
+        <li>{{ topic.name }} | {{ counter|get_item:topic.id }}</li>
+        <ul>
+        {% for subtopic in childs|get_item:topic.id %}
+            <li>{{ subtopic.name }} | {{ counter|get_item:subtopic.id }}</li>
+            <ul>
+                {% for subsubtopic in childs|get_item:subtopic.id %}
+                    <li>{{ subsubtopic.name }} | {{ counter|get_item:subsubtopic.id }}</li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+        </ul>
+    {% endfor %}
+    </ul>
+{% endfor %}
+<br>
+
+{% endblock %}
