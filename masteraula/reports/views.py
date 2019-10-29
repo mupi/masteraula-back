@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.shortcuts import redirect, render
 
 from django.views import View
@@ -12,7 +12,7 @@ from django.utils.decorators import method_decorator
 
 from django.contrib.auth.mixins import UserPassesTestMixin
 
-from masteraula.questions.models import Question, Discipline, Document, LearningObject, User, Alternative, DocumentDownload
+from masteraula.questions.models import Question, Discipline, Document, LearningObject, User, Alternative, DocumentDownload, Topic
 from masteraula.users.models import School
 
 from .serializers import QuestionStatementEditSerializer, LearningObjectEditSerializer, AlternativeEditSerializer
@@ -21,6 +21,11 @@ from bs4 import BeautifulSoup as bs
 
 import json
 import re
+
+from django.template.defaulttags import register
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
 
 class SuperuserMixin(UserPassesTestMixin):
     def test_func(self):
@@ -59,22 +64,6 @@ class DisciplineReportsBaseView(SuperuserMixin, TemplateView):
         context['disciplines'] = Discipline.objects.all()
         context['header'] =  self.header if hasattr(self, 'header') else 'Relatório'
         return context
-
-    def post(self, request, *args, **kwargs):
-        context = self.get_context_data(**kwargs)
-        disciplines = request.POST.getlist('disciplines',[])
-        
-        if disciplines:
-            results = self.queryset(disciplines)
-        if disciplines and results:
-            ids, texts = results
-            texts = [process_tags_br(t) for t in texts]
-        else:
-            return super().render_to_response(context)
-        
-        ids, texts, clean = self.report_function(ids, texts)
-        context['data'] = prepare_texts_data(ids, texts, clean)
-        return super().render_to_response(context)
 
 def prepare_texts_data(ids, texts, clean, all_status=None):
     data = []
@@ -354,3 +343,109 @@ class AlternativeUpdateView(SuperuserMixin, View):
             return JsonResponse( {"success": "true"}, status=200)
 
         return HttpResponseBadRequest('Invalid data')
+
+class QuestionPerTopicView(DisciplineReportsBaseView):
+    login_url = '/admin/login/'
+    template_name = 'reports/questions_per_topic.html'
+
+    def post(self, request, *args, **kwargs):
+        disciplines = [int(d) for d in request.POST.getlist('disciplines', [])]
+        empty_only = request.POST.get('empty_only', None)
+        
+        topics = Topic.objects.all().select_related('parent').prefetch_related('childs')
+        if disciplines:
+            topics = topics.filter(discipline__id__in=disciplines)
+
+        roots = Topic.objects.filter(parent__isnull=True)
+        if disciplines:
+            roots = roots.filter(discipline__id__in=disciplines)
+
+        leafs = Topic.objects.filter(childs__isnull=True).only('id')
+        if disciplines:
+            leafs = leafs.filter(discipline__id__in=disciplines)
+
+        all_topics = {} 
+        counter = {}
+
+        for topic in topics:
+            all_topics[topic.id] = topic
+            counter[topic.id] = 0
+
+        questions = Question.objects.filter(disabled=False).prefetch_related(Prefetch('topics', queryset=Topic.objects.only('discipline__id')))
+        if disciplines:
+            questions = questions.filter(topics__discipline__id__in=disciplines).distinct()
+
+        for question in questions:
+            topics = question.topics.all()
+            
+            for topic in topics:
+                if disciplines and topic.discipline_id not in disciplines:
+                    continue
+                topic = all_topics[topic.id]
+
+                if topic.id in counter:
+                    counter[topic.id] += 1
+                else:
+                    counter[topic.id] = 1
+
+        childs = {}
+        if empty_only:
+            for leaf in [leaf.id for leaf in leafs]:
+                if counter[leaf]:
+                    continue
+                topic = all_topics[leaf]
+
+                while topic.parent:
+                    if topic.parent_id not in childs:
+                        childs[topic.parent_id] = []
+                    if topic in childs[topic.parent_id]:
+                        break
+                    childs[topic.parent_id].append(topic)
+                    topic = all_topics[topic.parent_id]
+        else:
+            roots_queue = [root.id for root in roots]
+
+            while roots_queue:
+                curr = all_topics[roots_queue.pop(0)]
+                if curr.parent:
+                    childs[curr.parent.id].append(curr)
+                
+                for child in curr.childs.all():
+                    roots_queue.append(child.id)
+                
+                childs[curr.id] = []
+
+        leafs_queue = [leaf.id for leaf in leafs]
+        visited = {}
+        while(leafs_queue):
+            
+            topic = all_topics[leafs_queue.pop(0)]
+            if topic.id in visited:
+                continue
+            visited[topic.id] = True
+
+            if topic.parent:
+                counter[topic.parent_id] += counter[topic.id]
+                leafs_queue.append(topic.parent_id)
+
+        disciplines_topics_ids = {}
+        disciplines_topics = []
+
+        for root_topic in roots:
+            if root_topic.discipline_id in disciplines_topics_ids:
+                disciplines_topics_ids[root_topic.discipline_id].append(root_topic)
+            else:
+                disciplines_topics_ids[root_topic.discipline_id] = [root_topic]
+
+        for discipline in Discipline.objects.filter(id__in=disciplines_topics_ids.keys()):
+            disciplines_topics.append({
+                'discipline' : discipline,
+                'topics' : disciplines_topics_ids[discipline.id]
+            })
+
+        context= self.get_context_data(**kwargs)
+        context['counter'] = counter
+        context['disciplines_topics'] = disciplines_topics
+        context['childs'] = childs
+
+        return super().render_to_response(context)
