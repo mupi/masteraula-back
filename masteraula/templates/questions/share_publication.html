@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block metatags %}
+<meta property="fb:app_id"        content="445706276263617" />
+<meta property="og:url"           content="https://api.masteraula.com.br/document_publication/{{slug}}/share/" />
+<meta property="og:type"          content="website" />
+<meta property="og:description"   content="Com o Masteraula você gera uma prova em .doc com poucos cliques" />
+<meta property="og:title"         content="Masteraula | Prova: {{ document.name }}" />
+<meta property="og:image"         content="{% static 'images/coruja-310x310.png' %}" />
+<meta property="og:image:width"   content="310" />
+<meta property="og:image:height"  content="310" />
+<script>window.location.href='https://masteraula.com.br/view-list/{{slug}}' </script>
+{% endblock metatags %}
+
+{% block content %}
+{% endblock content %}
