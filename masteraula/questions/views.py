@@ -325,7 +325,7 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
 
         return_data = serializer_learningobject.data
         return_data['questions'] = serializer_questions.data
-        
+
         return Response(return_data)
 
     def get_queryset(self):

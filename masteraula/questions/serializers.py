@@ -110,6 +110,7 @@ class SourceSerializer(serializers.ModelSerializer):
 
 class LearningObjectSerializer(serializers.ModelSerializer):
     tags = TagListSerializer(read_only=False, required=False)
+    questions_quantity = serializers.SerializerMethodField()
 
     class Meta:
         model = LearningObject
@@ -121,6 +122,7 @@ class LearningObjectSerializer(serializers.ModelSerializer):
             'text',
             'tags',
             'object_types',
+            'questions_quantity',
         )
 
         extra_kwargs = {
@@ -130,6 +132,10 @@ class LearningObjectSerializer(serializers.ModelSerializer):
             'text': { 'read_only' : True },
             'object_types': { 'read_only' : True },
         }            
+    
+    def get_questions_quantity(self, obj):
+        questions = Question.objects.filter(learning_objects__id=obj.id).filter(disabled=False)
+        return questions.count()
 
     def create(self, validated_data):
         tags = validated_data.pop('tags', None)
