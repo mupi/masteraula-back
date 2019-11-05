@@ -6,7 +6,7 @@ from import_export.formats import base_formats
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
                      Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, Search,
-                     DocumentDownload, DocumentPublication)
+                     DocumentDownload, DocumentPublication, Synonym)
 
 class SearchResource(resources.ModelResource):
     
@@ -43,7 +43,7 @@ class DocumentResource(resources.ModelResource):
         widgets = {
                 'download_date': {'format': '%d/%m/%Y'},
                 }
-                
+           
 
     def dehydrate_document(self, documentDownload):
         return documentDownload.document.name
@@ -97,6 +97,9 @@ class AlternativesInline(admin.TabularInline):
 class TopicsInline(admin.TabularInline):
     model = Topic
 
+class SynonymInline(admin.TabularInline):
+    model = Synonym.topics.through
+
 class DisciplineModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'name',)
     search_fields = ['id', 'name',]
@@ -129,6 +132,14 @@ class TopicModelAdmin(admin.ModelAdmin):
     list_per_page = 100
 
     inlines = [TopicsInline,]
+
+class SynonymModelAdmin(admin.ModelAdmin):
+    list_display = ('id', 'term',)
+    search_fields = ['id', 'term',]
+    list_per_page = 100
+    exclude = ('topics',)
+
+    inlines = [SynonymInline,]
 
 class LearningObjectModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', )
@@ -258,3 +269,4 @@ admin.site.register(Header, HeaderModelAdmin)
 admin.site.register(Search, SearchModelAdmin)
 admin.site.register(DocumentDownload, DocumentDownloadModelAdmin)
 admin.site.register(DocumentPublication, DocumentPublicationModelAdmin)
+admin.site.register(Synonym, SynonymModelAdmin)

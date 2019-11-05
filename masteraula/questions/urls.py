@@ -26,6 +26,7 @@ router.register(r'headers', views.HeaderViewSet, base_name='headers')
 router.register(r'learning_object/search', views.LearningObjectSearchView, base_name='learning_object-search')
 router.register(r'learning_object', views.LearningObjectViewSet, base_name='learning_object')
 router.register(r'document_download', views.DocumentDownloadViewSet, base_name='document_download')
+router.register(r'synonym_topic', views.SynonymViewSet, base_name='synonym_topic')
 
 urlpatterns = [
     url(r'^', include(router.urls)),

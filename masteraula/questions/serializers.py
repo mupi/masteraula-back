@@ -22,7 +22,7 @@ from masteraula.users.models import User, Profile
 from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Question,
-                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, LearningObject, Search, DocumentDownload)
+                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, LearningObject, Search, DocumentDownload, Synonym)
 
 import unicodedata
 import ast
@@ -608,6 +608,16 @@ class DocumentDetailPublicationSerializer(serializers.ModelSerializer):
             'documentquestion_set' : { 'read_only' : True}
         }
 
+class SynonymSerializer(serializers.ModelSerializer):
+    topics = TopicSimpleSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Synonym
+        fields = (
+             'term',
+             'topics',
+        )
+    
 class SearchSerializer(serializers.ModelSerializer):
     user = UserDetailsSerializer(read_only=True)
     difficulty = serializers.CharField()
