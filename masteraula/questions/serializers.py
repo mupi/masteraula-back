@@ -134,7 +134,7 @@ class LearningObjectSerializer(serializers.ModelSerializer):
         }            
     
     def get_questions_quantity(self, obj):
-        questions = Question.objects.filter(learning_objects__id=obj.id).filter(disabled=False).order_by('-create_date')
+        questions = Question.objects.filter(learning_objects__id=obj.id).filter(disabled=False)
         return questions.count()
 
     def create(self, validated_data):
