@@ -12,7 +12,8 @@ class SearchResource(resources.ModelResource):
     
     class Meta:
         model = Search
-        fields = ('id','user', 'term', 'disciplines', 'teaching_levels', 'difficulty', 'source', 'year', 'date_search')
+        fields = ('id','user', 'user__name', 'term', 'disciplines', 'teaching_levels', 'difficulty', 'source', 'year', 'date_search')
+        export_order = fields
         widgets = {
                 'date_search': {'format': '%d/%m/%Y'},
                 }
