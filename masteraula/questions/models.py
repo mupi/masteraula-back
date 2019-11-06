@@ -51,6 +51,20 @@ class Topic(models.Model):
     def __str__(self):
         return str(self.name)
 
+class SynonymManager(models.Manager):
+    topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')
+    )
+
+class Synonym(models.Model):
+    term =  models.CharField(max_length=100, null=False, blank=False)
+    topics = models.ManyToManyField(Topic)
+
+    objects = SynonymManager()
+
+    def __str__(self):
+        return str(self.term)
+
 class Descriptor(models.Model):
     name = models.CharField(max_length=100, null=False, blank=False)
     description = models.TextField(null=True, blank=True)

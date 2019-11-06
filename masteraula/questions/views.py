@@ -23,7 +23,7 @@ from taggit.models import Tag
 from masteraula.users.models import User
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
-                    Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication)
+                    Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, Synonym)
 
 from .templatetags.search_helpers import prepare_document
 from .docx_parsers import Question_Parser
@@ -236,6 +236,11 @@ class SourceViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.SourceSerializer
     pagination_class = None
 
+class SynonymViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Synonym.objects.all()
+    serializer_class = serializers.SynonymSerializer
+    pagination_class = None
+    
 class TopicViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Topic.objects.get_parents_tree()
     serializer_class = serializers.TopicSerializer
