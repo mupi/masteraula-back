@@ -86,7 +86,15 @@ class QuestionResource(resources.ModelResource):
                 
 class LearningObjectQuestionsInline(admin.TabularInline):
     model = Question.learning_objects.through
+    show_change_link = True
     raw_id_fields = ('question',)
+    extra = 1
+
+class QuestionLearningObjectInline(admin.TabularInline):
+    model = LearningObject.questions.through
+    show_change_link = True
+    raw_id_fields = ('learningobject',)
+    extra = 1
 
 class DocumentQuestionsInline(admin.TabularInline):
     model = Document.questions.through
@@ -94,12 +102,32 @@ class DocumentQuestionsInline(admin.TabularInline):
 
 class AlternativesInline(admin.TabularInline):
     model = Alternative
+    show_change_link = True
+    extra = 1
 
-class TopicsInline(admin.TabularInline):
+class TopicQuestionInline(admin.StackedInline):
+    model = Topic.question_set.through
+    raw_id_fields=('question',)
+
+    extra = 1
+
+class TopicsInline(admin.StackedInline):
+    model = Question.topics.through
+    raw_id_fields=('topic',)
+
+    extra = 1
+
+class TopicChildsInline(admin.StackedInline):
     model = Topic
+    show_change_link = True
+    exclude = ('discipline', 'name')
+    extra = 1
 
 class SynonymInline(admin.TabularInline):
     model = Synonym.topics.through
+    raw_id_fields=('topic',)
+
+    extra = 1
 
 class DisciplineModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'name',)
@@ -130,9 +158,11 @@ class TopicModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('parent', )
     list_display = ('id', 'name',)
     search_fields = ['id', 'name',]
+
+    inlines = [TopicChildsInline, TopicQuestionInline, ]
     list_per_page = 100
 
-    inlines = [TopicsInline,]
+
 
 class SynonymModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'term',)
@@ -159,16 +189,15 @@ class LearningObjectModelAdmin(admin.ModelAdmin):
 
 class QuestionModelAdmin(ImportMixin, admin.ModelAdmin):
     resource_class = QuestionResource
-    raw_id_fields = ('author', 'learning_objects', 'topics')
-    list_display = ('id', 'statement', 'year', 'source', 'tag_list','disabled',)
-    search_fields = ['id', 'year', 'source', 'statement', 'tags__name']
+    raw_id_fields = ('author', )
+    list_display = ('id', 'statement', 'year', 'source', 'tag_list', 'disabled',)
+    exclude = ('topics', 'learning_objects')
+    search_fields = ('id', 'year', 'source', 'statement', 'tags__name')
 
-    inlines = [AlternativesInline, ]
+    inlines = [QuestionLearningObjectInline, AlternativesInline, TopicsInline]
 
     list_per_page = 100
 
-    def get_queryset(self, request):
-        return super(QuestionModelAdmin, self).get_queryset(request).prefetch_related('tags')
 
     def tag_list(self, obj):
         return u", ".join(o.name for o in obj.tags.all())
