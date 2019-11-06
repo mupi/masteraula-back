@@ -125,6 +125,9 @@ class TopicChildsInline(admin.StackedInline):
 
 class SynonymInline(admin.TabularInline):
     model = Synonym.topics.through
+    raw_id_fields=('topic',)
+
+    extra = 1
 
 class DisciplineModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'name',)
