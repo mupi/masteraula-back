@@ -1,0 +1,3 @@
+{% load search_helpers %}
+
+{{ object.term }}

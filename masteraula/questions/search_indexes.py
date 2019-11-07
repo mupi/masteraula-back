@@ -5,7 +5,7 @@ from taggit.models import Tag
 
 from haystack import indexes
 
-from .models import Question, LearningObject
+from .models import Question, LearningObject, Synonym, Topic
 from masteraula.questions.templatetags.search_helpers import stripaccents, prepare_document
 
 import re
@@ -90,3 +90,25 @@ class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_tags(self, obj):
         return ' '.join([ stripaccents(tag.name) for tag in obj.tags.all() ])
 
+class SynonymIndex(indexes.SearchIndex, indexes.Indexable):
+    text = indexes.CharField(document=True, use_template=True)
+    term = indexes.CharField(model_attr='term')
+    topics = indexes.MultiValueField()
+    term_auto = indexes.EdgeNgramField(model_attr='term')
+
+    def get_model(self):
+        return Synonym
+
+    def index_queryset(self, using=None):
+        return Synonym.objects.get_topics_prefetched()
+
+    def prepare_topics(self, obj):
+        return [ topic.name for topic in obj.topics.all() ]
+
+class TopicIndex(indexes.SearchIndex, indexes.Indexable):
+    text = indexes.CharField(document=True, use_template=True)
+    name = indexes.CharField(model_attr='name')
+    term_auto = indexes.EdgeNgramField(model_attr='name')
+
+    def get_model(self):
+        return Topic
