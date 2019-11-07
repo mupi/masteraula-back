@@ -169,6 +169,14 @@ class TopicSerializer(serializers.ModelSerializer):
             'name',
             'childs',
         )
+
+class TopicSimplestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Topic
+        fields = (
+            'id',
+            'name',
+        )
         
 class TopicSimpleSerializer(serializers.ModelSerializer):
     parent = serializers.SerializerMethodField()
