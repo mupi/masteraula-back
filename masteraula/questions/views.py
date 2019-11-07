@@ -88,6 +88,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         years = self.request.query_params.getlist('years', None)
         sources = self.request.query_params.getlist('sources', None)
         author = self.request.query_params.get('author', None)
+        topics = self.request.query_params.getlist('topics', None)
 
         params = {'disabled' : 'false'}
         if disciplines:
@@ -109,7 +110,9 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             params['source__in'] = sources
         if author:
             params['author__id'] = author
-
+        if topics:
+            params['topics__id__in'] = topics
+    
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         query = queries.pop()
@@ -159,6 +162,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
         years = self.request.query_params.getlist('years', None)
         sources = self.request.query_params.getlist('sources', None)
         author = self.request.query_params.get('author', None)
+        topics = self.request.query_params.getlist('topics', None)
        
         if disciplines:
             queryset = queryset.filter(disciplines__in=disciplines).distinct()
@@ -173,6 +177,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(query)
         if author:
             queryset = queryset.filter(author__id=author).order_by('-create_date')
+        if topics:
+            queryset = queryset.filter(topics__id__in=topics).distinct()
 
         return queryset.order_by('id')
 
@@ -266,7 +272,7 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
 
         queryset = queryset.annotate(num_questions=Count('question')).order_by('-num_questions')
         serializer_topics = serializers.TopicListSerializer(queryset, many = True)
-        
+
         return Response(serializer_topics.data)
       
     @list_route(methods=['get'])
