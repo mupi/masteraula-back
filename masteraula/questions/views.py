@@ -256,15 +256,17 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
     def topics_by_synonym(self, request):
         term= self.request.query_params.get('term', None)
         disciplines = self.request.query_params.getlist('disciplines', None)
+        topics = self.request.query_params.getlist('topics', None)
+
         synonym = Synonym.objects.get(term = term)
-        queryset = Topic.objects.filter(synonym__id = synonym.id)
+        queryset = Topic.objects.filter(synonym__id = synonym.id).exclude(id__in=topics)
 
         if disciplines:
             queryset = queryset.filter(discipline__id__in = disciplines)
 
         queryset = queryset.annotate(num_questions=Count('question')).order_by('-num_questions')
         serializer_topics = serializers.TopicListSerializer(queryset, many = True)
-
+        
         return Response(serializer_topics.data)
       
     @list_route(methods=['get'])

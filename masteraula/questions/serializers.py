@@ -154,7 +154,6 @@ class LearningObjectSerializer(serializers.ModelSerializer):
         return learning_object
 
 class TopicListSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Topic
         fields = (
