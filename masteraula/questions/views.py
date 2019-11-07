@@ -240,7 +240,7 @@ class SynonymViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Synonym.objects.all()
     serializer_class = serializers.SynonymSerializer
     pagination_class = None
-    
+
 class TopicViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Topic.objects.get_parents_tree()
     serializer_class = serializers.TopicSerializer
@@ -251,6 +251,29 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
             disciplines = self.request.query_params.getlist('disciplines', None)
             return Topic.objects.get_parents_tree(disciplines)
         return self.queryset
+
+    @list_route(methods=['get'])
+    def topics_by_synonym(self, request):
+        term= self.request.query_params.get('term', None)
+        disciplines = self.request.query_params.getlist('disciplines', None)
+        synonym = Synonym.objects.get(term = term)
+        queryset = Topic.objects.filter(synonym__id = synonym.id)
+
+        if disciplines:
+            queryset = queryset.filter(discipline__id__in = disciplines)
+
+        queryset = queryset.annotate(num_questions=Count('question')).order_by('-num_questions')
+        serializer_topics = serializers.TopicListSerializer(queryset, many = True)
+
+        return Response(serializer_topics.data)
+      
+    @list_route(methods=['get'])
+    def related_topics(self, request):
+        disciplines = self.request.query_params.getlist('disciplines', None)
+        queryset = Topic.objects.filter(discipline__id__in = disciplines).annotate(num_questions=Count('question')).order_by('-num_questions')[:20]            
+        serializer_topics = serializers.TopicListSerializer(queryset, many = True)
+
+        return Response(serializer_topics.data)
 
 class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
     pagination_class = LearningObjectPagination
