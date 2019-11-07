@@ -257,30 +257,28 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
             disciplines = self.request.query_params.getlist('disciplines', None)
             return Topic.objects.get_parents_tree(disciplines)
         return self.queryset
-
-    @list_route(methods=['get'])
-    def topics_by_synonym(self, request):
-        term= self.request.query_params.get('term', None)
-        disciplines = self.request.query_params.getlist('disciplines', None)
-        topics = self.request.query_params.getlist('topics', None)
-
-        synonym = Synonym.objects.get(term = term)
-        queryset = Topic.objects.filter(synonym__id = synonym.id).exclude(id__in=topics)
-
-        if disciplines:
-            queryset = queryset.filter(discipline__id__in = disciplines)
-
-        queryset = queryset.annotate(num_questions=Count('question')).order_by('-num_questions')
-        serializer_topics = serializers.TopicListSerializer(queryset, many = True)
-
-        return Response(serializer_topics.data)
       
     @list_route(methods=['get'])
     def related_topics(self, request):
+        topics_id = []
         disciplines = self.request.query_params.getlist('disciplines', None)
-        queryset = Topic.objects.filter(discipline__id__in = disciplines).annotate(num_questions=Count('question')).order_by('-num_questions')[:20]            
-        serializer_topics = serializers.TopicListSerializer(queryset, many = True)
+        topics = self.request.query_params.getlist('topics', None)
 
+        questions = Question.objects.filter(topics__id__in=topics)
+        for question in questions:
+            topics_id += [tp.id for tp in question.get_all_topics() if tp.id not in topics_id]
+
+        if topics:
+            queryset = Topic.objects.filter(id__in=topics_id)
+           
+            if disciplines:
+                queryset = queryset.filter(discipline__id__in = disciplines)
+
+        else:
+            queryset = Topic.objects.filter(discipline__id__in = disciplines)
+
+        queryset = queryset.annotate(num_questions=Count('question')).order_by('-num_questions').exclude(id__in=topics)[:20] 
+        serializer_topics = serializers.TopicListSerializer(queryset, many = True)
         return Response(serializer_topics.data)
 
 class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
