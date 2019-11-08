@@ -154,11 +154,14 @@ class LearningObjectSerializer(serializers.ModelSerializer):
         return learning_object
 
 class TopicListSerializer(serializers.ModelSerializer):
+    num_questions = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Topic
         fields = (
             'id',
             'name',
+            'num_questions',
         )
 
 class TopicSerializer(serializers.ModelSerializer):
