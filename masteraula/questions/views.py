@@ -276,10 +276,15 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.annotate(num_questions=Coalesce(Subquery(total_question, output_field=IntegerField()), Value(0)))
         else:
             queryset = queryset.annotate(num_questions=Count('question'))
-        queryset = queryset.filter(num_questions__gt=0).order_by('-num_questions')[:20].values('name', 'id', 'num_questions')
+        queryset = queryset.order_by('-num_questions').values('name', 'id', 'num_questions')[:21]
+        queryset = [topic for topic in queryset if topic['num_questions'] > 0]
+        more = len(queryset) > 20
 
-        serializer_topics = serializers.TopicListSerializer(queryset, many = True)
-        return Response(serializer_topics.data)
+        serializer_topics = serializers.TopicListSerializer(queryset[:20], many = True)
+        return Response({
+            'topics':serializer_topics.data,
+            'more':more
+        })
 
 class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
     pagination_class = LearningObjectPagination
