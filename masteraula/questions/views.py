@@ -14,7 +14,8 @@ from rest_framework import (generics, response, viewsets, status, mixins,
 from rest_framework.decorators import detail_route, list_route, permission_classes
 from rest_framework.response import Response
 
-from django.db.models import Count, Q, Case, When
+from django.db.models import Count, Q, Case, When, Subquery, OuterRef, IntegerField, Value
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse, FileResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
@@ -260,24 +261,23 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
       
     @list_route(methods=['get'])
     def related_topics(self, request):
-        topics_id = []
-        disciplines = self.request.query_params.getlist('disciplines', None)
-        topics = self.request.query_params.getlist('topics', None)
+        disciplines = self.request.query_params.getlist('disciplines', [])
+        topics = self.request.query_params.getlist('topics', [])
 
-        questions = Question.objects.filter(topics__id__in=topics)
-        for question in questions:
-            topics_id += [tp.id for tp in question.get_all_topics() if tp.id not in topics_id]
+        queryset = Topic.objects.filter(question__disciplines__id__in=disciplines, question__disabled=False).exclude(id__in=topics).distinct()
 
         if topics:
-            queryset = Topic.objects.filter(id__in=topics_id)
-           
-            if disciplines:
-                queryset = queryset.filter(discipline__id__in = disciplines)
+            questions = Question.objects.filter(disciplines__id__in=disciplines)
+            for topic in topics:
+                questions = questions.filter(topics__id=topic)
+            questions = questions.filter(topics=OuterRef('pk')).values('topics')
+            total_question = questions.annotate(cnt=Count('pk')).values('cnt')
 
+            queryset = queryset.annotate(num_questions=Coalesce(Subquery(total_question, output_field=IntegerField()), Value(0)))
         else:
-            queryset = Topic.objects.filter(discipline__id__in = disciplines)
+            queryset = queryset.annotate(num_questions=Count('question'))
+        queryset = queryset.filter(num_questions__gt=0).order_by('-num_questions')[:20].values('name', 'id', 'num_questions')
 
-        queryset = queryset.annotate(num_questions=Count('question')).order_by('-num_questions').exclude(id__in=topics)[:20] 
         serializer_topics = serializers.TopicListSerializer(queryset, many = True)
         return Response(serializer_topics.data)
 
