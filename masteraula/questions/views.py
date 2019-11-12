@@ -30,7 +30,7 @@ from masteraula.users.models import User
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, Synonym)
 
-from .templatetags.search_helpers import prepare_document
+from .templatetags.search_helpers import prepare_document, stripaccents_str
 from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
@@ -639,11 +639,12 @@ class AutocompleteSearchViewSet(HaystackViewSet):
     permission_classes = (permissions.IsAuthenticated, )
 
     def list(self, request, *args, **kwargs):
-        q = request.GET.get('q', None)
+        q = stripaccents_str(request.GET.get('q', None))
+        
         if not q or len(q) < 3:
             raise exceptions.ValidationError("'q' parameter required with at least 3 of length")
-        queryset = self.filter_queryset(self.get_queryset())
-
+        queryset = SearchQuerySet().autocomplete(term_auto=q)
+   
         synonym_qs = []
         topic_qs = []
 
