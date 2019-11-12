@@ -70,3 +70,5 @@ backup.sql
 corrects
 errors
 .vscode
+
+*.csv

@@ -56,6 +56,10 @@ class SynonymManager(models.Manager):
         'parent', 'discipline', 'parent__parent', 'parent__discipline')
     )
 
+    def get_topics_prefetched(self, topics=True):
+        qs = self.all().prefetch_related(self.topics_prefetch)
+        return qs
+
 class Synonym(models.Model):
     term =  models.CharField(max_length=100, null=False, blank=False)
     topics = models.ManyToManyField(Topic)
