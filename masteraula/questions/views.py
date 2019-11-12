@@ -21,10 +21,6 @@ from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
 from taggit.models import Tag
 
-from drf_haystack.filters import HaystackAutocompleteFilter
-from drf_haystack.serializers import HaystackSerializer
-from drf_haystack.viewsets import HaystackViewSet
-
 from masteraula.users.models import User
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
@@ -635,26 +631,27 @@ class HeaderViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class AutocompleteSerializer(HaystackSerializer):
-    
-    class Meta:
-        index_classes = [TopicIndex, SynonymIndex]
-        field_aliases = {
-            "q": "term_auto"
-        }
-
-class AutocompleteSearchViewSet(HaystackViewSet):
+class AutocompleteSearchViewSet(viewsets.ViewSet):
 
     index_models = [Synonym, Topic]
-    serializer_class = AutocompleteSerializer
-    filter_backends = [HaystackAutocompleteFilter]
     permission_classes = (permissions.IsAuthenticated, )
 
     def list(self, request, *args, **kwargs):
         q = request.GET.get('q', None)
+        topic_ids = request.GET.getlist('topics', [])
+
         if not q or len(q) < 3:
             raise exceptions.ValidationError("'q' parameter required with at least 3 of length")
-        queryset = self.filter_queryset(self.get_queryset())
+
+        queryset = SearchQuerySet().models(Topic, Synonym).autocomplete(term_auto=q)
+
+        topics = Topic.objects.all()
+        if topic_ids:
+            questions = Question.objects.all()
+            for topic_id in topic_ids:
+                questions = questions.filter(topics__id=topic_id)
+                
+            topics = topics.exclude(id__in=topic_ids).filter(question__in=questions).distinct()
 
         synonym_qs = []
         topic_qs = []
@@ -665,13 +662,19 @@ class AutocompleteSearchViewSet(HaystackViewSet):
             else:
                 topic_qs.append(q.pk)
 
-        synonym_qs = Synonym.objects.get_topics_prefetched().filter(id__in=synonym_qs)
-        topic_qs = Topic.objects.filter(id__in=topic_qs)
+        topic_res = [t for t in topics.filter(id__in=topic_qs).values('id', 'name')]
+        synonyms_res = []
+        synonyms = Synonym.objects.get_topics_prefetched().filter(id__in=synonym_qs).filter(topics__in=topics).distinct().only('id', 'term', 'topics')
+        for synonym in synonyms:
+            for topic in synonym.topics.all():
+                synonyms_res.append({
+                    'id': topic.id,
+                    'name': '{} -> {}'.format(synonym.term, topic.name)
+                })
 
-        synonym_serializer = serializers.SynonymSerializer(synonym_qs, many=True)
-        topic_serialzier = serializers.TopicSimplestSerializer(topic_qs, many=True)
+        topic_serialzier = serializers.TopicSimplestSerializer(topic_res + synonyms_res, many=True)
 
         return Response({
-            'synonyms': synonym_serializer.data,
+            'synonyms': [],
             'topics': topic_serialzier.data
         })
