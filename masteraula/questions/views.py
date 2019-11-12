@@ -14,7 +14,7 @@ from rest_framework import (generics, response, viewsets, status, mixins,
 from rest_framework.decorators import detail_route, list_route, permission_classes
 from rest_framework.response import Response
 
-from django.db.models import Count, Q, Case, When, Subquery, OuterRef, IntegerField, Value
+from django.db.models import Count, Q, Case, When, Subquery, OuterRef, IntegerField, Value, Prefetch
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, FileResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
@@ -269,22 +269,34 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
         disciplines = self.request.query_params.getlist('disciplines', [])
         topics = self.request.query_params.getlist('topics', [])
 
-        queryset = Topic.objects.filter(question__disciplines__id__in=disciplines, question__disabled=False).exclude(id__in=topics).distinct()
-
         if topics:
-            questions = Question.objects.filter(disciplines__id__in=disciplines)
+            topics = [int(topic) for topic in topics]
+            questions = Question.objects.prefetch_related(
+                    Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
+                ).filter(disciplines__id__in=disciplines, disabled=False)
             for topic in topics:
-                questions = questions.filter(topics__id=topic)
-            questions = questions.filter(topics=OuterRef('pk')).values('topics')
-            total_question = questions.annotate(cnt=Count('pk')).values('cnt')
+                    questions = questions.filter(topics__id=topic)
 
-            queryset = queryset.annotate(num_questions=Coalesce(Subquery(total_question, output_field=IntegerField()), Value(0)))
+            topics_dict = {}
+            for question in questions.only('topics__id', 'topics__name'):
+                for topic in question.topics.all():
+                    if topic.id in topics_dict:
+                        topics_dict[topic.id]['num_questions'] += 1
+                    else:
+                        topics_dict[topic.id] = {'name' : topic.name, 'num_questions' : 1}
+
+            topics_list = []
+            for key in topics_dict:
+                if key not in topics:
+                    topics_list.append(topics_dict[key])
+            queryset = sorted(topics_list, key=lambda x : x['num_questions'], reverse=True)
         else:
-            queryset = queryset.annotate(num_questions=Count('question'))
-        queryset = queryset.order_by('-num_questions').values('name', 'id', 'num_questions')[:21]
-        queryset = [topic for topic in queryset if topic['num_questions'] > 0]
+            queryset = Topic.objects.filter(question__disciplines__id__in=disciplines, question__disabled=False).distinct()
+            queryset = queryset.annotate(num_questions=Count('question')).values('name', 'id', 'num_questions')
+            queryset = [topic for topic in queryset if topic['num_questions'] > 0]
+            queryset.sort(key=lambda x: x['num_questions'], reverse=True)
+            
         more = len(queryset) > 20
-
         serializer_topics = serializers.TopicListSerializer(queryset[:20], many = True)
         return Response({
             'topics':serializer_topics.data,
