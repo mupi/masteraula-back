@@ -180,7 +180,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
         if author:
             queryset = queryset.filter(author__id=author).order_by('-create_date')
         if topics:
-            queryset = queryset.filter(topics__id__in=topics).distinct()
+            for topic in topics:
+                queryset = queryset.filter(topics__id=topic)
 
         return queryset.order_by('id')
 
@@ -649,14 +650,13 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
         queryset = SearchQuerySet().models(Topic, Synonym).autocomplete(term_auto=q)
 
         topics = Topic.objects.all()
+        questions = Question.objects.filter(disciplines__id=discipline_id)
         if topic_ids:
-            questions = Question.objects.filter(discipline__id=discipline_id)
             for topic_id in topic_ids:
                 questions = questions.filter(topics__id=topic_id)
-                
-            topics = topics.exclude(id__in=topic_ids).filter(question__in=questions).distinct()
-        else:
-            topics = topics.filter(discipline__id=discipline_id)
+
+        topics = topics.exclude(id__in=topic_ids).filter(question__in=questions).distinct()
+        topics_set = set([topic.id for topic in topics])
 
         synonym_qs = []
         topic_qs = []
@@ -671,9 +671,13 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
         synonyms_res = Synonym.objects.get_topics_prefetched().filter(id__in=synonym_qs).filter(topics__in=topics).distinct().only('id', 'term', 'topics')
 
         synonym_serializer = serializers.SynonymSerializer(synonyms_res, many=True)
+        serialized_data = synonym_serializer.data
+        for synonym in serialized_data:
+            synonym['topics'] = [topic for topic in synonym['topics'] if topic['id'] in topics_set]
+
         topic_serialzier = serializers.TopicSimplestSerializer(topic_res, many=True)
 
         return Response({
-            'synonyms': synonym_serializer.data,
+            'synonyms': serialized_data,
             'topics': topic_serialzier.data
         })
