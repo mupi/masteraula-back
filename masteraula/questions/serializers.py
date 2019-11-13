@@ -159,6 +159,17 @@ class LearningObjectSerializer(serializers.ModelSerializer):
 
         return learning_object
 
+class TopicListSerializer(serializers.ModelSerializer):
+    num_questions = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Topic
+        fields = (
+            'id',
+            'name',
+            'num_questions',
+        )
+
 class TopicSerializer(serializers.ModelSerializer):
     childs = serializers.ListSerializer(child=RecursiveField())
 
@@ -623,7 +634,7 @@ class DocumentDetailPublicationSerializer(serializers.ModelSerializer):
         }
 
 class SynonymSerializer(serializers.ModelSerializer):
-    topics = TopicSimpleSerializer(read_only=True, many=True)
+    topics = TopicListSerializer(read_only=True, many=True)
 
     class Meta:
         model = Synonym

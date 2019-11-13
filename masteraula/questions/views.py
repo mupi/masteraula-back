@@ -14,7 +14,8 @@ from rest_framework import (generics, response, viewsets, status, mixins,
 from rest_framework.decorators import detail_route, list_route, permission_classes
 from rest_framework.response import Response
 
-from django.db.models import Count, Q, Case, When
+from django.db.models import Count, Q, Case, When, Subquery, OuterRef, IntegerField, Value
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse, FileResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
@@ -29,7 +30,7 @@ from masteraula.users.models import User
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, Synonym)
 
-from .templatetags.search_helpers import prepare_document
+from .templatetags.search_helpers import prepare_document, stripaccents_str
 from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
@@ -93,6 +94,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         years = self.request.query_params.getlist('years', None)
         sources = self.request.query_params.getlist('sources', None)
         author = self.request.query_params.get('author', None)
+        topics = self.request.query_params.getlist('topics', None)
 
         params = {'disabled' : 'false'}
         if disciplines:
@@ -114,7 +116,9 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             params['source__in'] = sources
         if author:
             params['author__id'] = author
-
+        if topics:
+            params['topics__id__in'] = topics
+    
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         query = queries.pop()
@@ -164,6 +168,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
         years = self.request.query_params.getlist('years', None)
         sources = self.request.query_params.getlist('sources', None)
         author = self.request.query_params.get('author', None)
+        topics = self.request.query_params.getlist('topics', None)
        
         if disciplines:
             queryset = queryset.filter(disciplines__in=disciplines).distinct()
@@ -178,6 +183,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(query)
         if author:
             queryset = queryset.filter(author__id=author).order_by('-create_date')
+        if topics:
+            queryset = queryset.filter(topics__id__in=topics).distinct()
 
         return queryset.order_by('id')
 
@@ -245,7 +252,7 @@ class SynonymViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Synonym.objects.all()
     serializer_class = serializers.SynonymSerializer
     pagination_class = None
-    
+
 class TopicViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Topic.objects.get_parents_tree()
     serializer_class = serializers.TopicSerializer
@@ -256,6 +263,33 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
             disciplines = self.request.query_params.getlist('disciplines', None)
             return Topic.objects.get_parents_tree(disciplines)
         return self.queryset
+      
+    @list_route(methods=['get'])
+    def related_topics(self, request):
+        disciplines = self.request.query_params.getlist('disciplines', [])
+        topics = self.request.query_params.getlist('topics', [])
+
+        queryset = Topic.objects.filter(question__disciplines__id__in=disciplines, question__disabled=False).exclude(id__in=topics).distinct()
+
+        if topics:
+            questions = Question.objects.filter(disciplines__id__in=disciplines)
+            for topic in topics:
+                questions = questions.filter(topics__id=topic)
+            questions = questions.filter(topics=OuterRef('pk')).values('topics')
+            total_question = questions.annotate(cnt=Count('pk')).values('cnt')
+
+            queryset = queryset.annotate(num_questions=Coalesce(Subquery(total_question, output_field=IntegerField()), Value(0)))
+        else:
+            queryset = queryset.annotate(num_questions=Count('question'))
+        queryset = queryset.order_by('-num_questions').values('name', 'id', 'num_questions')[:21]
+        queryset = [topic for topic in queryset if topic['num_questions'] > 0]
+        more = len(queryset) > 20
+
+        serializer_topics = serializers.TopicListSerializer(queryset[:20], many = True)
+        return Response({
+            'topics':serializer_topics.data,
+            'more':more
+        })
 
 class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
     pagination_class = LearningObjectPagination
@@ -605,11 +639,12 @@ class AutocompleteSearchViewSet(HaystackViewSet):
     permission_classes = (permissions.IsAuthenticated, )
 
     def list(self, request, *args, **kwargs):
-        q = request.GET.get('q', None)
+        q = stripaccents_str(request.GET.get('q', None))
+        
         if not q or len(q) < 3:
             raise exceptions.ValidationError("'q' parameter required with at least 3 of length")
-        queryset = self.filter_queryset(self.get_queryset())
-
+        queryset = SearchQuerySet().autocomplete(term_auto=q)
+   
         synonym_qs = []
         topic_qs = []
 
