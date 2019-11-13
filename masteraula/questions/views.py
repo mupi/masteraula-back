@@ -639,23 +639,41 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
 
     def list(self, request, *args, **kwargs):
         q = request.GET.get('q', None)
-        topic_ids = request.GET.getlist('topics', [])
-        discipline_id = request.GET.get('disciplines', None)
+        disciplines = self.request.query_params.getlist('disciplines', None)
+        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
+        difficulties = self.request.query_params.getlist('difficulties', None)
+        years = self.request.query_params.getlist('years', None)
+        sources = self.request.query_params.getlist('sources', None)
+        author = self.request.query_params.get('author', None)
+        topics = self.request.query_params.getlist('topics', None)
 
         if not q or len(q) < 3:
             raise exceptions.ValidationError("'q' parameter required with at least 3 of length")
-        if not discipline_id:
+        if not disciplines:
             raise exceptions.ValidationError("discipine must be informed")
             
         q = stripaccents_str(q)
         queryset = SearchQuerySet().models(Topic, Synonym).autocomplete(term_auto=q)
 
-        topics = Topic.objects.all()
-        questions = Question.objects.filter(disciplines__id=discipline_id)
-        if topic_ids:
-            for topic_id in topic_ids:
-                questions = questions.filter(topics__id=topic_id)
+        questions = Question.objects.all()
+        if disciplines:
+            questions = questions.filter(disciplines__in=disciplines).distinct()
+        if teaching_levels:
+            questions = questions.filter(teaching_levels__in=teaching_levels).distinct()
+        if difficulties:
+            questions = questions.filter(difficulty__in=difficulties).distinct()
+        if years:
+            questions = questions.filter(year__in=years).distinct()
+        if sources:
+            query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
+            questions = questions.filter(query)
+        if author:
+            questions = questions.filter(author__id=author).order_by('-create_date')
+        if topics:
+            for topic in topics:
+                questions = questions.filter(topics__id=topic)
 
+        topics = Topic.objects.all()
         topics = topics.exclude(id__in=topic_ids).filter(question__in=questions).distinct()
         topics_set = set([topic.id for topic in topics])
 
