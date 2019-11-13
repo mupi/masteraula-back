@@ -26,7 +26,7 @@ from masteraula.users.models import User
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, Synonym)
 
-from .templatetags.search_helpers import prepare_document
+from .templatetags.search_helpers import prepare_document, stripaccents_str
 from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
@@ -646,7 +646,8 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
             raise exceptions.ValidationError("'q' parameter required with at least 3 of length")
         if not discipline_id:
             raise exceptions.ValidationError("discipine must be informed")
-
+            
+        q = stripaccents_str(q)
         queryset = SearchQuerySet().models(Topic, Synonym).autocomplete(term_auto=q)
 
         topics = Topic.objects.all()

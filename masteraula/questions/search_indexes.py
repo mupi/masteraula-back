@@ -6,7 +6,7 @@ from taggit.models import Tag
 from haystack import indexes
 
 from .models import Question, LearningObject, Synonym, Topic
-from masteraula.questions.templatetags.search_helpers import stripaccents, prepare_document
+from masteraula.questions.templatetags.search_helpers import stripaccents, prepare_document, stripaccents_str
 
 import re
 import unicodedata
@@ -104,6 +104,9 @@ class SynonymIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_topics(self, obj):
         return [ topic.name for topic in obj.topics.all() ]
+    
+    def prepare_term_auto(self, obj):
+        return stripaccents_str(obj)
 
 class TopicIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
@@ -112,3 +115,6 @@ class TopicIndex(indexes.SearchIndex, indexes.Indexable):
 
     def get_model(self):
         return Topic
+
+    def prepare_term_auto(self, obj):
+        return stripaccents_str(obj)
