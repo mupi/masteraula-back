@@ -263,37 +263,52 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
       
     @list_route(methods=['get'])
     def related_topics(self, request):
-        disciplines = self.request.query_params.getlist('disciplines', [])
+        disciplines = self.request.query_params.getlist('disciplines', None)
+        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
+        difficulties = self.request.query_params.getlist('difficulties', None)
+        years = self.request.query_params.getlist('years', None)
+        sources = self.request.query_params.getlist('sources', None)
+        author = self.request.query_params.get('author', None)
         topics = self.request.query_params.getlist('topics', [])
+       
+        questions = Question.objects.prefetch_related(
+            Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
+        ).filter(disciplines__id__in=disciplines, disabled=False)
 
+        if disciplines:
+            questions = questions.filter(disciplines__in=disciplines).distinct()
+        if teaching_levels:
+            questions = questions.filter(teaching_levels__in=teaching_levels).distinct()
+        if difficulties:
+            questions = questions.filter(difficulty__in=difficulties).distinct()
+        if years:
+            questions = questions.filter(year__in=years).distinct()
+        if sources:
+            query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
+            questions = questions.filter(query)
+        if author:
+            questions = questions.filter(author__id=author)
         if topics:
-            topics = [int(topic) for topic in topics]
-            questions = Question.objects.prefetch_related(
-                    Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
-                ).filter(disciplines__id__in=disciplines, disabled=False)
             for topic in topics:
-                    questions = questions.filter(topics__id=topic)
+                questions = questions.filter(topics__id=topic)
 
-            topics_dict = {}
-            for question in questions.only('topics__id', 'topics__name'):
-                for topic in question.topics.all():
-                    if topic.id in topics_dict:
-                        topics_dict[topic.id]['num_questions'] += 1
-                    else:
-                        topics_dict[topic.id] = {'id' : topic.id, 'name' : topic.name, 'num_questions' : 1}
+            topics = set([int(topic) for topic in topics])
 
-            topics_list = []
-            for key in topics_dict:
-                if key not in topics:
-                    topics_list.append(topics_dict[key])
-            queryset = sorted(topics_list, key=lambda x : x['num_questions'], reverse=True)
-        else:
-            queryset = Topic.objects.filter(question__disciplines__id__in=disciplines, question__disabled=False).distinct()
-            queryset = queryset.annotate(num_questions=Count('question')).values('name', 'id', 'num_questions')
-            queryset = [topic for topic in queryset if topic['num_questions'] > 0]
-            queryset.sort(key=lambda x: x['num_questions'], reverse=True)
-            
+        topics_dict = {}
+        for question in questions.only('topics__id', 'topics__name'):
+            for topic in question.topics.all():
+                if topic.id in topics_dict:
+                    topics_dict[topic.id]['num_questions'] += 1
+                else:
+                    topics_dict[topic.id] = {'id' : topic.id, 'name' : topic.name, 'num_questions' : 1}
+
+        topics_list = []
+        for key in topics_dict:
+            if key not in topics:
+                topics_list.append(topics_dict[key])
+        queryset = sorted(topics_list, key=lambda x : x['num_questions'], reverse=True)
         more = len(queryset) > 20
+
         serializer_topics = serializers.TopicListSerializer(queryset[:20], many = True)
         return Response({
             'topics':serializer_topics.data,
@@ -673,8 +688,7 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
             for topic in topics:
                 questions = questions.filter(topics__id=topic)
 
-        topics = Topic.objects.all()
-        topics = topics.exclude(id__in=topic_ids).filter(question__in=questions).distinct()
+        topics = Topic.objects.exclude(id__in=topics).filter(question__in=questions).distinct()
         topics_set = set([topic.id for topic in topics])
 
         synonym_qs = []
