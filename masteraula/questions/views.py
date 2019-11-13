@@ -279,7 +279,7 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
                     if topic.id in topics_dict:
                         topics_dict[topic.id]['num_questions'] += 1
                     else:
-                        topics_dict[topic.id] = {'name' : topic.name, 'num_questions' : 1}
+                        topics_dict[topic.id] = {'id' : topic.id, 'name' : topic.name, 'num_questions' : 1}
 
             topics_list = []
             for key in topics_dict:
@@ -639,19 +639,24 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
     def list(self, request, *args, **kwargs):
         q = request.GET.get('q', None)
         topic_ids = request.GET.getlist('topics', [])
+        discipline_id = request.GET.get('disciplines', None)
 
         if not q or len(q) < 3:
             raise exceptions.ValidationError("'q' parameter required with at least 3 of length")
+        if not discipline_id:
+            raise exceptions.ValidationError("discipine must be informed")
 
         queryset = SearchQuerySet().models(Topic, Synonym).autocomplete(term_auto=q)
 
         topics = Topic.objects.all()
         if topic_ids:
-            questions = Question.objects.all()
+            questions = Question.objects.filter(discipline__id=discipline_id)
             for topic_id in topic_ids:
                 questions = questions.filter(topics__id=topic_id)
                 
             topics = topics.exclude(id__in=topic_ids).filter(question__in=questions).distinct()
+        else:
+            topics = topics.filter(discipline__id=discipline_id)
 
         synonym_qs = []
         topic_qs = []
@@ -663,18 +668,12 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
                 topic_qs.append(q.pk)
 
         topic_res = [t for t in topics.filter(id__in=topic_qs).values('id', 'name')]
-        synonyms_res = []
-        synonyms = Synonym.objects.get_topics_prefetched().filter(id__in=synonym_qs).filter(topics__in=topics).distinct().only('id', 'term', 'topics')
-        for synonym in synonyms:
-            for topic in synonym.topics.all():
-                synonyms_res.append({
-                    'id': topic.id,
-                    'name': '{} -> {}'.format(synonym.term, topic.name)
-                })
+        synonyms_res = Synonym.objects.get_topics_prefetched().filter(id__in=synonym_qs).filter(topics__in=topics).distinct().only('id', 'term', 'topics')
 
-        topic_serialzier = serializers.TopicSimplestSerializer(topic_res + synonyms_res, many=True)
+        synonym_serializer = serializers.SynonymSerializer(synonyms_res, many=True)
+        topic_serialzier = serializers.TopicSimplestSerializer(topic_res, many=True)
 
         return Response({
-            'synonyms': [],
+            'synonyms': synonym_serializer.data,
             'topics': topic_serialzier.data
         })
