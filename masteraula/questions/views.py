@@ -14,16 +14,12 @@ from rest_framework import (generics, response, viewsets, status, mixins,
 from rest_framework.decorators import detail_route, list_route, permission_classes
 from rest_framework.response import Response
 
-from django.db.models import Count, Q, Case, When, Subquery, OuterRef, IntegerField, Value
+from django.db.models import Count, Q, Case, When, Subquery, OuterRef, IntegerField, Value, Prefetch
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, FileResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
 from taggit.models import Tag
-
-from drf_haystack.filters import HaystackAutocompleteFilter
-from drf_haystack.serializers import HaystackSerializer
-from drf_haystack.viewsets import HaystackViewSet
 
 from masteraula.users.models import User
 
@@ -184,7 +180,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
         if author:
             queryset = queryset.filter(author__id=author).order_by('-create_date')
         if topics:
-            queryset = queryset.filter(topics__id__in=topics).distinct()
+            for topic in topics:
+                queryset = queryset.filter(topics__id=topic)
 
         return queryset.order_by('id')
 
@@ -269,22 +266,34 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
         disciplines = self.request.query_params.getlist('disciplines', [])
         topics = self.request.query_params.getlist('topics', [])
 
-        queryset = Topic.objects.filter(question__disciplines__id__in=disciplines, question__disabled=False).exclude(id__in=topics).distinct()
-
         if topics:
-            questions = Question.objects.filter(disciplines__id__in=disciplines)
+            topics = [int(topic) for topic in topics]
+            questions = Question.objects.prefetch_related(
+                    Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
+                ).filter(disciplines__id__in=disciplines, disabled=False)
             for topic in topics:
-                questions = questions.filter(topics__id=topic)
-            questions = questions.filter(topics=OuterRef('pk')).values('topics')
-            total_question = questions.annotate(cnt=Count('pk')).values('cnt')
+                    questions = questions.filter(topics__id=topic)
 
-            queryset = queryset.annotate(num_questions=Coalesce(Subquery(total_question, output_field=IntegerField()), Value(0)))
+            topics_dict = {}
+            for question in questions.only('topics__id', 'topics__name'):
+                for topic in question.topics.all():
+                    if topic.id in topics_dict:
+                        topics_dict[topic.id]['num_questions'] += 1
+                    else:
+                        topics_dict[topic.id] = {'id' : topic.id, 'name' : topic.name, 'num_questions' : 1}
+
+            topics_list = []
+            for key in topics_dict:
+                if key not in topics:
+                    topics_list.append(topics_dict[key])
+            queryset = sorted(topics_list, key=lambda x : x['num_questions'], reverse=True)
         else:
-            queryset = queryset.annotate(num_questions=Count('question'))
-        queryset = queryset.order_by('-num_questions').values('name', 'id', 'num_questions')[:21]
-        queryset = [topic for topic in queryset if topic['num_questions'] > 0]
+            queryset = Topic.objects.filter(question__disciplines__id__in=disciplines, question__disabled=False).distinct()
+            queryset = queryset.annotate(num_questions=Count('question')).values('name', 'id', 'num_questions')
+            queryset = [topic for topic in queryset if topic['num_questions'] > 0]
+            queryset.sort(key=lambda x: x['num_questions'], reverse=True)
+            
         more = len(queryset) > 20
-
         serializer_topics = serializers.TopicListSerializer(queryset[:20], many = True)
         return Response({
             'topics':serializer_topics.data,
@@ -623,28 +632,51 @@ class HeaderViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class AutocompleteSerializer(HaystackSerializer):
-    
-    class Meta:
-        index_classes = [TopicIndex, SynonymIndex]
-        field_aliases = {
-            "q": "term_auto"
-        }
-
-class AutocompleteSearchViewSet(HaystackViewSet):
+class AutocompleteSearchViewSet(viewsets.ViewSet):
 
     index_models = [Synonym, Topic]
-    serializer_class = AutocompleteSerializer
-    filter_backends = [HaystackAutocompleteFilter]
     permission_classes = (permissions.IsAuthenticated, )
 
     def list(self, request, *args, **kwargs):
-        q = stripaccents_str(request.GET.get('q', None))
-        
+        q = request.GET.get('q', None)
+        disciplines = self.request.query_params.getlist('disciplines', None)
+        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
+        difficulties = self.request.query_params.getlist('difficulties', None)
+        years = self.request.query_params.getlist('years', None)
+        sources = self.request.query_params.getlist('sources', None)
+        author = self.request.query_params.get('author', None)
+        topics = self.request.query_params.getlist('topics', None)
+
         if not q or len(q) < 3:
             raise exceptions.ValidationError("'q' parameter required with at least 3 of length")
-        queryset = SearchQuerySet().autocomplete(term_auto=q)
-   
+        if not disciplines:
+            raise exceptions.ValidationError("discipine must be informed")
+            
+        q = stripaccents_str(q)
+        queryset = SearchQuerySet().models(Topic, Synonym).autocomplete(term_auto=q)
+
+        questions = Question.objects.all()
+        if disciplines:
+            questions = questions.filter(disciplines__in=disciplines).distinct()
+        if teaching_levels:
+            questions = questions.filter(teaching_levels__in=teaching_levels).distinct()
+        if difficulties:
+            questions = questions.filter(difficulty__in=difficulties).distinct()
+        if years:
+            questions = questions.filter(year__in=years).distinct()
+        if sources:
+            query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
+            questions = questions.filter(query)
+        if author:
+            questions = questions.filter(author__id=author).order_by('-create_date')
+        if topics:
+            for topic in topics:
+                questions = questions.filter(topics__id=topic)
+
+        topics = Topic.objects.all()
+        topics = topics.exclude(id__in=topic_ids).filter(question__in=questions).distinct()
+        topics_set = set([topic.id for topic in topics])
+
         synonym_qs = []
         topic_qs = []
 
@@ -654,13 +686,17 @@ class AutocompleteSearchViewSet(HaystackViewSet):
             else:
                 topic_qs.append(q.pk)
 
-        synonym_qs = Synonym.objects.get_topics_prefetched().filter(id__in=synonym_qs)
-        topic_qs = Topic.objects.filter(id__in=topic_qs)
+        topic_res = [t for t in topics.filter(id__in=topic_qs).values('id', 'name')]
+        synonyms_res = Synonym.objects.get_topics_prefetched().filter(id__in=synonym_qs).filter(topics__in=topics).distinct().only('id', 'term', 'topics')
 
-        synonym_serializer = serializers.SynonymSerializer(synonym_qs, many=True)
-        topic_serialzier = serializers.TopicSimplestSerializer(topic_qs, many=True)
+        synonym_serializer = serializers.SynonymSerializer(synonyms_res, many=True)
+        serialized_data = synonym_serializer.data
+        for synonym in serialized_data:
+            synonym['topics'] = [topic for topic in synonym['topics'] if topic['id'] in topics_set]
+
+        topic_serialzier = serializers.TopicSimplestSerializer(topic_res, many=True)
 
         return Response({
-            'synonyms': synonym_serializer.data,
+            'synonyms': serialized_data,
             'topics': topic_serialzier.data
         })
