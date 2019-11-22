@@ -12,6 +12,9 @@
 
 {% for topic in object.get_all_topics %}
     {{ topic.name|stripaccents }}
+    {% for synonym in topic.synonym_set.all %}
+        {{ synonym.term|stripaccents }}
+    {% endfor %}
 {% endfor %}
 
 {% for lo in object.learning_objects.all %}
