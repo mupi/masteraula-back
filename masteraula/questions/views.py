@@ -128,9 +128,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             query |= item
 
         search_queryset = SearchQuerySet().models(Question).filter_and(**params)
-        search_queryset = search_queryset.filter(SQ(content=Clean(text)) | (
-            SQ(content=Clean(text)) & query
-        ))
+        search_queryset = search_queryset.filter(SQ(content__startswith=Clean(text)) | (SQ(content__startswith=Clean(text)) & query ))
 
         #Salvar os dados de busca	        
         obj = Search.objects.create(user=self.request.user, term=self.request.query_params['text'])	   
