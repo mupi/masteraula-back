@@ -2,7 +2,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from masteraula.questions.models import Topic, Synonym, Discipline
 from django.core.files import File
-from django.shortcuts import get_object_or_404
 
 import csv
 import os
@@ -20,7 +19,6 @@ class Command(BaseCommand):
         for filename in options['filename']:
             print('Adding synonyms from ' + filename)
     
-            line = 0
             csvfile = None
 
             try:
@@ -36,9 +34,8 @@ class Command(BaseCommand):
 
             reader = csv.reader(csvfile, delimiter=',')
             first = True
-            for row in reader:
+            for i, row in enumerate(reader):
                 try:
-                    line = line + 1
 
                     if first:
                         first = False
@@ -46,6 +43,9 @@ class Command(BaseCommand):
 
                     if row[0]:
                         topic = Topic.objects.filter(name=row[0], discipline=discipline)
+                        
+                        if not topic:
+                            print('Topic "%s" does not exist' % row[0])
                         
                         if row[1] and topic:
                             syns = [syn.strip() for syn in row[1].split(',') if syn.strip() != '']
@@ -55,16 +55,20 @@ class Command(BaseCommand):
 
                                 if not check_syns:
                                     syn_create = Synonym.objects.create(term=item)
+                                
+                                else:
+                                    syn_create = check_syns[0]
                                     
-                                    for top in topic:
-                                        syn_create.topics.add(top)
+                                for top in topic:
+                                    syn_create.topics.add(top)
                                     
-                                    syn_create.save()
-                                    print('Success adding synonym in line ' + str(line))
+                                syn_create.save()
+                                    
                         else:
                             continue
+                    print('Success adding synonym in line ' + str(i + 1))
 
                 except Exception as e:
-                    print('ERROR adding synonym in line ' + str(line))
+                    print('ERROR adding synonym in line ' + str(i + 1))
                     print(e)
                     continue
