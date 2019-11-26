@@ -18,8 +18,10 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     tags = indexes.CharField(boost=100)
     statement = indexes.CharField()
 
+    topics_ids = indexes.MultiValueField()
     disciplines = indexes.MultiValueField()
     teaching_levels = indexes.MultiValueField()
+
     year = indexes.CharField(model_attr='year', null=True)
     source = indexes.CharField(model_attr='source', null=True)
     difficulty = indexes.CharField()
@@ -39,6 +41,9 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_topics(self, obj):
         return ' '.join([ stripaccents(topic.name) for topic in obj.get_all_topics() ])
+    
+    def prepare_topics_ids(self, obj):
+        return [ topic.pk for topic in obj.get_all_topics() ]
 
     def prepare_tags(self, obj):
         return ' '.join([ stripaccents(tag.name) for tag in obj.tags.all() ])
