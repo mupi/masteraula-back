@@ -37,6 +37,35 @@ from . import serializers as serializers
 
 current_milli_time = lambda: int(round(time.time() * 1000))
 
+def related_topic(questions_ids, topics):
+    questions = Question.objects.prefetch_related(
+        Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
+    ).filter(id__in=questions_ids)
+    topics_dict = {}
+    for question in questions.only('topics__id', 'topics__name'):
+        for topic in question.topics.all():
+            if topic.id in topics_dict:
+                topics_dict[topic.id]['num_questions'] += 1
+            else:
+                topics_dict[topic.id] = {'id' : topic.id, 'name' : topic.name, 'num_questions' : 1}
+
+    topics_list = []
+    for key in topics_dict:
+        if key not in topics:
+            topics_list.append(topics_dict[key])
+    queryset = sorted(topics_list, key=lambda x : x['num_questions'], reverse=True)
+
+    more = len(queryset) > 20
+    serializer_topics = serializers.TopicListSerializer(queryset[:20], many = True)
+    print({
+        'topics':serializer_topics.data,
+        'more':more
+    })
+    return {
+        'topics':serializer_topics.data,
+        'more':more
+    }
+
 class DocumentPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 10
@@ -63,10 +92,8 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.IsAuthenticated, QuestionPermission, )
      
     def paginate_queryset(self, search_queryset):
-        search_queryset = search_queryset.load_all()
-
         page = super().paginate_queryset(search_queryset)
-        questions_ids = [res.object.id for res in page]
+        questions_ids = [res.pk for res in page]
 
         queryset = Question.objects.get_questions_prefetched().filter(disabled=False, id__in=questions_ids).order_by('id')
         order = Case(*[When(id=id, then=pos) for pos, id in enumerate(questions_ids)])
@@ -143,9 +170,23 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         else:
             obj.difficulty = None
         obj.save()
-        
         return search_queryset
-    
+
+    def list(self, request):
+        topics = self.request.query_params.getlist('topics', None)
+
+        sqs = self.get_queryset()
+        questions_ids = [res.pk for res in sqs[:]]
+        related_topics = related_topic(questions_ids, topics)
+
+        page = self.paginate_queryset(sqs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(sqs, many=True)
+        return Response(serializer.data)
+
 class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.QuestionSerializer
     pagination_class = QuestionPagination
@@ -294,19 +335,11 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
 
             topics = set([int(topic) for topic in topics])
 
-        topics_dict = {}
-        for question in questions.only('topics__id', 'topics__name'):
-            for topic in question.topics.all():
-                if topic.id in topics_dict:
-                    topics_dict[topic.id]['num_questions'] += 1
-                else:
-                    topics_dict[topic.id] = {'id' : topic.id, 'name' : topic.name, 'num_questions' : 1}
-
-        topics_list = []
-        for key in topics_dict:
-            if key not in topics:
-                topics_list.append(topics_dict[key])
-        queryset = sorted(topics_list, key=lambda x : x['num_questions'], reverse=True)
+        questions = questions.filter(topics=OuterRef('pk')).values('topics')
+        total_question = questions.annotate(cnt=Count('pk')).values('cnt')
+        queryset = Topic.objects.all().annotate(num_questions=Coalesce(Subquery(total_question, output_field=IntegerField()), Value(0)))
+        queryset = queryset.order_by('-num_questions').values('name', 'num_questions')
+        queryset = [res for res in queryset[:20] if res['num_questions'] > 0]
         more = len(queryset) > 20
 
         serializer_topics = serializers.TopicListSerializer(queryset[:20], many = True)
