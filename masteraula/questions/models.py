@@ -85,7 +85,7 @@ class QuestionManager(models.Manager):
     def get_questions_prefetched(self, topics=True):
         qs = self.all().select_related('author').prefetch_related(
             'tags', 'disciplines', 'teaching_levels', 'alternatives',
-            'learning_objects', 'learning_objects__tags', 'learning_objects__owner', 
+            'learning_objects', 'learning_objects__tags', 'learning_objects__owner', 'learning_objects__questions', 
         )
         if topics:
             qs = qs.prefetch_related(self.topics_prefetch)
