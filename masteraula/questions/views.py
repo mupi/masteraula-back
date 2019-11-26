@@ -273,7 +273,7 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
        
         questions = Question.objects.prefetch_related(
             Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
-        ).filter(disciplines__id__in=disciplines, disabled=False)
+        ).filter(disabled=False)
 
         if disciplines:
             questions = questions.filter(disciplines__in=disciplines).distinct()
