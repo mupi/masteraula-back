@@ -114,34 +114,10 @@ class QuestionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
             return Question.objects.all()
-        queryset = Question.objects.get_questions_prefetched()
+
+        queryset = Question.objects.filter_questions_request(self.request.query_params)
         if self.action == 'list':
             queryset = queryset.filter(disabled=False).order_by('id')
-
-        disciplines = self.request.query_params.getlist('disciplines', None)
-        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
-        difficulties = self.request.query_params.getlist('difficulties', None)
-        years = self.request.query_params.getlist('years', None)
-        sources = self.request.query_params.getlist('sources', None)
-        author = self.request.query_params.get('author', None)
-        topics = self.request.query_params.getlist('topics', None)
-       
-        if disciplines:
-            queryset = queryset.filter(disciplines__in=disciplines).distinct()
-        if teaching_levels:
-            queryset = queryset.filter(teaching_levels__in=teaching_levels).distinct()
-        if difficulties:
-            queryset = queryset.filter(difficulty__in=difficulties).distinct()
-        if years:
-            queryset = queryset.filter(year__in=years).distinct()
-        if sources:
-            query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
-            queryset = queryset.filter(query)
-        if author:
-            queryset = queryset.filter(author__id=author).order_by('-create_date')
-        if topics:
-            for topic in topics:
-                queryset = queryset.filter(topics__id=topic)
 
         return queryset.order_by('id')
 
