@@ -140,7 +140,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         if author:
             params['author__id'] = author
         if topics:
-            params['topics__id__in'] = topics
+            params['topics_ids__in'] = topics
     
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
@@ -155,9 +155,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
             query |= item
 
         search_queryset = SearchQuerySet().models(Question).filter_and(**params)
-        search_queryset = search_queryset.filter(SQ(content=Clean(text)) | (
-            SQ(content=Clean(text)) & query
-        ))
+        search_queryset = search_queryset.filter(SQ(content__startswith=Clean(text)) | (SQ(content__startswith=Clean(text)) & query ))
 
         #Salvar os dados de busca	        
         obj = Search.objects.create(user=self.request.user, term=self.request.query_params['text'])	   
@@ -703,26 +701,26 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
         q = stripaccents_str(q)
         queryset = SearchQuerySet().models(Topic, Synonym).autocomplete(term_auto=q)
 
-        questions = Question.objects.all()
-        if disciplines:
-            questions = questions.filter(disciplines__in=disciplines).distinct()
-        if teaching_levels:
-            questions = questions.filter(teaching_levels__in=teaching_levels).distinct()
-        if difficulties:
-            questions = questions.filter(difficulty__in=difficulties).distinct()
-        if years:
-            questions = questions.filter(year__in=years).distinct()
-        if sources:
-            query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
-            questions = questions.filter(query)
-        if author:
-            questions = questions.filter(author__id=author).order_by('-create_date')
-        if topics:
-            for topic in topics:
-                questions = questions.filter(topics__id=topic)
+        # questions = Question.objects.all()
+        # if disciplines:
+        #     questions = questions.filter(disciplines__in=disciplines).distinct()
+        # if teaching_levels:
+        #     questions = questions.filter(teaching_levels__in=teaching_levels).distinct()
+        # if difficulties:
+        #     questions = questions.filter(difficulty__in=difficulties).distinct()
+        # if years:
+        #     questions = questions.filter(year__in=years).distinct()
+        # if sources:
+        #     query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
+        #     questions = questions.filter(query)
+        # if author:
+        #     questions = questions.filter(author__id=author).order_by('-create_date')
+        # if topics:
+        #     for topic in topics:
+        #         questions = questions.filter(topics__id=topic)
 
-        topics = Topic.objects.exclude(id__in=topics).filter(question__in=questions).distinct()
-        topics_set = set([topic.id for topic in topics])
+        topics = Topic.objects.exclude(id__in=topics)
+        # topics_set = set([topic.id for topic in topics])
 
         synonym_qs = []
         topic_qs = []
@@ -734,7 +732,7 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
                 topic_qs.append(q.pk)
 
         topic_res = [t for t in topics.filter(id__in=topic_qs).values('id', 'name')]
-        synonyms_res = Synonym.objects.get_topics_prefetched().filter(id__in=synonym_qs).filter(topics__in=topics).distinct().only('id', 'term', 'topics')
+        synonyms_res = Synonym.objects.get_topics_prefetched().filter(id__in=synonym_qs).only('id', 'term', 'topics')
 
         synonym_serializer = serializers.SynonymSerializer(synonyms_res, many=True)
         serialized_data = synonym_serializer.data

@@ -185,6 +185,11 @@ class Command(BaseCommand):
                                 question.tags.add(tag)
                                 question.save()
 
+                        if "topics" in question_data:
+                            for topic in question_data["topics"]:
+                                question.topics.add(topic)
+                                question.save()
+
                         print ("Questao " + question_data["id_enem"] + " Salva")
 
                         # if  len(question_data["object_text"]) > 0:

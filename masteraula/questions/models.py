@@ -78,7 +78,7 @@ class Descriptor(models.Model):
 
 class QuestionManager(models.Manager):
     # Hardcoded because we know the total depth of the topics tree
-    topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
+    topics_prefetch = Prefetch('topics', queryset=Topic.objects.prefetch_related('synonym_set').select_related(
         'parent', 'discipline', 'parent__parent', 'parent__discipline')
     )
 
