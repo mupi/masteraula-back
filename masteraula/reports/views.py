@@ -271,18 +271,26 @@ class StatementLearningObject(DisciplineReportsBaseView):
         
         program_list = [
             'Adaptado',
+            '(adaptado)'
             'Disponível',
             'Acesso',
             'In:',
             'http(s)?://',
             'Adapted',
-            '<small>'
+            '<small>',
+            'smaller',
+            'Leia'
         ]
         possible_objects = set()
         for program in program_list:
             for question in questions:
                 if re.search(program, question.statement):
+                    if program == 'Leia':
+                        if question.learning_objects.values():
+                            continue
+                    
                     possible_objects.add(question.id)
+
             questions = questions.filter(~Q(id__in=list(possible_objects)))
 
         context['data'] = Question.objects.filter(id__in=list(possible_objects))
