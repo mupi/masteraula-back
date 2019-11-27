@@ -31,40 +31,11 @@ from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
-from .search_indexes import SynonymIndex, TopicIndex
+from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex
 from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission
 from . import serializers as serializers
 
 current_milli_time = lambda: int(round(time.time() * 1000))
-
-def related_topic(questions_ids, topics):
-    questions = Question.objects.prefetch_related(
-        Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
-    ).filter(id__in=questions_ids)
-    topics_dict = {}
-    for question in questions.only('topics__id', 'topics__name'):
-        for topic in question.topics.all():
-            if topic.id in topics_dict:
-                topics_dict[topic.id]['num_questions'] += 1
-            else:
-                topics_dict[topic.id] = {'id' : topic.id, 'name' : topic.name, 'num_questions' : 1}
-
-    topics_list = []
-    for key in topics_dict:
-        if key not in topics:
-            topics_list.append(topics_dict[key])
-    queryset = sorted(topics_list, key=lambda x : x['num_questions'], reverse=True)
-
-    more = len(queryset) > 20
-    serializer_topics = serializers.TopicListSerializer(queryset[:20], many = True)
-    print({
-        'topics':serializer_topics.data,
-        'more':more
-    })
-    return {
-        'topics':serializer_topics.data,
-        'more':more
-    }
 
 class DocumentPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
@@ -103,6 +74,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         text = self.request.GET.get('text', None)
+
         if not text:
             raise exceptions.ValidationError("Invalid search text")
         text = prepare_document(text)
@@ -111,51 +83,14 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         if not text:
             raise exceptions.ValidationError("Invalid search text")
 
+        search_queryset = QuestionIndex.filter_question_search(text, self.request.query_params)
+
         disciplines = self.request.query_params.getlist('disciplines', None)
         teaching_levels = self.request.query_params.getlist('teaching_levels', None)
-        difficulties = self.request.query_params.getlist('difficulties', None)
-        years = self.request.query_params.getlist('years', None)
         sources = self.request.query_params.getlist('sources', None)
-        author = self.request.query_params.get('author', None)
+        years = self.request.query_params.getlist('years', None)
+        difficulties = self.request.query_params.getlist('difficulties', None)
         topics = self.request.query_params.getlist('topics', None)
-
-        params = {'disabled' : 'false'}
-        if disciplines:
-            params['disciplines__id__in'] = disciplines
-        if teaching_levels:
-            params['teaching_levels__in'] = teaching_levels
-        if difficulties:
-            difficulties_texts = []
-            if 'E' in difficulties:
-                difficulties_texts.append('Facil')
-            if 'M' in difficulties:
-                difficulties_texts.append('Medio')
-            if 'H' in difficulties:
-                difficulties_texts.append('Dificil')
-            params['difficulty__in'] = difficulties_texts
-        if years:
-            params['year__in'] = years
-        if sources:
-            params['source__in'] = sources
-        if author:
-            params['author__id'] = author
-        if topics:
-            params['topics_ids__in'] = topics
-    
-        # The following queries are to apply the weights of haystack boost
-        queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
-        query = queries.pop()
-        for item in queries:
-            query |= item
-        queries = [SQ(topics=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
-        for item in queries:
-            query |= item
-        queries = [SQ(statement=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
-        for item in queries:
-            query |= item
-
-        search_queryset = SearchQuerySet().models(Question).filter_and(**params)
-        search_queryset = search_queryset.filter(SQ(content__startswith=Clean(text)) | (SQ(content__startswith=Clean(text)) & query ))
 
         #Salvar os dados de busca	        
         obj = Search.objects.create(user=self.request.user, term=self.request.query_params['text'])	   
@@ -168,22 +103,8 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         else:
             obj.difficulty = None
         obj.save()
+        
         return search_queryset
-
-    def list(self, request):
-        topics = self.request.query_params.getlist('topics', None)
-
-        sqs = self.get_queryset()
-        questions_ids = [res.pk for res in sqs[:]]
-        related_topics = related_topic(questions_ids, topics)
-
-        page = self.paginate_queryset(sqs)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(sqs, many=True)
-        return Response(serializer.data)
 
 class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.QuestionSerializer
