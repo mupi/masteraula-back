@@ -199,48 +199,49 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
       
     @list_route(methods=['get'])
     def related_topics(self, request):
-        disciplines = self.request.query_params.getlist('disciplines', None)
-        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
-        difficulties = self.request.query_params.getlist('difficulties', None)
-        years = self.request.query_params.getlist('years', None)
-        sources = self.request.query_params.getlist('sources', None)
-        author = self.request.query_params.get('author', None)
-        topics = self.request.query_params.getlist('topics', [])
+        text = request.query_params.get('text', None)
+        topics = request.query_params.getlist('topics', [])
        
-        questions = Question.objects.prefetch_related(
-            Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
-        ).filter(disabled=False)
+        if text:
+            text = prepare_document(text)
+            text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
+            
+            if not text:
+                raise exceptions.ValidationError("Invalid search text")
 
-        if disciplines:
-            questions = questions.filter(disciplines__in=disciplines).distinct()
-        if teaching_levels:
-            questions = questions.filter(teaching_levels__in=teaching_levels).distinct()
-        if difficulties:
-            questions = questions.filter(difficulty__in=difficulties).distinct()
-        if years:
-            questions = questions.filter(year__in=years).distinct()
-        if sources:
-            query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
-            questions = questions.filter(query)
-        if author:
-            questions = questions.filter(author__id=author)
-        if topics:
-            for topic in topics:
-                questions = questions.filter(topics__id=topic)
+            search_queryset = QuestionIndex.filter_question_search(text, request.query_params)
+            questions_ids = [q.pk for q in search_queryset[:]]
 
-            topics = set([int(topic) for topic in topics])
+            questions = Question.objects.prefetch_related(
+                Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
+            ).filter(id__in=questions_ids)
+            topics_dict = {}
+            for question in questions.only('topics__id', 'topics__name'):
+                for topic in question.topics.all():
+                    if topic.id in topics_dict:
+                        topics_dict[topic.id]['num_questions'] += 1
+                    else:
+                        topics_dict[topic.id] = {'id' : topic.id, 'name' : topic.name, 'num_questions' : 1}
 
-        questions = questions.filter(topics=OuterRef('pk')).values('topics')
-        total_question = questions.annotate(cnt=Count('pk')).values('cnt')
-        queryset = Topic.objects.all().annotate(num_questions=Coalesce(Subquery(total_question, output_field=IntegerField()), Value(0)))
-        queryset = queryset.order_by('-num_questions').values('name', 'num_questions')
-        queryset = [res for res in queryset[:20] if res['num_questions'] > 0]
-        more = len(queryset) > 20
+            topics_list = []
+            for key in topics_dict:
+                if str(key) not in topics:
+                    topics_list.append(topics_dict[key])
+            queryset = sorted(topics_list, key=lambda x : x['num_questions'], reverse=True)
+
+        else:
+            questions = Question.objects.filter_questions_request(self.request.query_params).filter(disabled=False)
+
+            questions = questions.filter(topics=OuterRef('pk')).values('topics')
+            total_question = questions.annotate(cnt=Count('pk')).values('cnt')
+            queryset = Topic.objects.exclude(id__in=topics).annotate(num_questions=Coalesce(Subquery(total_question, output_field=IntegerField()), Value(0)))
+            queryset = queryset.order_by('-num_questions').values('name', 'num_questions', 'id')
+            queryset = [res for res in queryset[:20] if res['num_questions'] > 0]
 
         serializer_topics = serializers.TopicListSerializer(queryset[:20], many = True)
         return Response({
-            'topics':serializer_topics.data,
-            'more':more
+            'topics' : serializer_topics.data,
+            'more' : len(queryset) > 20
         })
 
 class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
