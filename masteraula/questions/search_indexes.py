@@ -36,11 +36,16 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         return Question.objects.get_questions_update_index().filter(disabled=False)
 
     def prepare_statement(self, obj):
-
         return prepare_document(obj.statement)
 
     def prepare_topics(self, obj):
-        return ' '.join([ stripaccents(topic.name) for topic in obj.get_all_topics() ])
+        topics = obj.get_all_topics()
+        res = [ topic.name for topic in topics ]
+
+        for topic in topics:
+            res += [ synonym.term for synonym in topic.synonym_set.all() ]
+
+        return ' '.join(stripaccents(t) for t in res)
     
     def prepare_topics_ids(self, obj):
         return [ topic.pk for topic in obj.get_all_topics() ]
@@ -64,7 +69,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         return [ teaching_level.pk for teaching_level in obj.teaching_levels.all() ]
 
     def prepare_author(self, obj):
-        return obj.author_id 
+        return obj.author_id
 
 class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True, boost=0.01)
