@@ -1,25 +1,26 @@
 from masteraula.questions.models import Topic
 
-all_topics = { topic.id:topic for topic in Topic.objects.prefetch_related('question_set') }
-next_topics = [topic.id for topic in Topic.objects.filter(childs__isnull=True).filter(discipline__id=2)]
+topics = [t for t in Topic.objects.filter(childs__isnull=True).prefetch_related('question_set').select_related('parent')]
 
 added = {}
-while next_topics:
-    curr = next_topics.pop(0)
-    if curr in added:
-        continue
-        
-    added[curr] = 1
-    curr = all_topics[curr]
+while topics:
+    next_topics = []
+    while topics:
+        curr = topics.pop(0)
+        if curr.id in added:
+            continue
+            
+        added[curr.id] = 1
 
-    if curr.parent:
-        parent = all_topics[curr.parent_id]
-        print('{} -> {}'.format(curr.name, parent.name))
+        if curr.parent:
+            print('{} -> {}'.format(curr.name, curr.parent.name))
 
-        for question in curr.question_set.all():
-            question.topics.add(parent)
-            # print(question.id)
+            for question in curr.question_set.all():
+                question.topics.add(curr.parent)
+                # print(question.id)
+            next_topics.append(curr.parent_id)
 
-        next_topics.append(curr.parent_id)
-    else:
-        continue
+    print('-' * 10)
+    next_topics = list(set(next_topics))
+    print(next_topics)
+    topics = [t for t in Topic.objects.filter(id__in=next_topics).prefetch_related('parent__question_set').select_related('parent')]
