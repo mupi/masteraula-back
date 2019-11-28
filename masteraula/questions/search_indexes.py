@@ -169,7 +169,7 @@ class SynonymIndex(indexes.SearchIndex, indexes.Indexable):
         return Synonym.objects.get_topics_prefetched()
 
     def prepare_topics(self, obj):
-        return [ topic.name for topic in obj.topics.all() ]
+        return [ {'id' : topic.id, 'name' : topic.name} for topic in obj.topics.all() ]
     
     def prepare_term_auto(self, obj):
         return stripaccents_str(obj)
