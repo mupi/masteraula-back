@@ -583,18 +583,18 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
 
     def list(self, request, *args, **kwargs):
         q = request.GET.get('q', None)
-        disciplines = self.request.query_params.getlist('disciplines', None)
-        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
-        difficulties = self.request.query_params.getlist('difficulties', None)
-        years = self.request.query_params.getlist('years', None)
-        sources = self.request.query_params.getlist('sources', None)
-        author = self.request.query_params.get('author', None)
+        # disciplines = self.request.query_params.getlist('disciplines', None)
+        # teaching_levels = self.request.query_params.getlist('teaching_levels', None)
+        # difficulties = self.request.query_params.getlist('difficulties', None)
+        # years = self.request.query_params.getlist('years', None)
+        # sources = self.request.query_params.getlist('sources', None)
+        # author = self.request.query_params.get('author', None)
         topics = self.request.query_params.getlist('topics', None)
 
         if not q or len(q) < 3:
             raise exceptions.ValidationError("'q' parameter required with at least 3 of length")
-        if not disciplines:
-            raise exceptions.ValidationError("discipine must be informed")
+        # if not disciplines:
+        #     raise exceptions.ValidationError("discipine must be informed")
             
         q = stripaccents_str(q)
         queryset = SearchQuerySet().models(Topic, Synonym).autocomplete(term_auto=q)
