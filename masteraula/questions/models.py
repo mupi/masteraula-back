@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 import datetime
 import uuid
+import operator
+
 from django.db import models
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
+
+from functools import reduce
 
 from taggit.managers import TaggableManager
 
@@ -78,7 +82,7 @@ class Descriptor(models.Model):
 
 class QuestionManager(models.Manager):
     # Hardcoded because we know the total depth of the topics tree
-    topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
+    topics_prefetch = Prefetch('topics', queryset=Topic.objects.prefetch_related('synonym_set').select_related(
         'parent', 'discipline', 'parent__parent', 'parent__discipline')
     )
 
@@ -98,7 +102,37 @@ class QuestionManager(models.Manager):
         if topics:
             qs = qs.prefetch_related(self.topics_prefetch)
         return qs
-    
+
+    def filter_questions_request(self, query_params):
+        queryset = self.get_questions_prefetched()
+        
+        disciplines = query_params.getlist('disciplines', None)
+        teaching_levels = query_params.getlist('teaching_levels', None)
+        difficulties = query_params.getlist('difficulties', None)
+        difficulties = query_params.getlist('difficulties', None)
+        years = query_params.getlist('years', None)
+        sources = query_params.getlist('sources', None)
+        author = query_params.get('author', None)
+        topics = query_params.getlist('topics', None)
+       
+        if disciplines:
+            queryset = queryset.filter(disciplines__in=disciplines).distinct()
+        if teaching_levels:
+            queryset = queryset.filter(teaching_levels__in=teaching_levels).distinct()
+        if difficulties:
+            queryset = queryset.filter(difficulty__in=difficulties).distinct()
+        if years:
+            queryset = queryset.filter(year__in=years).distinct()
+        if sources:
+            query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
+            queryset = queryset.filter(query)
+        if author:
+            queryset = queryset.filter(author__id=author).order_by('-create_date')
+        if topics:
+            for topic in topics:
+                queryset = queryset.filter(topics__id=topic)
+
+        return queryset
 
 class Question(models.Model):
     LEVEL_CHOICES = (
