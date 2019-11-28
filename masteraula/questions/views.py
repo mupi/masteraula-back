@@ -583,63 +583,27 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
 
     def list(self, request, *args, **kwargs):
         q = request.GET.get('q', None)
-        # disciplines = self.request.query_params.getlist('disciplines', None)
-        # teaching_levels = self.request.query_params.getlist('teaching_levels', None)
-        # difficulties = self.request.query_params.getlist('difficulties', None)
-        # years = self.request.query_params.getlist('years', None)
-        # sources = self.request.query_params.getlist('sources', None)
-        # author = self.request.query_params.get('author', None)
         topics = self.request.query_params.getlist('topics', None)
 
         if not q or len(q) < 3:
             raise exceptions.ValidationError("'q' parameter required with at least 3 of length")
-        # if not disciplines:
-        #     raise exceptions.ValidationError("discipine must be informed")
             
         q = stripaccents_str(q)
-        queryset = SearchQuerySet().models(Topic, Synonym).autocomplete(term_auto=q)
-
-        # questions = Question.objects.all()
-        # if disciplines:
-        #     questions = questions.filter(disciplines__in=disciplines).distinct()
-        # if teaching_levels:
-        #     questions = questions.filter(teaching_levels__in=teaching_levels).distinct()
-        # if difficulties:
-        #     questions = questions.filter(difficulty__in=difficulties).distinct()
-        # if years:
-        #     questions = questions.filter(year__in=years).distinct()
-        # if sources:
-        #     query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
-        #     questions = questions.filter(query)
-        # if author:
-        #     questions = questions.filter(author__id=author).order_by('-create_date')
-        # if topics:
-        #     for topic in topics:
-        #         questions = questions.filter(topics__id=topic)
-
-        topics = Topic.objects.exclude(id__in=topics)
-        # topics_set = set([topic.id for topic in topics])
+        queryset = SearchQuerySet().models(Topic, Synonym).autocomplete(term_auto=q).load_all()
 
         synonym_qs = []
         topic_qs = []
 
-        for q in queryset:
+        for q in queryset[:]:
             if q.model_name == 'synonym':
-                synonym_qs.append(q.pk)
+                synonym_qs.append(q.object)
             else:
-                topic_qs.append(q.pk)
+                topic_qs.append(q.object)
 
-        topic_res = [t for t in topics.filter(id__in=topic_qs).values('id', 'name')]
-        synonyms_res = Synonym.objects.get_topics_prefetched().filter(id__in=synonym_qs).only('id', 'term', 'topics')
-
-        synonym_serializer = serializers.SynonymSerializer(synonyms_res, many=True)
-        serialized_data = synonym_serializer.data
-        for synonym in serialized_data:
-            synonym['topics'] = [topic for topic in synonym['topics'] if topic['id'] in topics_set]
-
-        topic_serialzier = serializers.TopicSimplestSerializer(topic_res, many=True)
+        synonym_serializer = serializers.SynonymSerializer(synonym_qs, many=True)
+        topic_serialzier = serializers.TopicSimplestSerializer(topic_qs, many=True)
 
         return Response({
-            'synonyms': serialized_data,
+            'synonyms': synonym_serializer.data,
             'topics': topic_serialzier.data
         })
