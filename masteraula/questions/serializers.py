@@ -134,8 +134,8 @@ class LearningObjectSerializer(serializers.ModelSerializer):
         }            
     
     def get_questions_quantity(self, obj):
-        questions = Question.objects.filter(learning_objects__id=obj.id).filter(disabled=False)
-        return questions.count()
+        # questions = Question.objects.filter(learning_objects__id=obj.id).filter(disabled=False)
+        return obj.questions.filter(disabled=False).count()
 
     def create(self, validated_data):
         tags = validated_data.pop('tags', None)
