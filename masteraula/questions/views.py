@@ -31,7 +31,7 @@ from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
-from .search_indexes import SynonymIndex, TopicIndex
+from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex
 from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission
 from . import serializers as serializers
 
@@ -63,10 +63,8 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.IsAuthenticated, QuestionPermission, )
      
     def paginate_queryset(self, search_queryset):
-        search_queryset = search_queryset.load_all()
-
         page = super().paginate_queryset(search_queryset)
-        questions_ids = [res.object.id for res in page]
+        questions_ids = [res.pk for res in page]
 
         queryset = Question.objects.get_questions_prefetched().filter(disabled=False, id__in=questions_ids).order_by('id')
         order = Case(*[When(id=id, then=pos) for pos, id in enumerate(questions_ids)])
@@ -76,6 +74,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         text = self.request.GET.get('text', None)
+
         if not text:
             raise exceptions.ValidationError("Invalid search text")
         text = prepare_document(text)
@@ -84,51 +83,14 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         if not text:
             raise exceptions.ValidationError("Invalid search text")
 
+        search_queryset = QuestionIndex.filter_question_search(text, self.request.query_params)
+
         disciplines = self.request.query_params.getlist('disciplines', None)
         teaching_levels = self.request.query_params.getlist('teaching_levels', None)
-        difficulties = self.request.query_params.getlist('difficulties', None)
-        years = self.request.query_params.getlist('years', None)
         sources = self.request.query_params.getlist('sources', None)
-        author = self.request.query_params.get('author', None)
+        years = self.request.query_params.getlist('years', None)
+        difficulties = self.request.query_params.getlist('difficulties', None)
         topics = self.request.query_params.getlist('topics', None)
-
-        params = {'disabled' : 'false'}
-        if disciplines:
-            params['disciplines__id__in'] = disciplines
-        if teaching_levels:
-            params['teaching_levels__in'] = teaching_levels
-        if difficulties:
-            difficulties_texts = []
-            if 'E' in difficulties:
-                difficulties_texts.append('Facil')
-            if 'M' in difficulties:
-                difficulties_texts.append('Medio')
-            if 'H' in difficulties:
-                difficulties_texts.append('Dificil')
-            params['difficulty__in'] = difficulties_texts
-        if years:
-            params['year__in'] = years
-        if sources:
-            params['source__in'] = sources
-        if author:
-            params['author__id'] = author
-        if topics:
-            params['topics_ids__in'] = topics
-    
-        # The following queries are to apply the weights of haystack boost
-        queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
-        query = queries.pop()
-        for item in queries:
-            query |= item
-        queries = [SQ(topics=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
-        for item in queries:
-            query |= item
-        queries = [SQ(statement=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
-        for item in queries:
-            query |= item
-
-        search_queryset = SearchQuerySet().models(Question).filter_and(**params)
-        search_queryset = search_queryset.filter(SQ(content__startswith=Clean(text)) | (SQ(content__startswith=Clean(text)) & query ))
 
         #Salvar os dados de busca	        
         obj = Search.objects.create(user=self.request.user, term=self.request.query_params['text'])	   
@@ -143,7 +105,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         obj.save()
         
         return search_queryset
-    
+
 class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.QuestionSerializer
     pagination_class = QuestionPagination
@@ -152,34 +114,10 @@ class QuestionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
             return Question.objects.all()
-        queryset = Question.objects.get_questions_prefetched()
+
+        queryset = Question.objects.filter_questions_request(self.request.query_params)
         if self.action == 'list':
             queryset = queryset.filter(disabled=False).order_by('id')
-
-        disciplines = self.request.query_params.getlist('disciplines', None)
-        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
-        difficulties = self.request.query_params.getlist('difficulties', None)
-        years = self.request.query_params.getlist('years', None)
-        sources = self.request.query_params.getlist('sources', None)
-        author = self.request.query_params.get('author', None)
-        topics = self.request.query_params.getlist('topics', None)
-       
-        if disciplines:
-            queryset = queryset.filter(disciplines__in=disciplines).distinct()
-        if teaching_levels:
-            queryset = queryset.filter(teaching_levels__in=teaching_levels).distinct()
-        if difficulties:
-            queryset = queryset.filter(difficulty__in=difficulties).distinct()
-        if years:
-            queryset = queryset.filter(year__in=years).distinct()
-        if sources:
-            query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
-            queryset = queryset.filter(query)
-        if author:
-            queryset = queryset.filter(author__id=author).order_by('-create_date')
-        if topics:
-            for topic in topics:
-                queryset = queryset.filter(topics__id=topic)
 
         return queryset.order_by('id')
 
@@ -261,56 +199,49 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
       
     @list_route(methods=['get'])
     def related_topics(self, request):
-        disciplines = self.request.query_params.getlist('disciplines', None)
-        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
-        difficulties = self.request.query_params.getlist('difficulties', None)
-        years = self.request.query_params.getlist('years', None)
-        sources = self.request.query_params.getlist('sources', None)
-        author = self.request.query_params.get('author', None)
-        topics = self.request.query_params.getlist('topics', [])
+        text = request.query_params.get('text', None)
+        topics = request.query_params.getlist('topics', [])
        
-        questions = Question.objects.prefetch_related(
-            Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
-        ).filter(disabled=False)
+        if text:
+            text = prepare_document(text)
+            text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
+            
+            if not text:
+                raise exceptions.ValidationError("Invalid search text")
 
-        if disciplines:
-            questions = questions.filter(disciplines__in=disciplines).distinct()
-        if teaching_levels:
-            questions = questions.filter(teaching_levels__in=teaching_levels).distinct()
-        if difficulties:
-            questions = questions.filter(difficulty__in=difficulties).distinct()
-        if years:
-            questions = questions.filter(year__in=years).distinct()
-        if sources:
-            query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
-            questions = questions.filter(query)
-        if author:
-            questions = questions.filter(author__id=author)
-        if topics:
-            for topic in topics:
-                questions = questions.filter(topics__id=topic)
+            search_queryset = QuestionIndex.filter_question_search(text, request.query_params)
+            questions_ids = [q.pk for q in search_queryset[:]]
 
-            topics = set([int(topic) for topic in topics])
+            questions = Question.objects.prefetch_related(
+                Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
+            ).filter(id__in=questions_ids)
+            topics_dict = {}
+            for question in questions.only('topics__id', 'topics__name'):
+                for topic in question.topics.all():
+                    if topic.id in topics_dict:
+                        topics_dict[topic.id]['num_questions'] += 1
+                    else:
+                        topics_dict[topic.id] = {'id' : topic.id, 'name' : topic.name, 'num_questions' : 1}
 
-        topics_dict = {}
-        for question in questions.only('topics__id', 'topics__name'):
-            for topic in question.topics.all():
-                if topic.id in topics_dict:
-                    topics_dict[topic.id]['num_questions'] += 1
-                else:
-                    topics_dict[topic.id] = {'id' : topic.id, 'name' : topic.name, 'num_questions' : 1}
+            topics_list = []
+            for key in topics_dict:
+                if str(key) not in topics:
+                    topics_list.append(topics_dict[key])
+            queryset = sorted(topics_list, key=lambda x : x['num_questions'], reverse=True)
 
-        topics_list = []
-        for key in topics_dict:
-            if key not in topics:
-                topics_list.append(topics_dict[key])
-        queryset = sorted(topics_list, key=lambda x : x['num_questions'], reverse=True)
-        more = len(queryset) > 20
+        else:
+            questions = Question.objects.filter_questions_request(self.request.query_params).filter(disabled=False)
+
+            questions = questions.filter(topics=OuterRef('pk')).values('topics')
+            total_question = questions.annotate(cnt=Count('pk')).values('cnt')
+            queryset = Topic.objects.exclude(id__in=topics).annotate(num_questions=Coalesce(Subquery(total_question, output_field=IntegerField()), Value(0)))
+            queryset = queryset.order_by('-num_questions').values('name', 'num_questions', 'id')
+            queryset = [res for res in queryset[:20] if res['num_questions'] > 0]
 
         serializer_topics = serializers.TopicListSerializer(queryset[:20], many = True)
         return Response({
-            'topics':serializer_topics.data,
-            'more':more
+            'topics' : serializer_topics.data,
+            'more' : len(queryset) > 20
         })
 
 class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
