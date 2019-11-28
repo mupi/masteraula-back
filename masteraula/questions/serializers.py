@@ -634,7 +634,7 @@ class DocumentDetailPublicationSerializer(serializers.ModelSerializer):
         }
 
 class SynonymSerializer(serializers.ModelSerializer):
-    topics = TopicListSerializer(read_only=True, many=True)
+    topics = TopicSimplestSerializer(read_only=True, many=True)
 
     class Meta:
         model = Synonym
