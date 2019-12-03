@@ -90,7 +90,6 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         sources = self.request.query_params.getlist('sources', None)
         years = self.request.query_params.getlist('years', None)
         difficulties = self.request.query_params.getlist('difficulties', None)
-        topics = self.request.query_params.getlist('topics', None)
 
         #Salvar os dados de busca	        
         obj = Search.objects.create(user=self.request.user, term=self.request.query_params['text'])	   
