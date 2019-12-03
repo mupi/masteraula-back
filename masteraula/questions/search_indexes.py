@@ -106,7 +106,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         if author:
             params['author__id'] = author
         if topics:
-            params['topics_ids__in'] = topics
+            params['topics_ids'] = topics
     
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
