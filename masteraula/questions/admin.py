@@ -162,8 +162,6 @@ class TopicModelAdmin(admin.ModelAdmin):
     inlines = [TopicChildsInline, TopicQuestionInline, ]
     list_per_page = 100
 
-
-
 class SynonymModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'term',)
     search_fields = ['id', 'term',]
@@ -214,7 +212,7 @@ class AlternativeModelAdmin(admin.ModelAdmin):
 
 class DocumentModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner',)
-    list_display = ('id', 'owner_id', 'owner_name', 'owner_email', 'name', 'create_date', 'secret', 'disabled',)
+    list_display = ('id', 'owner_id', 'owner_name', 'owner_email', 'name', 'num_questions', 'create_date', 'secret', 'disabled',)
     search_fields = ['id', 'owner__id', 'owner__name', 'owner__email', 'name', 'create_date']
 
     inlines = [DocumentQuestionsInline, ]
@@ -226,6 +224,9 @@ class DocumentModelAdmin(admin.ModelAdmin):
 
     def owner_email(self, obj):
         return obj.owner.email
+    
+    def num_questions(self, obj):
+        return obj.questions.count()
 
 class HeaderModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner',)
@@ -256,7 +257,7 @@ class DocumentDownloadModelAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = DocumentResource
     raw_id_fields = ('user',)
     list_display = ('id', 'user_id', 'user', 'document', 'download_date')
-    search_fields = ['id', 'user__name', 'user__id', 'document__name', 'download_date']
+    search_fields = ['id', 'user__name', 'user__id',  'user__email', 'document__name', 'download_date']
     list_per_page = 100
 
     def get_export_formats(self):
