@@ -72,3 +72,8 @@ class DocumentDownloadPermission(permissions.BasePermission):
         if DocumentDownload.objects.filter(Q(user=request.user) & Q(download_date__month=now.month)).count() < 3:
             return True
         return False
+
+class LabelPermission(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        # Write permissions are only allowed to the owner of the snippet.
+        return obj.owner == request.user

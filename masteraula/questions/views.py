@@ -32,7 +32,7 @@ from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
 from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex
-from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission
+from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission
 from . import serializers as serializers
 
 current_milli_time = lambda: int(round(time.time() * 1000))
@@ -307,6 +307,7 @@ class LabelViewSet(viewsets.ModelViewSet):
     queryset = Label.objects.all()
     serializer_class = serializers.LabelSerializer
     pagination_class = None
+    permission_classes = (LabelPermission, )
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
