@@ -6,7 +6,7 @@ from import_export.formats import base_formats
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
                      Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, Search,
-                     DocumentDownload, DocumentPublication, Synonym)
+                     DocumentDownload, DocumentPublication, Synonym, Label)
 
 class SearchResource(resources.ModelResource):
     
@@ -123,6 +123,18 @@ class TopicChildsInline(admin.StackedInline):
     exclude = ('discipline', 'name')
     extra = 1
 
+class LabelQuestionInline(admin.StackedInline):
+    model = Label.question_set.through
+    raw_id_fields=('question',)
+
+    extra = 1
+
+class LabelInline(admin.TabularInline):
+    model = Question.labels.through
+    raw_id_fields=('label',)
+
+    extra = 1
+
 class SynonymInline(admin.TabularInline):
     model = Synonym.topics.through
     raw_id_fields=('topic',)
@@ -162,6 +174,13 @@ class TopicModelAdmin(admin.ModelAdmin):
     inlines = [TopicChildsInline, TopicQuestionInline, ]
     list_per_page = 100
 
+class LabelModelAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name',)
+    search_fields = ['id', 'name',]
+
+    inlines = [LabelQuestionInline, ]
+    list_per_page = 100
+
 class SynonymModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'term',)
     search_fields = ['id', 'term',]
@@ -192,7 +211,7 @@ class QuestionModelAdmin(ImportMixin, admin.ModelAdmin):
     exclude = ('topics', 'learning_objects')
     search_fields = ('id', 'year', 'source', 'statement', 'tags__name')
 
-    inlines = [QuestionLearningObjectInline, AlternativesInline, TopicsInline]
+    inlines = [QuestionLearningObjectInline, AlternativesInline, TopicsInline, LabelInline]
 
     list_per_page = 100
 
@@ -292,6 +311,7 @@ admin.site.register(TeachingLevel, TeachingLeveltModelAdmin)
 admin.site.register(Year, YearModelAdmin)
 admin.site.register(Source, SourceModelAdmin)
 admin.site.register(Topic, TopicModelAdmin)
+admin.site.register(Label, LabelModelAdmin)
 admin.site.register(LearningObject, LearningObjectModelAdmin)
 admin.site.register(Alternative, AlternativeModelAdmin)
 admin.site.register(Question, QuestionModelAdmin)
