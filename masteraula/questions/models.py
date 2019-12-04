@@ -55,6 +55,29 @@ class Topic(models.Model):
     def __str__(self):
         return str(self.name)
 
+class Label(models.Model):
+    COLORS_CHOICES = (
+        ('', _('None')),
+        ('Y', _('Yellow')),
+        ('P', _('Purple')),
+        ('R', _('Red')),
+        ('G', _('Grey')),
+        ('B', _('Black')),
+        ('PI', _('Pink')),
+        ('O', _('Orange')),
+        ('LG', _('Light Green')),
+        ('DG', _('Dark Green')),
+        ('DB', _('Dark Blue')),
+        ('LB', _('Light Blue'))
+    )
+
+    name = models.CharField(max_length=100, null=False, blank=False)
+    color = models.CharField(max_length=2, choices = COLORS_CHOICES, null=True, blank=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.name)
+
 class SynonymManager(models.Manager):
     topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
         'parent', 'discipline', 'parent__parent', 'parent__discipline')
@@ -109,7 +132,6 @@ class QuestionManager(models.Manager):
         disciplines = query_params.getlist('disciplines', None)
         teaching_levels = query_params.getlist('teaching_levels', None)
         difficulties = query_params.getlist('difficulties', None)
-        difficulties = query_params.getlist('difficulties', None)
         years = query_params.getlist('years', None)
         sources = query_params.getlist('sources', None)
         author = query_params.get('author', None)
@@ -155,6 +177,7 @@ class Question(models.Model):
     descriptors = models.ManyToManyField(Descriptor, blank=True)
     teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)
     topics = models.ManyToManyField(Topic, blank=True)
+    labels = models.ManyToManyField(Label, blank=True)
 
     year = models.PositiveIntegerField(null=True, blank=True)
     source = models.CharField(max_length=50, null=True, blank=True)

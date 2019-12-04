@@ -24,7 +24,7 @@ from taggit.models import Tag
 from masteraula.users.models import User
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
-                    Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, Synonym)
+                    Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, Synonym, Label,)
 
 from .templatetags.search_helpers import prepare_document, stripaccents_str
 from .docx_parsers import Question_Parser
@@ -302,6 +302,14 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
 
         # return self.gen_queryset(search_queryset, start_offset)
         return search_queryset
+
+class LabelViewSet(viewsets.ModelViewSet):
+    queryset = Label.objects.all()
+    serializer_class = serializers.LabelSerializer
+    pagination_class = None
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 class LearningObjectViewSet(viewsets.ModelViewSet):
     queryset = LearningObject.objects.all()

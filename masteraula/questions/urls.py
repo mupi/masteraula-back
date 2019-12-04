@@ -20,6 +20,7 @@ router.register(r'teaching_levels', views.TeachingLevelViewSet, base_name='teach
 router.register(r'years', views.YearViewSet, base_name='years')
 router.register(r'sources', views.SourceViewSet, base_name='sources')
 router.register(r'topics', views.TopicViewSet, base_name='topics')
+router.register(r'labels', views.LabelViewSet, base_name='labels')
 router.register(r'documents', views.DocumentViewSet, base_name='documents')
 router.register(r'document_publication', views.DocumentPublicationViewSet, base_name='document_publication')
 router.register(r'headers', views.HeaderViewSet, base_name='headers')
