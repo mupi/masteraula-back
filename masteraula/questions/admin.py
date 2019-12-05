@@ -175,11 +175,15 @@ class TopicModelAdmin(admin.ModelAdmin):
     list_per_page = 100
 
 class LabelModelAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name',)
+    raw_id_fields = ('owner', )
+    list_display = ('id', 'owner_id', 'name', 'num_questions')
     search_fields = ['id', 'name',]
 
     inlines = [LabelQuestionInline, ]
     list_per_page = 100
+
+    def num_questions(self, obj):
+        return Question.objects.filter(labels=obj).count()
 
 class SynonymModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'term',)
