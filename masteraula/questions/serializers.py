@@ -216,7 +216,7 @@ class AlternativeSerializer(serializers.ModelSerializer):
         )
 
 class LabelSerializer(serializers.ModelSerializer):
-    color = serializers.CharField(read_only=False)
+    color = serializers.CharField(read_only=False, required=False, allow_null=True)
 
     class Meta:
         model = Label
