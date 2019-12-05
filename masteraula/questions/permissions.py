@@ -58,12 +58,9 @@ class HeaderPermission(permissions.BasePermission):
         return obj.owner == request.user
 
 class DocumentDownloadPermission(permissions.BasePermission):
-    """3 download por usuário se não for premium"""
+    message = "Free users has limit of 3 downloads"
 
-    def has_permission(self, request, view, obj=None):
-        if not request.user.is_authenticated:
-            return False
-
+    def has_permission(self, request, view):
         now = datetime.datetime.now()
 
         if request.user.premium():

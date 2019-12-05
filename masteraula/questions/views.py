@@ -448,7 +448,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    @detail_route(methods=['get'], permission_classes=[DocumentDownloadPermission, ])
+    @detail_route(methods=['get'], permission_classes=[permissions.IsAuthenticated, DocumentDownloadPermission, ])
     def generate_list(self, request, pk=None):
         """
         Generate a docx file containing all the list.
