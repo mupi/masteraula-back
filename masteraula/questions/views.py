@@ -26,6 +26,8 @@ from masteraula.users.models import User
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, Synonym)
 
+from .models import DocumentLimitExceedException
+
 from .templatetags.search_helpers import prepare_document, stripaccents_str
 from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
@@ -385,15 +387,18 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @detail_route(methods=['post'])
     def add_question(self, request, pk=None):
         document = self.get_object()
-        serializer = serializers.DocumentQuestionSerializer(data=request.data)
+        serializer = serializers.DocumentQuestionSerializer(data={ **request.data, 'document' : document })
         serializer.is_valid(raise_exception=True)
-        document_question = serializer.save(document=document)
+
+        try:
+            document_question = document.add_question(serializer.validated_data['question'])
+        except DocumentLimitExceedException as err:
+            raise exceptions.ValidationError(str(err))
 
         document_question = DocumentQuestion.objects.get_questions_prefetched().get(id=document_question.id)
-        
         list_document = serializers.DocumentQuestionListDetailSerializer(document_question)
+
         headers = self.get_success_headers(list_document.data)
-        
         return Response(list_document.data, status=status.HTTP_201_CREATED, headers=headers)
     
     @detail_route(methods=['post'])
