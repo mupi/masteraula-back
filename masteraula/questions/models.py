@@ -112,7 +112,7 @@ class QuestionManager(models.Manager):
     def get_questions_prefetched(self, topics=True):
         qs = self.all().select_related('author').prefetch_related(
             'tags', 'disciplines', 'teaching_levels', 'alternatives',
-            'learning_objects', 'learning_objects__tags', 'learning_objects__owner', 'learning_objects__questions', 
+            'learning_objects', 'learning_objects__tags', 'learning_objects__owner', 'learning_objects__questions', 'labels',
         )
         if topics:
             qs = qs.prefetch_related(self.topics_prefetch)
@@ -136,6 +136,7 @@ class QuestionManager(models.Manager):
         sources = query_params.getlist('sources', None)
         author = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
+        labels = query_params.getlist('labels', None)
        
         if disciplines:
             queryset = queryset.filter(disciplines__in=disciplines).distinct()
@@ -153,6 +154,8 @@ class QuestionManager(models.Manager):
         if topics:
             for topic in topics:
                 queryset = queryset.filter(topics__id=topic)
+        if labels:
+            queryset = queryset.filter(labels__in=labels).distinct()
 
         return queryset
 
