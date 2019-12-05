@@ -234,7 +234,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         return TopicSimpleSerializer(question.get_all_topics(), many=True).data
 
     alternatives = AlternativeSerializer(many=True, read_only=False, required=False, allow_null=True)
-    tags = TagListSerializer(read_only=False) 
+    tags = TagListSerializer(read_only=False, required=False, allow_null=True) 
     year = serializers.IntegerField(read_only=False, required=False, allow_null=True)
     difficulty = serializers.CharField(read_only=False, required=True)
 
@@ -304,10 +304,10 @@ class QuestionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(_("At least one teaching level id"))
         return list(set(value))
 
-    def validate_tags(self, value):
-        if len(value) < 2:
-            raise serializers.ValidationError(_("At least two tags"))
-        return value
+    # def validate_tags(self, value):
+    #     if len(value) < 2:
+    #         raise serializers.ValidationError(_("At least two tags"))
+    #     return value
 
     def validate_year(self, value):
         if not value:
