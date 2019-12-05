@@ -65,10 +65,9 @@ class DocumentDownloadPermission(permissions.BasePermission):
             return False
 
         now = datetime.datetime.now()
-        premium = Subscription.objects.filter(Q(user=request.user) & Q(expiration_date__gt=now)).count()
 
-        if premium:
+        if request.user.premium():
             return True
-        if DocumentDownload.objects.filter(Q(user=request.user) & Q(download_date__month=now.month)).count() < 3:
+        if request.user.documentdownload_set.filter(download_date__month=now.month).count() < 3:
             return True
         return False
