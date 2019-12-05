@@ -454,6 +454,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
         Generate a docx file containing all the list.
         """
         document = self.get_object()
+        if document.questions.count() > 30:
+            raise exceptions.ValidationError('Document have more than 30 questions')
         document_generator = DocxGeneratorAWS()
 
         try:
