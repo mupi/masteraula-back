@@ -285,9 +285,9 @@ class Document(models.Model):
 
     def add_question(self, question):
         if self.questions.count() >= 30:
-            raise DocumentLimitExceedException('Document has more than 30 questions')
+            raise DocumentLimitExceedException('Documentos não pode ter mais de 30 questões.')
         if not self.owner.premium() and self.questions.count() >= 10:
-            raise DocumentLimitExceedException('Free user document can not have more than 10 questions')
+            raise DocumentLimitExceedException('Documentos não pode ter mais de 10 questões. Para aumentar o número de questões, atualize seu plano gratuito para Premium.')
         
         last_learning_object = None
 

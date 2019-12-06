@@ -393,7 +393,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         try:
             document_question = document.add_question(serializer.validated_data['question'])
         except DocumentLimitExceedException as err:
-            raise exceptions.ValidationError(str(err))
+            raise exceptions.PermissionDenied(str(err))
 
         document_question = DocumentQuestion.objects.get_questions_prefetched().get(id=document_question.id)
         list_document = serializers.DocumentQuestionListDetailSerializer(document_question)
@@ -455,7 +455,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         """
         document = self.get_object()
         if document.questions.count() > 30:
-            raise exceptions.ValidationError('Document have more than 30 questions')
+            raise exceptions.PermissionDenied('Documento não pode ter mais de 30 questões.')
         document_generator = DocxGeneratorAWS()
 
         try:
