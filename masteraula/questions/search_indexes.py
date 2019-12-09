@@ -29,7 +29,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     year = indexes.CharField(model_attr='year', null=True)
     source = indexes.CharField(model_attr='source', null=True)
     difficulty = indexes.CharField()
-    author = indexes.IntegerField()
+    author = indexes.CharField(model_attr='author')
     authorship = indexes.CharField()
     disabled = indexes.BooleanField(model_attr='disabled')
 
@@ -71,9 +71,6 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_teaching_levels(self, obj):
         return [ teaching_level.pk for teaching_level in obj.teaching_levels.all() ]
-
-    def prepare_author(self, obj):
-        return obj.author_id
 
     @staticmethod
     def filter_question_search(text, query_params):
