@@ -58,21 +58,21 @@ class Topic(models.Model):
 class Label(models.Model):
     COLORS_CHOICES = (
         ('', _('None')),
-        ('Y', _('Yellow')),
-        ('P', _('Purple')),
-        ('R', _('Red')),
-        ('G', _('Grey')),
-        ('B', _('Black')),
-        ('PI', _('Pink')),
-        ('O', _('Orange')),
-        ('LG', _('Light Green')),
-        ('DG', _('Dark Green')),
-        ('DB', _('Dark Blue')),
-        ('LB', _('Light Blue'))
+        ('#FFFF33', _('Yellow')),
+        ('#A849F7', _('Purple')),
+        ('#F9442E', _('Red')),
+        ('#BABEBF', _('Grey')),
+        ('#050505', _('Black')),
+        ('#FC1979', _('Pink')),
+        ('#FC7320', _('Orange')),
+        ('#9AEE2E', _('Light Green')),
+        ('#569505', _('Dark Green')),
+        ('#82C2FB', _('Light Blue')),
+        ('#055195', _('Dark Blue'))
     )
 
     name = models.CharField(max_length=100, null=False, blank=False)
-    color = models.CharField(max_length=2, choices = COLORS_CHOICES, null=True, blank=True)
+    color = models.CharField(max_length=7, choices = COLORS_CHOICES, null=True, blank=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -120,7 +120,7 @@ class QuestionManager(models.Manager):
 
     def get_questions_update_index(self, topics=True):
         qs = self.all().select_related('author').prefetch_related(
-            'tags', 'alternatives', 'disciplines', 'teaching_levels', 'learning_objects', 'learning_objects__tags', 
+            'tags', 'alternatives', 'disciplines', 'teaching_levels', 'learning_objects', 'learning_objects__tags', 'labels',
         )
         if topics:
             qs = qs.prefetch_related(self.topics_prefetch)
