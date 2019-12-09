@@ -260,6 +260,9 @@ class DocumentManager(models.Manager):
             ),
         )
 
+class DocumentLimitExceedException(Exception):
+    pass
+
 class Document(models.Model):
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -281,6 +284,11 @@ class Document(models.Model):
         self.save()
 
     def add_question(self, question):
+        if self.questions.count() >= 30:
+            raise DocumentLimitExceedException('Documentos não pode ter mais de 30 questões.')
+        if not self.owner.premium() and self.questions.count() >= 10:
+            raise DocumentLimitExceedException('Documentos não pode ter mais de 10 questões. Para aumentar o número de questões, atualize seu plano gratuito para Premium.')
+        
         last_learning_object = None
 
         question = Question.objects.prefetch_related('learning_objects').get(id=question.id)
@@ -360,7 +368,6 @@ class DocumentQuestionManager(models.Manager):
             if dq != documentQuestion:
                 dq.order = dq.order + 1
                 dq.save()
-
         return documentQuestion
 
 
