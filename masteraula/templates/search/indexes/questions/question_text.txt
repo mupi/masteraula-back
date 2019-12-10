@@ -1,6 +1,7 @@
 {% load search_helpers %}
 
 {{ object.statement|prepare_document }}
+{{ object.author.name|stripaccents }}
 
 {{ object.year }}
 {{ object.source|prepare_document }}

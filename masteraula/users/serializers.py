@@ -99,12 +99,8 @@ class UserSerializer(serializers.ModelSerializer):
         return SocialAccountSerializer(SocialAccount.objects.filter(user=obj), many=True).data
 
     def get_subscription(self, obj):
-        subscription = Subscription.objects.filter(user=obj)
+        return obj.premium()
 
-        if subscription:
-            return True
-        return False
-        
     class Meta:
         model = User
         fields = (
