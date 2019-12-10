@@ -25,6 +25,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     topics_ids = indexes.MultiValueField()
     disciplines = indexes.MultiValueField()
     teaching_levels = indexes.MultiValueField()
+    labels = indexes.MultiValueField()
 
     year = indexes.CharField(model_attr='year', null=True)
     source = indexes.CharField(model_attr='source', null=True)
@@ -72,6 +73,12 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_teaching_levels(self, obj):
         return [ teaching_level.pk for teaching_level in obj.teaching_levels.all() ]
 
+    def prepare_labels(self, obj):
+        return [ label.pk for label in obj.labels.all() ]
+
+    def prepare_author(self, obj):
+        return obj.author_id
+
     @staticmethod
     def filter_question_search(text, query_params):
         disciplines = query_params.getlist('disciplines', None)
@@ -81,6 +88,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         sources = query_params.getlist('sources', None)
         author = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
+        labels = query_params.getlist('labels', None)
 
         params = {'disabled' : 'false'}
         if disciplines:
@@ -104,6 +112,8 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
             params['author__id'] = author
         if topics:
             params['topics_ids'] = topics
+        if labels:
+            params['labels__in'] = labels
     
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]

@@ -22,7 +22,7 @@ from masteraula.users.models import User, Profile
 from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Question,
-                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, LearningObject, Search, DocumentDownload, Synonym)
+                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, LearningObject, Search, DocumentDownload, Synonym, Label)
 
 import unicodedata
 import ast
@@ -215,6 +215,22 @@ class AlternativeSerializer(serializers.ModelSerializer):
             'is_correct'
         )
 
+class LabelSerializer(serializers.ModelSerializer):
+    color = serializers.CharField(read_only=False, required=False, allow_null=True)
+
+    class Meta:
+        model = Label
+        fields = (
+             'id',
+             'name',
+             'color',
+             'owner'
+        )
+
+        extra_kwargs = {
+            'owner' : { 'read_only' : True },
+            }
+
 class ListDocumentQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
@@ -227,6 +243,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     author = UserDetailsSerializer(read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
     topics = TopicSimpleSerializer(read_only=True, many=True)
+    labels = LabelSerializer(many=True, required=False)
     learning_objects = LearningObjectSerializer(many=True, read_only=True)
 
     all_topics = serializers.SerializerMethodField('all_topics_serializer')
@@ -240,6 +257,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     learning_objects_ids = ModelListSerializer(write_only=True, allow_null=True, required=False, many=True, queryset=LearningObject.objects.all())
     topics_ids = ModelListSerializer(write_only=True, many=True, queryset=Topic.objects.all())
+    labels_ids = ModelListSerializer(write_only=True, allow_null=True,  many=True, queryset=Label.objects.all())
     disciplines_ids = ModelListSerializer(write_only=True, many=True, queryset=Discipline.objects.all())
     teaching_levels_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingLevel.objects.all())
     source_id = serializers.PrimaryKeyRelatedField(write_only=True, required=False, allow_null=True, queryset=Source.objects.all())
@@ -263,10 +281,12 @@ class QuestionSerializer(serializers.ModelSerializer):
             'year',
             'source',
             'topics',
+            'labels',
             'all_topics',
 
             'learning_objects_ids',
             'topics_ids',
+            'labels_ids',
             'disciplines_ids',
             'teaching_levels_ids',
             'source_id',
@@ -642,7 +662,7 @@ class SynonymSerializer(serializers.ModelSerializer):
              'term',
              'topics',
         )
-    
+
 class SearchSerializer(serializers.ModelSerializer):
     user = UserDetailsSerializer(read_only=True)
     difficulty = serializers.CharField()

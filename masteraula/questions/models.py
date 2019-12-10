@@ -55,6 +55,29 @@ class Topic(models.Model):
     def __str__(self):
         return str(self.name)
 
+class Label(models.Model):
+    COLORS_CHOICES = (
+        ('', _('None')),
+        ('#FFFF33', _('Yellow')),
+        ('#A849F7', _('Purple')),
+        ('#F9442E', _('Red')),
+        ('#BABEBF', _('Grey')),
+        ('#050505', _('Black')),
+        ('#FC1979', _('Pink')),
+        ('#FC7320', _('Orange')),
+        ('#9AEE2E', _('Light Green')),
+        ('#569505', _('Dark Green')),
+        ('#82C2FB', _('Light Blue')),
+        ('#055195', _('Dark Blue'))
+    )
+
+    name = models.CharField(max_length=100, null=False, blank=False)
+    color = models.CharField(max_length=7, choices = COLORS_CHOICES, null=True, blank=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.name)
+
 class SynonymManager(models.Manager):
     topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
         'parent', 'discipline', 'parent__parent', 'parent__discipline')
@@ -89,7 +112,7 @@ class QuestionManager(models.Manager):
     def get_questions_prefetched(self, topics=True):
         qs = self.all().select_related('author').prefetch_related(
             'tags', 'disciplines', 'teaching_levels', 'alternatives',
-            'learning_objects', 'learning_objects__tags', 'learning_objects__owner', 'learning_objects__questions', 
+            'learning_objects', 'learning_objects__tags', 'learning_objects__owner', 'learning_objects__questions', 'labels',
         )
         if topics:
             qs = qs.prefetch_related(self.topics_prefetch)
@@ -97,7 +120,7 @@ class QuestionManager(models.Manager):
 
     def get_questions_update_index(self, topics=True):
         qs = self.all().select_related('author').prefetch_related(
-            'tags', 'alternatives', 'disciplines', 'teaching_levels', 'learning_objects', 'learning_objects__tags', 
+            'tags', 'alternatives', 'disciplines', 'teaching_levels', 'learning_objects', 'learning_objects__tags', 'labels',
         )
         if topics:
             qs = qs.prefetch_related(self.topics_prefetch)
@@ -109,11 +132,11 @@ class QuestionManager(models.Manager):
         disciplines = query_params.getlist('disciplines', None)
         teaching_levels = query_params.getlist('teaching_levels', None)
         difficulties = query_params.getlist('difficulties', None)
-        difficulties = query_params.getlist('difficulties', None)
         years = query_params.getlist('years', None)
         sources = query_params.getlist('sources', None)
         author = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
+        labels = query_params.getlist('labels', None)
        
         if disciplines:
             queryset = queryset.filter(disciplines__in=disciplines).distinct()
@@ -131,6 +154,8 @@ class QuestionManager(models.Manager):
         if topics:
             for topic in topics:
                 queryset = queryset.filter(topics__id=topic)
+        if labels:
+            queryset = queryset.filter(labels__in=labels).distinct()
 
         return queryset
 
@@ -155,6 +180,7 @@ class Question(models.Model):
     descriptors = models.ManyToManyField(Descriptor, blank=True)
     teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)
     topics = models.ManyToManyField(Topic, blank=True)
+    labels = models.ManyToManyField(Label, blank=True)
 
     year = models.PositiveIntegerField(null=True, blank=True)
     source = models.CharField(max_length=50, null=True, blank=True)

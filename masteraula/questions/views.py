@@ -24,7 +24,7 @@ from taggit.models import Tag
 from masteraula.users.models import User
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
-                    Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, Synonym)
+                    Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, Synonym, Label,)
 
 from .models import DocumentLimitExceedException
 
@@ -34,7 +34,7 @@ from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
 from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex
-from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission
+from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission
 from . import serializers as serializers
 
 current_milli_time = lambda: int(round(time.time() * 1000))
@@ -304,6 +304,18 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
 
         # return self.gen_queryset(search_queryset, start_offset)
         return search_queryset
+
+class LabelViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.LabelSerializer
+    pagination_class = None
+    permission_classes = (LabelPermission, )
+
+    def get_queryset(self):
+        queryset = Label.objects.filter(owner=self.request.user).order_by('name')
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 class LearningObjectViewSet(viewsets.ModelViewSet):
     queryset = LearningObject.objects.all()
