@@ -257,7 +257,6 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     learning_objects_ids = ModelListSerializer(write_only=True, allow_null=True, required=False, many=True, queryset=LearningObject.objects.all())
     topics_ids = ModelListSerializer(write_only=True, many=True, queryset=Topic.objects.all())
-    labels_ids = ModelListSerializer(write_only=True, allow_null=True,  many=True, queryset=Label.objects.all())
     disciplines_ids = ModelListSerializer(write_only=True, many=True, queryset=Discipline.objects.all())
     teaching_levels_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingLevel.objects.all())
     source_id = serializers.PrimaryKeyRelatedField(write_only=True, required=False, allow_null=True, queryset=Source.objects.all())
@@ -286,7 +285,6 @@ class QuestionSerializer(serializers.ModelSerializer):
 
             'learning_objects_ids',
             'topics_ids',
-            'labels_ids',
             'disciplines_ids',
             'teaching_levels_ids',
             'source_id',
