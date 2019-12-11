@@ -59,6 +59,9 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+    def premium(self):
+        return self.subscription_set.filter(expiration_date__gt=datetime.datetime.now()).count() > 0
+
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     credit_avaiable = models.PositiveIntegerField(null=False, blank=True, default=0)

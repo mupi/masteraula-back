@@ -58,18 +58,14 @@ class HeaderPermission(permissions.BasePermission):
         return obj.owner == request.user
 
 class DocumentDownloadPermission(permissions.BasePermission):
-    """3 download por usuário se não for premium"""
+    message = "Free users has limit of 3 downloads"
 
-    def has_permission(self, request, view, obj=None):
-        if not request.user.is_authenticated:
-            return False
-
+    def has_permission(self, request, view):
         now = datetime.datetime.now()
-        premium = Subscription.objects.filter(Q(user=request.user) & Q(expiration_date__gt=now)).count()
 
-        if premium:
+        if request.user.premium():
             return True
-        if DocumentDownload.objects.filter(Q(user=request.user) & Q(download_date__month=now.month)).count() < 3:
+        if request.user.documentdownload_set.filter(download_date__month=now.month).count() < 3:
             return True
         return False
 
