@@ -217,19 +217,25 @@ class AlternativeSerializer(serializers.ModelSerializer):
 
 class LabelSerializer(serializers.ModelSerializer):
     color = serializers.CharField(read_only=False, required=False, allow_null=True)
-
+    num_questions = serializers.SerializerMethodField()
+    
     class Meta:
         model = Label
         fields = (
              'id',
              'name',
              'color',
-             'owner'
+             'owner',
+             'num_questions'
         )
 
         extra_kwargs = {
             'owner' : { 'read_only' : True },
             }
+
+    def get_num_questions(self, obj):
+        questions = Question.objects.filter(labels__id=obj.id).filter(disabled=False)
+        return questions.count()
 
 class ListDocumentQuestionSerializer(serializers.ModelSerializer):
     class Meta:

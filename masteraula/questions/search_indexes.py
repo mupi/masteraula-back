@@ -76,9 +76,6 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_labels(self, obj):
         return [ label.pk for label in obj.labels.all() ]
 
-    def prepare_author(self, obj):
-        return obj.author_id
-
     @staticmethod
     def filter_question_search(text, query_params):
         disciplines = query_params.getlist('disciplines', None)
