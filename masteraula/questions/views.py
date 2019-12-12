@@ -332,7 +332,7 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
 class LabelViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.LabelSerializer
     pagination_class = None
-    permission_classes = (LabelPermission, )
+    permission_classes = (permissions.IsAuthenticated, LabelPermission,)
 
     def get_queryset(self):
         queryset = Label.objects.filter(owner=self.request.user).order_by('name')
