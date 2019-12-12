@@ -65,13 +65,12 @@ class Label(models.Model):
         ('#050505', _('Black')),
         ('#FC1979', _('Pink')),
         ('#FC7320', _('Orange')),
+        ('#82C2FB', _('Blue')),
         ('#9AEE2E', _('Light Green')),
-        ('#569505', _('Dark Green')),
-        ('#82C2FB', _('Light Blue')),
-        ('#055195', _('Dark Blue'))
+        ('#569505', _('Dark Green'))
     )
 
-    name = models.CharField(max_length=100, null=False, blank=False)
+    name = models.CharField(max_length=50, null=False, blank=False)
     color = models.CharField(max_length=7, choices = COLORS_CHOICES, null=True, blank=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
