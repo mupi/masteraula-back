@@ -59,6 +59,11 @@ class HeaderPagination(pagination.PageNumberPagination):
     page_size = 10
     max_page_size = 50
 
+class TopicPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 54
+    max_page_size = 106
+
 class QuestionSearchView(viewsets.ReadOnlyModelViewSet):   
     pagination_class = QuestionPagination
     serializer_class = serializers.QuestionSerializer
@@ -188,15 +193,34 @@ class SynonymViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
 
 class TopicViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Topic.objects.get_parents_tree()
-    serializer_class = serializers.TopicSerializer
-    pagination_class = None
+    queryset = Topic.objects.all()
+    serializer_class = serializers.TopicListSerializer
+    pagination_class = TopicPagination
 
     def get_queryset(self, *args, **kwargs):
-        if self.request.query_params:
-            disciplines = self.request.query_params.getlist('disciplines', None)
-            return Topic.objects.get_parents_tree(disciplines)
-        return self.queryset
+        order_field = self.request.query_params.get('order_field', None)
+        order_type = self.request.query_params.get('order', None)
+        disciplines = self.request.query_params.getlist('disciplines', None)
+        
+        queryset = self.queryset.annotate(num_questions=Count('question'))
+
+        if disciplines:
+            queryset = queryset.filter(discipline__in = disciplines)
+
+        if order_type:
+            if order_field == 'name':
+                if order_type =='desc':
+                    queryset = queryset.order_by('-name')
+                else:
+                    queryset = queryset.order_by('name')
+
+            elif order_field == 'num_questions':
+                if order_type == 'desc':
+                    queryset = queryset.order_by('-num_questions')
+                else:
+                    queryset = queryset.order_by('num_questions')
+            return queryset
+        return queryset.annotate(num_questions=Count('question')).order_by('-num_questions')
       
     @list_route(methods=['get'])
     def related_topics(self, request):
