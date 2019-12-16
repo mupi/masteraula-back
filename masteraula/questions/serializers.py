@@ -22,7 +22,7 @@ from masteraula.users.models import User, Profile
 from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Question,
-                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, LearningObject, Search, DocumentDownload, Synonym, Label)
+                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, LearningObject, Search, DocumentDownload, Synonym, Label, QuestionLabel)
 
 import unicodedata
 import ast
@@ -214,6 +214,31 @@ class AlternativeSerializer(serializers.ModelSerializer):
             'text',
             'is_correct'
         )
+
+class QuestionLabelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionLabel
+        fields = (
+            'id',
+            'question',
+            'label',
+        )
+        extra_kwargs = {
+            'label' : { 'read_only' : True }
+        }
+
+    def validate_question(self, data):
+        if data.disabled:
+            raise serializers.ValidationError(_("This question is disabled"))
+        return data
+    
+    def create(self, validated_data):
+        label = validated_data['label']
+        try:
+            return label.questionlabel_set.get(question=validated_data['question'])
+        except:
+            questionLabel = label.add_question(validated_data['question'])
+            return questionLabel 
 
 class LabelSerializer(serializers.ModelSerializer):
     color = serializers.CharField(read_only=False, required=False, allow_null=True)
