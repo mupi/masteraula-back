@@ -347,10 +347,13 @@ class LabelViewSet(viewsets.ModelViewSet):
         label = self.get_object()
         serializer = serializers.QuestionLabelSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(label=label)
+        question_label = serializer.save(label=label)
 
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        question_label = QuestionLabel.objects.get(id=question_label.id)
+        list_label = serializers.QuestionLabelListDetailSerializer(question_label)
+
+        headers = self.get_success_headers(list_label.data)
+        return Response(list_label.data, status=status.HTTP_201_CREATED, headers=headers)
     
     @detail_route(methods=['post'])
     def remove_question(self, request, pk=None):

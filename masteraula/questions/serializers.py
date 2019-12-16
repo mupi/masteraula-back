@@ -215,31 +215,6 @@ class AlternativeSerializer(serializers.ModelSerializer):
             'is_correct'
         )
 
-class QuestionLabelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = QuestionLabel
-        fields = (
-            'id',
-            'question',
-            'label',
-        )
-        extra_kwargs = {
-            'label' : { 'read_only' : True }
-        }
-
-    def validate_question(self, data):
-        if data.disabled:
-            raise serializers.ValidationError(_("This question is disabled"))
-        return data
-    
-    def create(self, validated_data):
-        label = validated_data['label']
-        try:
-            return label.questionlabel_set.get(question=validated_data['question'])
-        except:
-            questionLabel = label.add_question(validated_data['question'])
-            return questionLabel 
-
 class LabelSerializer(serializers.ModelSerializer):
     color = serializers.CharField(read_only=False, required=False, allow_null=True)
     num_questions = serializers.SerializerMethodField()
@@ -464,6 +439,48 @@ class QuestionTagEditSerializer(serializers.ModelSerializer):
 # 
 #    class Meta(QuestionSerializer.Meta):
 #       search_fields = ('text',)
+
+class QuestionLabelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionLabel
+        fields = (
+            'id',
+            'question',
+            'label',
+        )
+        extra_kwargs = {
+            'label' : { 'read_only' : True }
+        }
+
+    def validate_question(self, data):
+        if data.disabled:
+            raise serializers.ValidationError(_("This question is disabled"))
+        return data
+    
+    def create(self, validated_data):
+        label = validated_data['label']
+        try:
+            return label.questionlabel_set.get(question=validated_data['question'])
+        except:
+            questionLabel = label.add_question(validated_data['question'])
+            return questionLabel 
+
+class QuestionLabelListDetailSerializer(serializers.ModelSerializer):
+    
+    question = QuestionSerializer(read_only=True)
+    label = LabelSerializer(read_only=True)
+
+    class Meta:
+        model = QuestionLabel
+       
+        fields = (
+            'id',
+            'question',
+            'label',
+        )
+        extra_kwargs = {
+            'label' : { 'read_only' : True }
+        }
 
 class DocumentQuestionSerializer(serializers.ModelSerializer):
 
