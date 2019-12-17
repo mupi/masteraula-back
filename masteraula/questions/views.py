@@ -115,7 +115,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
 class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.QuestionSerializer
     pagination_class = QuestionPagination
-    permission_classes = (permissions.IsAuthenticated, QuestionPermission )
+    permission_classes = (permissions.IsAuthenticated, QuestionPermission)
 
     def get_queryset(self):
         if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
@@ -143,8 +143,12 @@ class QuestionViewSet(viewsets.ModelViewSet):
         documents = Document.objects.filter(questions__id=pk, owner=request.user).order_by('create_date')
         serializer_documents = serializers.ListDocumentQuestionSerializer(documents, many = True)
 
+        labels = Label.objects.filter(question=pk, owner=request.user)
+        serializer_labels = serializers.LabelSerializer(labels, many = True)
+
         return_data = serializer_question.data
         return_data['documents'] = serializer_documents.data
+        return_data['labels'] = serializer_labels.data
 
         related_questions = RelatedQuestions().similar_questions(question)
         order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_questions)])
