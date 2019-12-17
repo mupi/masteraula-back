@@ -22,7 +22,8 @@ from masteraula.users.models import User, Profile
 from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Question,
-                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, LearningObject, Search, DocumentDownload, Synonym, Label, QuestionLabel)
+                    Alternative, Document, DocumentQuestion, Header, Year,
+                    Source, Topic, LearningObject, Search, DocumentDownload, Synonym, Label,)
 
 import unicodedata
 import ast
@@ -435,14 +436,9 @@ class QuestionTagEditSerializer(serializers.ModelSerializer):
 
         return question
 
-# class QuestionSearchSerializer(HaystackSerializerMixin, QuestionSerializer):
-# 
-#    class Meta(QuestionSerializer.Meta):
-#       search_fields = ('text',)
-
 class QuestionLabelSerializer(serializers.ModelSerializer):
     class Meta:
-        model = QuestionLabel
+        model = Label.question_set.through
         fields = (
             'id',
             'question',
@@ -460,18 +456,17 @@ class QuestionLabelSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         label = validated_data['label']
         try:
-            return label.questionlabel_set.get(question=validated_data['question'])
+            return label.question_set.get(id=validated_data['question'].id)
         except:
             questionLabel = label.add_question(validated_data['question'])
-            return questionLabel 
+            return questionLabel
 
 class QuestionLabelListDetailSerializer(serializers.ModelSerializer):
-    
     question = QuestionSerializer(read_only=True)
     label = LabelSerializer(read_only=True)
 
     class Meta:
-        model = QuestionLabel
+        model = Label.question_set.through
        
         fields = (
             'id',

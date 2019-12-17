@@ -79,14 +79,11 @@ class Label(models.Model):
         return str(self.name)
 
     def add_question(self, question):
-        question = Question.objects.get(id=question.id)
-        qs = self.questionlabel_set.all().select_related('question')       
-        question_label = self.questionlabel_set.create(question=question)
-
-        return question_label
+        self.question_set.add(question)
+        return Label.question_set.through.objects.get(question=question, label=self)
 
     def remove_question(self, question):
-        self.questionlabel_set.filter(question=question).delete()
+        self.question_set.filter(id=question.id).delete()
 
 class SynonymManager(models.Manager):
     topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
@@ -190,7 +187,7 @@ class Question(models.Model):
     descriptors = models.ManyToManyField(Descriptor, blank=True)
     teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)
     topics = models.ManyToManyField(Topic, blank=True)
-    labels = models.ManyToManyField(Label, through='QuestionLabel', related_name='labels')
+    labels = models.ManyToManyField(Label, blank=True)
 
     year = models.PositiveIntegerField(null=True, blank=True)
     source = models.CharField(max_length=50, null=True, blank=True)
@@ -420,13 +417,6 @@ class DocumentQuestion(models.Model):
     def set_order(self, order):
         self.order = order
         self.save()
-
-class QuestionLabel(models.Model):
-    label = models.ForeignKey(Label, on_delete=models.CASCADE)
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-
-    class Meta:
-        ordering = ['label']
 
 class Header(models.Model):
     name = models.CharField(max_length=200)

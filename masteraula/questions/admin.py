@@ -124,7 +124,7 @@ class TopicChildsInline(admin.StackedInline):
     extra = 1
 
 class LabelQuestionInline(admin.StackedInline):
-    model = Question.labels.through
+    model = Label.question_set.through
     raw_id_fields=('question',)
 
     extra = 1
