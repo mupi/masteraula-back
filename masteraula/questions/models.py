@@ -77,6 +77,13 @@ class Label(models.Model):
     def __str__(self):
         return str(self.name)
 
+    def add_question(self, question):
+        self.question_set.add(question)
+        return Label.question_set.through.objects.get(question=question, label=self)
+
+    def remove_question(self, question):
+        self.question_set.filter(id=question.id).delete()
+
 class SynonymManager(models.Manager):
     topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
         'parent', 'discipline', 'parent__parent', 'parent__discipline')

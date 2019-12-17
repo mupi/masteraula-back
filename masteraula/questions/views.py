@@ -24,7 +24,8 @@ from taggit.models import Tag
 from masteraula.users.models import User
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
-                    Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, Synonym, Label,)
+                    Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
+                    Synonym, Label)
 
 from .models import DocumentLimitExceedException
 
@@ -340,6 +341,32 @@ class LabelViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+    
+    @detail_route(methods=['post'])
+    def add_question(self, request, pk=None):
+        label = self.get_object()
+
+        serializer = serializers.QuestionLabelSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        question_label = serializer.save(label=label)
+
+        list_label = serializers.QuestionLabelListDetailSerializer(question_label)
+
+        headers = self.get_success_headers(list_label.data)
+        return Response(list_label.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+    @detail_route(methods=['post'])
+    def remove_question(self, request, pk=None):
+        label = self.get_object()
+
+        serializer = serializers.QuestionLabelSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        question = serializer.validated_data['question']
+
+        label.remove_question(question)
+
+        return Response(status = status.HTTP_204_NO_CONTENT)
+
 
 class LearningObjectViewSet(viewsets.ModelViewSet):
     queryset = LearningObject.objects.all()
