@@ -10,7 +10,7 @@ class RelatedQuestions():
         questions = Question.objects.filter(topics__in=question.get_all_topics()).exclude(id=question.id).order_by('?')
         disciplines = Question.objects.filter(disciplines__in=question.disciplines.all()).exclude(id=question.id).order_by('?')
        
-        if not questions.count():
+        if not questions:
             questions = disciplines[:4]
            
         else:
