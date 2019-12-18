@@ -116,7 +116,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
 class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.QuestionSerializer
     pagination_class = QuestionPagination
-    permission_classes = (permissions.IsAuthenticated, QuestionPermission )
+    permission_classes = (permissions.IsAuthenticated, QuestionPermission)
 
     def get_queryset(self):
         if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
@@ -139,7 +139,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
     
     def retrieve(self, request, pk=None):
         question = get_object_or_404(self.get_queryset(), pk=pk)
-        serializer_question = self.serializer_class(question)
+        serializer_question = self.serializer_class(question, context={'request': request})
 
         documents = Document.objects.filter(questions__id=pk, owner=request.user).order_by('create_date')
         serializer_documents = serializers.ListDocumentQuestionSerializer(documents, many = True)
@@ -151,7 +151,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
         order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_questions)])
 
         questions_object = Question.objects.get_questions_prefetched().filter(id__in=related_questions).order_by(order)
-        serializer_questions = serializers.QuestionSerializer(questions_object, many=True)
+        serializer_questions = serializers.QuestionSerializer(questions_object, many=True, context={'request': request})
 
         return_data['related_questions'] = serializer_questions.data
     

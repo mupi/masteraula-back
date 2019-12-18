@@ -250,7 +250,18 @@ class QuestionSerializer(serializers.ModelSerializer):
     author = UserDetailsSerializer(read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
     topics = TopicSimpleSerializer(read_only=True, many=True)
-    labels = LabelSerializer(many=True, required=False)
+    labels = serializers.SerializerMethodField('get_labels_owner')
+
+    def get_labels_owner(self, obj):
+        user = None
+        try:
+            user = self.context.get('request').user.id
+        except:
+            pass
+        label_obj = Label.objects.filter(owner = user, question=obj)
+        serializer = LabelSerializer(label_obj, many=True)
+        return serializer.data
+
     learning_objects = LearningObjectSerializer(many=True, read_only=True)
 
     all_topics = serializers.SerializerMethodField('all_topics_serializer')
