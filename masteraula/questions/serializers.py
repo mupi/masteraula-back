@@ -135,8 +135,11 @@ class LearningObjectSerializer(serializers.ModelSerializer):
         }            
     
     def get_questions_quantity(self, obj):
-        # questions = Question.objects.filter(learning_objects__id=obj.id).filter(disabled=False)
-        return obj.questions.filter(disabled=False).count()
+        try:
+            obj._prefetched_objects_cache['questions']
+            return len([1 for question in obj.questions.all() if not question.disabled])
+        except (AttributeError, KeyError):
+            return obj.questions.filter(disabled=False).count()
 
     def create(self, validated_data):
         tags = validated_data.pop('tags', None)
@@ -235,8 +238,11 @@ class LabelSerializer(serializers.ModelSerializer):
             }
 
     def get_num_questions(self, obj):
-        questions = Question.objects.filter(labels__id=obj.id).filter(disabled=False)
-        return questions.count()
+        try:
+            obj._prefetched_objects_cache['question_set']
+            return len(obj.question_set)
+        except (AttributeError, KeyError):
+            return obj.question_set.count()
 
 class ListDocumentQuestionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -250,16 +256,19 @@ class QuestionSerializer(serializers.ModelSerializer):
     author = UserDetailsSerializer(read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
     topics = TopicSimpleSerializer(read_only=True, many=True)
-    labels = serializers.SerializerMethodField('get_labels_owner')
 
+    labels = serializers.SerializerMethodField('get_labels_owner')
     def get_labels_owner(self, obj):
-        user = None
         try:
-            user = self.context.get('request').user.id
+            user = self.context.get('request').user
         except:
-            pass
-        label_obj = Label.objects.filter(owner = user, question=obj)
-        serializer = LabelSerializer(label_obj, many=True)
+            user = None
+        try:
+            obj._prefetched_objects_cache['labels']
+            labels = [label for label in obj.labels.all() if label.owner == user]
+        except (AttributeError, KeyError):
+            labels = Label.objects.filter(owner=user, question=obj)
+        serializer = LabelSerializer(labels, many=True)
         return serializer.data
 
     learning_objects = LearningObjectSerializer(many=True, read_only=True)
