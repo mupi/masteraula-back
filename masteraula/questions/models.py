@@ -115,10 +115,21 @@ class QuestionManager(models.Manager):
         'parent', 'discipline', 'parent__parent', 'parent__discipline')
     )
 
+    label_prefetch = Prefetch('labels', queryset=Label.objects.prefetch_related('question_set').select_related(
+        'owner'
+    ))
+
     def get_questions_prefetched(self, topics=True):
+        from django.apps import apps
+
+        LearningObject = apps.get_model('questions', 'LearningObject')
+        learning_object_prefetch = Prefetch('learning_objects', queryset=LearningObject.objects.select_related('owner').prefetch_related(
+            'tags', 'questions'
+        ))
+
         qs = self.all().select_related('author').prefetch_related(
             'tags', 'disciplines', 'teaching_levels', 'alternatives',
-            'learning_objects', 'learning_objects__tags', 'learning_objects__owner', 'learning_objects__questions', 'labels',
+            self.label_prefetch, learning_object_prefetch
         )
         if topics:
             qs = qs.prefetch_related(self.topics_prefetch)
