@@ -138,23 +138,19 @@ class QuestionViewSet(viewsets.ModelViewSet):
     
     def retrieve(self, request, pk=None):
         question = get_object_or_404(self.get_queryset(), pk=pk)
-        serializer_question = self.serializer_class(question)
+        serializer_question = self.serializer_class(question, context={'request': request})
 
         documents = Document.objects.filter(questions__id=pk, owner=request.user).order_by('create_date')
         serializer_documents = serializers.ListDocumentQuestionSerializer(documents, many = True)
 
-        labels = Label.objects.filter(question=pk, owner=request.user)
-        serializer_labels = serializers.LabelSerializer(labels, many = True)
-
         return_data = serializer_question.data
         return_data['documents'] = serializer_documents.data
-        return_data['labels'] = serializer_labels.data
 
         related_questions = RelatedQuestions().similar_questions(question)
         order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_questions)])
 
         questions_object = Question.objects.get_questions_prefetched().filter(id__in=related_questions).order_by(order)
-        serializer_questions = serializers.QuestionSerializer(questions_object, many=True)
+        serializer_questions = serializers.QuestionSerializer(questions_object, many=True, context={'request': request})
 
         return_data['related_questions'] = serializer_questions.data
     
