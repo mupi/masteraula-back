@@ -139,7 +139,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
     
     def retrieve(self, request, pk=None):
         question = get_object_or_404(self.get_queryset(), pk=pk)
-        serializer_question = self.serializer_class(question, context={'request': request})
+        serializer_question = self.serializer_class(question, context=self.get_serializer_context())
 
         documents = Document.objects.filter(questions__id=pk, owner=request.user).order_by('create_date')
         serializer_documents = serializers.ListDocumentQuestionSerializer(documents, many = True)
@@ -151,7 +151,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
         order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_questions)])
 
         questions_object = Question.objects.get_questions_prefetched().filter(id__in=related_questions).order_by(order)
-        serializer_questions = serializers.QuestionSerializer(questions_object, many=True, context={'request': request})
+        serializer_questions = serializers.QuestionSerializer(questions_object, many=True, context=self.get_serializer_context())
 
         return_data['related_questions'] = serializer_questions.data
     
@@ -349,6 +349,7 @@ class LabelViewSet(viewsets.ModelViewSet):
         serializer = serializers.QuestionLabelSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         question_label = serializer.save(label=label)
+        question_label.question = Question.objects.get_questions_prefetched().get(id=question_label.question_id)
 
         list_label = serializers.QuestionLabelListDetailSerializer(question_label)
 
@@ -379,7 +380,7 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         learning_object = get_object_or_404(self.get_queryset(), pk=pk)
-        serializer_learningobject = self.serializer_class(learning_object, context={'request': request})
+        serializer_learningobject = self.serializer_class(learning_object, context=self.get_serializer_context())
 
         questions_object = Question.objects.filter(learning_objects__id=pk).filter(disabled=False).order_by('-create_date')
         serializer_questions = serializers.QuestionSerializer(questions_object, many = True)
