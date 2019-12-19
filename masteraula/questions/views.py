@@ -345,7 +345,6 @@ class LabelViewSet(viewsets.ModelViewSet):
     @detail_route(methods=['post'])
     def add_question(self, request, pk=None):
         label = self.get_object()
-
         serializer = serializers.QuestionLabelSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         question_label = serializer.save(label=label)
@@ -383,7 +382,7 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
         serializer_learningobject = self.serializer_class(learning_object, context=self.get_serializer_context())
 
         questions_object = Question.objects.filter(learning_objects__id=pk).filter(disabled=False).order_by('-create_date')
-        serializer_questions = serializers.QuestionSerializer(questions_object, many = True)
+        serializer_questions = serializers.QuestionSerializer(questions_object, many = True, context=self.get_serializer_context())
 
         return_data = serializer_learningobject.data
         return_data['questions'] = serializer_questions.data

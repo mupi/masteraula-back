@@ -115,7 +115,7 @@ class QuestionManager(models.Manager):
         'parent', 'discipline', 'parent__parent', 'parent__discipline')
     )
 
-    label_prefetch = Prefetch('labels', queryset=Label.objects.prefetch_related('question_set').select_related(
+    labels_prefetch = Prefetch('labels', queryset=Label.objects.prefetch_related('question_set').select_related(
         'owner'
     ))
 
@@ -129,7 +129,7 @@ class QuestionManager(models.Manager):
 
         qs = self.all().select_related('author').prefetch_related(
             'tags', 'disciplines', 'teaching_levels', 'alternatives',
-            self.label_prefetch, learning_object_prefetch
+            self.labels_prefetch, learning_object_prefetch
         )
         if topics:
             qs = qs.prefetch_related(self.topics_prefetch)
@@ -278,14 +278,19 @@ class DocumentManager(models.Manager):
     )
 
     learning_objects_prefetch = Prefetch('learning_objects',
-        queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags')
+        queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags', 'questions')
     )
+
+    labels_prefetch = Prefetch('labels', queryset=Label.objects.prefetch_related('question_set').select_related(
+        'owner'
+    ))
 
     questions_prefetch = Prefetch('documentquestion_set__question',
         queryset=Question.objects.all().select_related('author').prefetch_related(
             'tags', 'disciplines', 'teaching_levels', 'alternatives',
             topics_prefetch, 
-            learning_objects_prefetch
+            learning_objects_prefetch,
+            labels_prefetch
         )
     )
 
