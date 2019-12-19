@@ -476,7 +476,7 @@ class QuestionLabelSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         label = validated_data['label']
         try:
-            return label.question_set.get(id=validated_data['question'].id)
+            return label.question_set.through.get(question_id=validated_data['question'].id)
         except:
             questionLabel = label.add_question(validated_data['question'])
             return questionLabel
