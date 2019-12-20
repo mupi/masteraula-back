@@ -167,7 +167,7 @@ class QuestionManager(models.Manager):
             query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             queryset = queryset.filter(query)
         if author:
-            queryset = queryset.filter(author__id=author).order_by('-create_date')
+            queryset = queryset.filter(author__id=author)
         if topics:
             for topic in topics:
                 queryset = queryset.filter(topics__id=topic)
