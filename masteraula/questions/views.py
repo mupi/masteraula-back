@@ -25,7 +25,7 @@ from masteraula.users.models import User
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label)
+                    Synonym, Label, Link, TeachingYear, ClassPlan)
 
 from .models import DocumentLimitExceedException
 
@@ -64,6 +64,11 @@ class TopicPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 54
     max_page_size = 106
+
+class ClassPlanPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 10
+    max_page_size = 80
 
 class QuestionSearchView(viewsets.ReadOnlyModelViewSet):   
     pagination_class = QuestionPagination
@@ -676,3 +681,25 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
             'synonyms': synonym_serializer.data,
             'topics': topic_serialzier.data
         })
+
+class LinkViewSet(viewsets.ModelViewSet):
+    queryset = Link.objects.all()
+    serializer_class = serializers.LinkSerializer
+    pagination_class = None
+
+class TeachingYearViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Link.objects.all()
+    serializer_class = serializers.TeachingYearSerializer
+    pagination_class = None
+
+class ClassPlanViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.ClassPlanSerializer
+    pagination_class = ClassPlanPagination
+    # permission_classes = (permissions.IsAuthenticated)
+
+    def get_queryset(self):
+        queryset = ClassPlan.objects.filter(owner=self.request.user).order_by('name')
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)

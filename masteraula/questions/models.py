@@ -2,11 +2,13 @@
 import datetime
 import uuid
 import operator
+import magic
 
 from django.db import models
 from django.db.models import Prefetch, Q
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
 
 from functools import reduce
 
@@ -456,7 +458,6 @@ class Header(models.Model):
         self.save()
 
 class Search(models.Model):
-   
     term = models.TextField(null=False, blank=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE) 
 
@@ -486,3 +487,49 @@ class DocumentPublication(models.Model):
     user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
     create_date = models.DateTimeField(auto_now_add=True)
+
+class Link(models.Model):
+    link = models.URLField(null=False, blank=False)
+    description_url = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return str(self.link)
+
+class TeachingYear(models.Model):
+    name = models.CharField(max_length=10)
+
+    def __str__(self):
+        return str(self.name)
+
+class ClassPlan(models.Model):
+
+    def validate_pdf(fileobj):
+        max_size = 2*(1024 * 1024)
+        if fileobj.size > max_size:
+            raise ValidationError(_('Max file size is 1MB'))
+
+        filetype = magic.from_buffer(fileobj.read())
+        print(filetype)
+        if not "PDF" in filetype:
+            raise ValidationError("File is not PDF.")
+
+
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    create_date = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=200)
+
+    disciplines = models.ManyToManyField(Discipline, blank=True)
+    teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)
+    topics = models.ManyToManyField(Topic, blank=True)
+    learning_objects = models.ManyToManyField('LearningObject', related_name='plans_obj', blank=True)
+    documents = models.ManyToManyField(Document, related_name='plans_doc', blank=True)
+    links = models.ManyToManyField(Link, related_name='plans_links', blank=True)
+    teaching_years = models.ManyToManyField(TeachingYear, blank=True)
+
+    duration = models.PositiveIntegerField(null=True, blank=True)
+    comment = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    pdf = models.FileField(null=True, blank=True, upload_to='documents_pdf', validators=[validate_pdf])
+
+    def __str__(self):
+        return str(self.name)

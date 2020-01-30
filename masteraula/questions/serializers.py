@@ -23,7 +23,7 @@ from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Question,
                     Alternative, Document, DocumentQuestion, Header, Year,
-                    Source, Topic, LearningObject, Search, DocumentDownload, Synonym, Label,)
+                    Source, Topic, LearningObject, Search, DocumentDownload, Synonym, Label, ClassPlan, TeachingYear, Link)
 
 import unicodedata
 import ast
@@ -742,3 +742,51 @@ class SearchSerializer(serializers.ModelSerializer):
             'year',
             'date_search',
         )
+
+class LinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Link
+        fields = (
+            'id',
+            'link',
+            'description_url',
+        )
+
+class TeachingYearSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeachingYear
+        fields = (
+            'id',
+            'name',
+        )
+
+class ClassPlanSerializer(serializers.ModelSerializer):
+    owner = UserDetailsSerializer(read_only=True)
+    create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
+    topics = TopicSimpleSerializer(read_only=True, many=True)
+    learning_objects = LearningObjectSerializer(many=True, read_only=True)
+    documents = DocumentDetailSerializer(many=True,read_only=True)
+
+    class Meta:
+        model = ClassPlan
+        fields = (
+            'id',
+            'owner',
+            'create_date',
+            'name',
+
+            'disciplines',
+            'teaching_levels',
+            'topics',
+            'learning_objects',
+            'documents', 
+            'links',
+            'teaching_years',
+
+            'duration',
+            'comment',
+            'description',
+            'pdf',
+        )
+
+        depth = 1

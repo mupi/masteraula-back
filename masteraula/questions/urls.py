@@ -29,6 +29,9 @@ router.register(r'learning_object', views.LearningObjectViewSet, base_name='lear
 router.register(r'document_download', views.DocumentDownloadViewSet, base_name='document_download')
 router.register(r'synonym_topic', views.SynonymViewSet, base_name='synonym_topic')
 router.register(r'synonym_autocomplete', views.AutocompleteSearchViewSet, base_name='synonym_autocomplete')
+router.register(r'class_plans', views.ClassPlanViewSet, base_name="class_plans")
+router.register(r'links', views.LinkViewSet, base_name="links")
+router.register(r'years_teaching', views.TeachingYearViewSet, base_name="years_teaching")
 
 urlpatterns = [
     url(r'^', include(router.urls)),
