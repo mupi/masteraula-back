@@ -763,9 +763,17 @@ class TeachingYearSerializer(serializers.ModelSerializer):
 class ClassPlanSerializer(serializers.ModelSerializer):
     owner = UserDetailsSerializer(read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
-    topics = TopicSimpleSerializer(many=True, required=True)
+    topics = TopicSimpleSerializer(read_only=True, many=True)
     learning_objects = LearningObjectSerializer(many=True, read_only=True)
     documents = DocumentDetailSerializer(many=True,read_only=True)
+
+    learning_objects_ids = ModelListSerializer(write_only=True, allow_null=True, required=False, many=True, queryset=LearningObject.objects.all())
+    topics_ids = ModelListSerializer(write_only=True, many=True, queryset=Topic.objects.all())
+    disciplines_ids = ModelListSerializer(write_only=True, many=True, queryset=Discipline.objects.all())
+    teaching_levels_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingLevel.objects.all())
+    documents_ids = ModelListSerializer(write_only=True, many=True, queryset=Document.objects.all())
+    teaching_years_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingYear.objects.all())
+
 
     class Meta:
         model = ClassPlan
@@ -783,6 +791,13 @@ class ClassPlanSerializer(serializers.ModelSerializer):
             'links',
             'teaching_years',
 
+            'learning_objects_ids',
+            'topics_ids',
+            'disciplines_ids',
+            'teaching_levels_ids',
+            'documents_ids',
+            'teaching_years_ids',
+
             'duration',
             'comment',
             'description',
@@ -795,3 +810,36 @@ class ClassPlanSerializer(serializers.ModelSerializer):
             'teaching_levels' : { 'required' : True}
         }
         depth = 1
+
+    def validate_disciplines_ids(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError(_("At least one discipline id"))
+        return list(set(value))
+
+    def validate_topics_ids(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError(_("At least one topic id"))
+        return list(set(value))
+
+    def validate_teaching_levels_ids(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError(_("At least one teaching level id"))
+        return list(set(value))
+    
+    def create(self, validated_data):
+        for key in list(validated_data.keys()):
+            if key.endswith('_ids'):
+                validated_data[key[:-4]] = validated_data.pop(key)
+        
+        plan = super().create(validated_data)
+
+        return ClassPlan.objects.get(id=plan.id)
+    
+    def update(self, instance, validated_data):
+        for key in list(validated_data.keys()):
+            if key.endswith('_ids'):
+                validated_data[key[:-4]] = validated_data.pop(key)
+        
+        plan = super().update(instance, validated_data)
+
+        return ClassPlan.objects.get(id=plan.id)

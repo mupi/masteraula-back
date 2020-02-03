@@ -517,9 +517,9 @@ class ClassPlan(models.Model):
     create_date = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=200)
 
-    disciplines = models.ManyToManyField(Discipline)
-    teaching_levels = models.ManyToManyField(TeachingLevel)
-    topics = models.ManyToManyField(Topic)
+    disciplines = models.ManyToManyField(Discipline, blank=True)
+    teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)
+    topics = models.ManyToManyField(Topic, blank=True)
     learning_objects = models.ManyToManyField('LearningObject', related_name='plans_obj', blank=True)
     documents = models.ManyToManyField(Document, related_name='plans_doc', blank=True)
     links = models.ManyToManyField(Link, related_name='plans_links', blank=True)
