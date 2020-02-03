@@ -763,7 +763,7 @@ class TeachingYearSerializer(serializers.ModelSerializer):
 class ClassPlanSerializer(serializers.ModelSerializer):
     owner = UserDetailsSerializer(read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
-    topics = TopicSimpleSerializer(read_only=True, many=True)
+    topics = TopicSimpleSerializer(many=True, required=True)
     learning_objects = LearningObjectSerializer(many=True, read_only=True)
     documents = DocumentDetailSerializer(many=True,read_only=True)
 
@@ -789,4 +789,9 @@ class ClassPlanSerializer(serializers.ModelSerializer):
             'pdf',
         )
 
+        extra_kwargs = {
+            'name' : { 'required' : True},
+            'disciplines' : { 'required' : True},
+            'teaching_levels' : { 'required' : True}
+        }
         depth = 1

@@ -31,7 +31,7 @@ router.register(r'synonym_topic', views.SynonymViewSet, base_name='synonym_topic
 router.register(r'synonym_autocomplete', views.AutocompleteSearchViewSet, base_name='synonym_autocomplete')
 router.register(r'class_plans', views.ClassPlanViewSet, base_name="class_plans")
 router.register(r'links', views.LinkViewSet, base_name="links")
-router.register(r'years_teaching', views.TeachingYearViewSet, base_name="years_teaching")
+router.register(r'teaching_years', views.TeachingYearViewSet, base_name="teaching_years")
 
 urlpatterns = [
     url(r'^', include(router.urls)),
