@@ -141,9 +141,10 @@ class ClassPlanLinkInline(admin.StackedInline):
 
     extra = 1
 
-class LinkClassPlanInline(admin.StackedInline):
+class LinkClassPlanInline(admin.TabularInline):
     model = Link.plans_links.through
-
+    show_change_link = True
+    raw_id_fields = ('classplan',)
     extra = 1
 
 class TopicChildsInline(admin.StackedInline):
