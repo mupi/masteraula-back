@@ -506,10 +506,9 @@ class ClassPlan(models.Model):
     def validate_pdf(fileobj):
         max_size = 2*(1024 * 1024)
         if fileobj.size > max_size:
-            raise ValidationError(_('Max file size is 1MB'))
+            raise ValidationError(_('Max file size is 2MB'))
 
         filetype = magic.from_buffer(fileobj.read())
-        print(filetype)
         if not "PDF" in filetype:
             raise ValidationError("File is not PDF.")
 
@@ -518,9 +517,9 @@ class ClassPlan(models.Model):
     create_date = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=200)
 
-    disciplines = models.ManyToManyField(Discipline, blank=True)
-    teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)
-    topics = models.ManyToManyField(Topic, blank=True)
+    disciplines = models.ManyToManyField(Discipline)
+    teaching_levels = models.ManyToManyField(TeachingLevel)
+    topics = models.ManyToManyField(Topic)
     learning_objects = models.ManyToManyField('LearningObject', related_name='plans_obj', blank=True)
     documents = models.ManyToManyField(Document, related_name='plans_doc', blank=True)
     links = models.ManyToManyField(Link, related_name='plans_links', blank=True)
