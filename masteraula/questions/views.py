@@ -35,7 +35,7 @@ from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
 from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex
-from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission
+from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission, ClassPlanPermission
 from . import serializers as serializers
 
 current_milli_time = lambda: int(round(time.time() * 1000))
@@ -688,14 +688,14 @@ class LinkViewSet(viewsets.ModelViewSet):
     pagination_class = None
 
 class TeachingYearViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Link.objects.all()
+    queryset = TeachingYear.objects.all()
     serializer_class = serializers.TeachingYearSerializer
     pagination_class = None
 
 class ClassPlanViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ClassPlanSerializer
     pagination_class = ClassPlanPagination
-    # permission_classes = (permissions.IsAuthenticated)
+    permission_classes = (permissions.IsAuthenticated, ClassPlanPermission, )
 
     def get_queryset(self):
         queryset = ClassPlan.objects.filter(owner=self.request.user).order_by('name')
