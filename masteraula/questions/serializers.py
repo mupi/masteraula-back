@@ -25,6 +25,8 @@ from .models import (Discipline, TeachingLevel, LearningObject, Question,
                     Alternative, Document, DocumentQuestion, Header, Year,
                     Source, Topic, LearningObject, Search, DocumentDownload, Synonym, Label, ClassPlan, TeachingYear, Link)
 
+from django.db.models import Prefetch
+
 import unicodedata
 import ast
 import datetime
@@ -580,6 +582,54 @@ class DocumentListSerializer(serializers.ModelSerializer):
             'secret' : { 'required' : True }
         }
 
+class DocumentListInfoSerializer(serializers.ModelSerializer):
+    create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
+    questions_quantity = serializers.SerializerMethodField()
+    questions_topics = serializers.SerializerMethodField('questions_topics_serializer')
+
+    def questions_topics_serializer(self, obj):
+        questions = obj.questions.all().prefetch_related(Prefetch('topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')))
+        topic = []
+        for q in questions:
+            topic += q.get_all_topics()
+        topic = list(set(topic))
+        return TopicSimpleSerializer(topic, many=True).data
+
+    questions_disciplines = serializers.SerializerMethodField('questions_disciplines_serializer')
+
+    def questions_disciplines_serializer(self, obj):
+        questions = obj.questions.all().prefetch_related('disciplines')
+        discipline = []
+        for q in questions:
+            discipline += q.disciplines.all()
+        discipline = list(set(discipline))
+        return DisciplineSerializer(discipline, many=True).data
+
+    class Meta:
+        model = Document
+        fields = (
+            'id',
+            'name',
+            'owner',
+            'create_date',
+            'questions_quantity',
+            'questions_topics',
+            'questions_disciplines',
+        )
+        extra_kwargs = {
+            'owner' : { 'read_only' : True },
+            'create_date' : { 'read_only' : True },
+            'secret' : { 'required' : True }
+        }
+
+    def get_questions_quantity(self, obj):
+        try:
+            obj._prefetched_objects_cache['questions']
+            return len([1 for question in obj.questions.all() if not question.disabled])
+        except (AttributeError, KeyError):
+            return obj.questions.filter(disabled=False).count()
+
 class DocumentDetailSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionListDetailSerializer(many=True, source='documentquestion_set', read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
@@ -765,7 +815,7 @@ class ClassPlanSerializer(serializers.ModelSerializer):
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
     topics = TopicSimpleSerializer(read_only=True, many=True)
     learning_objects = LearningObjectSerializer(many=True, read_only=True)
-    documents = DocumentDetailSerializer(many=True,read_only=True)
+    documents = DocumentListInfoSerializer(many=True,read_only=True)
 
     learning_objects_ids = ModelListSerializer(write_only=True, allow_null=True, required=False, many=True, queryset=LearningObject.objects.all())
     topics_ids = ModelListSerializer(write_only=True, many=True, queryset=Topic.objects.all())

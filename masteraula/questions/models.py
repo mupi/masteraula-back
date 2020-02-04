@@ -501,6 +501,21 @@ class TeachingYear(models.Model):
     def __str__(self):
         return str(self.name)
 
+class ClassPlanManager(models.Manager):
+    topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline'))
+
+    learning_objects_prefetch = Prefetch(
+        'learning_objects',
+        queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags', 'questions')
+    )
+
+    def get_classplan_prefetched(self):
+        qs = self.all().select_related('owner').prefetch_related(
+           'disciplines', 'teaching_levels', 'links', 'teaching_years', self.learning_objects_prefetch, self.topics_prefetch,
+        )
+        return qs
+
 class ClassPlan(models.Model):
 
     def validate_pdf(fileobj):
@@ -530,5 +545,11 @@ class ClassPlan(models.Model):
     description = models.TextField(null=True, blank=True)
     pdf = models.FileField(null=True, blank=True, upload_to='documents_pdf', validators=[validate_pdf])
 
+    objects = ClassPlanManager()
+
     def __str__(self):
         return str(self.name)
+    
+    class Meta:
+        ordering = ['id']
+

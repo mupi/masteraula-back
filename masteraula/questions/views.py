@@ -698,7 +698,7 @@ class ClassPlanViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, ClassPlanPermission, )
 
     def get_queryset(self):
-        queryset = ClassPlan.objects.filter(owner=self.request.user).order_by('name')
+        queryset = ClassPlan.objects.get_classplan_prefetched()
         return queryset
 
     def perform_create(self, serializer):
