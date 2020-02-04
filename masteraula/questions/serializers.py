@@ -588,7 +588,7 @@ class DocumentListInfoSerializer(serializers.ModelSerializer):
     questions_topics = serializers.SerializerMethodField('questions_topics_serializer')
 
     def questions_topics_serializer(self, obj):
-        questions = obj.questions.all().prefetch_related(Prefetch('topics', queryset=Topic.objects.select_related(
+        questions = obj.questions.prefetch_related(Prefetch('topics', queryset=Topic.objects.select_related(
         'parent', 'discipline', 'parent__parent', 'parent__discipline')))
         topic = []
         for q in questions:
@@ -599,7 +599,7 @@ class DocumentListInfoSerializer(serializers.ModelSerializer):
     questions_disciplines = serializers.SerializerMethodField('questions_disciplines_serializer')
 
     def questions_disciplines_serializer(self, obj):
-        questions = obj.questions.all().prefetch_related('disciplines')
+        questions = obj.questions.prefetch_related('disciplines')
         discipline = []
         for q in questions:
             discipline += q.disciplines.all()

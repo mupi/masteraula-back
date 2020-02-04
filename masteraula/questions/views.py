@@ -45,6 +45,11 @@ class DocumentPagination(pagination.PageNumberPagination):
     page_size = 10
     max_page_size = 80
 
+class DocumentCardPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 16
+    max_page_size = 64
+
 class QuestionPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 16
@@ -516,6 +521,20 @@ class DocumentViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    @list_route(methods=['get'])
+    def my_documents_cards(self, request):       
+        queryset = self.get_queryset().order_by("id")
+       
+        self.pagination_class = DocumentCardPagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = serializers.DocumentListInfoSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = serializers.DocumentListInfoSerializer(queryset, many=True)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
     @detail_route(methods=['get'], permission_classes=[permissions.IsAuthenticated, DocumentDownloadPermission, ])
     def generate_list(self, request, pk=None):
         """
@@ -698,8 +717,50 @@ class ClassPlanViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, ClassPlanPermission, )
 
     def get_queryset(self):
-        queryset = ClassPlan.objects.get_classplan_prefetched()
+        queryset = ClassPlan.objects.get_classplan_prefetched().filter(owner=self.request.user)
         return queryset
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+    
+    @list_route(methods=['get'])
+    def my_plans(self, request):
+        order_field = request.query_params.get('order_field', None)
+        order_type = request.query_params.get('order', None)
+
+        queryset = self.get_queryset()
+        if order_field == 'create_date':
+            if order_type == 'desc':
+                queryset = queryset.order_by('-create_date')
+            else:
+                queryset = queryset.order_by('create_date')
+
+        elif order_field == 'name':
+            if order_type =='desc':
+                queryset = queryset.order_by('-name')
+            else:
+                queryset = queryset.order_by('name')
+        
+        elif order_field == 'duration':
+            if order_type =='desc':
+                queryset = queryset.order_by('-duration')
+            else:
+                queryset = queryset.order_by('duration')
+        
+        elif order_field == 'disciplines':
+            if order_type =='desc':
+                queryset = queryset.order_by('-disciplines')
+            else:
+                queryset = queryset.order_by('disciplines')
+        else:
+            queryset = queryset.order_by('-create_date')
+
+        self.pagination_class = ClassPlanPagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = serializers.ClassPlanSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = serializers.ClassPlanSerializer(queryset, many=True)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

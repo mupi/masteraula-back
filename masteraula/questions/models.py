@@ -404,7 +404,7 @@ class DocumentQuestionManager(models.Manager):
 
     def get_questions_prefetched(self, topics=True):
         qs = self.all().select_related('question').prefetch_related(
-            'question__tags', 'question__disciplines', 'question__teaching_levels', 'question__alternatives',
+            'question__tags', 'question__disciplines', 'question__teaching_levels', 'question__alternatives', 
             self.learning_objects_prefetch
         )
         if topics:
