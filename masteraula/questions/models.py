@@ -24,6 +24,9 @@ class Discipline(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        ordering = ['-name']
 
 class TeachingLevel(models.Model):
     name = models.CharField(max_length=50, null=False, blank=False)
@@ -510,9 +513,14 @@ class ClassPlanManager(models.Manager):
         queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags', 'questions')
     )
 
+    documents_prefetch = Prefetch(
+        'documents',
+        queryset=Document.objects.all().select_related('owner').prefetch_related('questions')
+    )
+
     def get_classplan_prefetched(self):
         qs = self.all().select_related('owner').prefetch_related(
-           'disciplines', 'teaching_levels', 'links', 'teaching_years', self.learning_objects_prefetch, self.topics_prefetch,
+            'teaching_levels', 'links', 'teaching_years', self.learning_objects_prefetch, self.topics_prefetch, self.documents_prefetch
         )
         return qs
 

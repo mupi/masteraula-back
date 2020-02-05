@@ -14,7 +14,7 @@ from rest_framework import (generics, response, viewsets, status, mixins,
 from rest_framework.decorators import detail_route, list_route, permission_classes
 from rest_framework.response import Response
 
-from django.db.models import Count, Q, Case, When, Subquery, OuterRef, IntegerField, Value, Prefetch
+from django.db.models import Count, Q, Case, When, Subquery, OuterRef, IntegerField, Value, Prefetch, Max
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, FileResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
@@ -749,9 +749,10 @@ class ClassPlanViewSet(viewsets.ModelViewSet):
         
         elif order_field == 'disciplines':
             if order_type =='desc':
-                queryset = queryset.order_by('-disciplines')
+                queryset = queryset.annotate(order_temp=Max("disciplines__name")).order_by("-order_temp") 
             else:
-                queryset = queryset.order_by('disciplines')
+                queryset = queryset.annotate(order_temp=Max("disciplines__name")).order_by("order_temp")
+
         else:
             queryset = queryset.order_by('-create_date')
 
