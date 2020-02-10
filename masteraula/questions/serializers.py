@@ -823,6 +823,7 @@ class ClassPlanSerializer(serializers.ModelSerializer):
     teaching_levels_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingLevel.objects.all())
     documents_ids = ModelListSerializer(write_only=True, many=True, queryset=Document.objects.all())
     teaching_years_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingYear.objects.all())
+    links_ids = ModelListSerializer(write_only=True, many=True, queryset=Link.objects.all())
 
 
     class Meta:
@@ -847,6 +848,7 @@ class ClassPlanSerializer(serializers.ModelSerializer):
             'teaching_levels_ids',
             'documents_ids',
             'teaching_years_ids',
+            'links_ids',
 
             'duration',
             'comment',
