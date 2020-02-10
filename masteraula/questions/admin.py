@@ -135,16 +135,8 @@ class ClassPlanTopicsInline(admin.StackedInline):
 
     extra = 1
 
-class ClassPlanLinkInline(admin.StackedInline):
-    model = ClassPlan.links.through
-    raw_id_fields=('link',)
-
-    extra = 1
-
-class LinkClassPlanInline(admin.TabularInline):
-    model = Link.plans_links.through
-    show_change_link = True
-    raw_id_fields = ('classplan',)
+class ClassPlanLinksInline(admin.TabularInline):
+    model = Link
     extra = 1
 
 class TopicChildsInline(admin.StackedInline):
@@ -345,11 +337,10 @@ class TeachingYearModelAdmin(admin.ModelAdmin):
     list_per_page = 100
 
 class LinkModelAdmin(admin.ModelAdmin):
+    raw_id_fields = ('plan', )
     list_display = ('id', 'link',)
     search_fields = ['id',]
     list_per_page = 100
-
-    inlines = [LinkClassPlanInline]
 
 class ClassPlanModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', )
@@ -357,8 +348,7 @@ class ClassPlanModelAdmin(admin.ModelAdmin):
     search_fields = ('id', 'name', 'description')
     exclude = ('topics', 'learning_objects', 'links', 'documents')
 
-
-    inlines = [ClassPlanDocumentInline, ClassPlanLearningObjectInline, ClassPlanLinkInline, ClassPlanTopicsInline]
+    inlines = [ClassPlanDocumentInline, ClassPlanLearningObjectInline, ClassPlanLinksInline, ClassPlanTopicsInline]
 
     list_per_page = 100
 

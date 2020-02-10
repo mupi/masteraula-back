@@ -491,13 +491,6 @@ class DocumentPublication(models.Model):
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
     create_date = models.DateTimeField(auto_now_add=True)
 
-class Link(models.Model):
-    link = models.URLField(null=False, blank=False)
-    description_url = models.TextField(null=True, blank=True)
-
-    def __str__(self):
-        return str(self.link)
-
 class TeachingYear(models.Model):
     name = models.CharField(max_length=10)
 
@@ -545,7 +538,6 @@ class ClassPlan(models.Model):
     topics = models.ManyToManyField(Topic, blank=True)
     learning_objects = models.ManyToManyField('LearningObject', related_name='plans_obj', blank=True)
     documents = models.ManyToManyField(Document, related_name='plans_doc', blank=True)
-    links = models.ManyToManyField(Link, related_name='plans_links', blank=True)
     teaching_years = models.ManyToManyField(TeachingYear, blank=True)
 
     duration = models.PositiveIntegerField(null=True, blank=True)
@@ -561,3 +553,10 @@ class ClassPlan(models.Model):
     class Meta:
         ordering = ['id']
 
+class Link(models.Model):
+    link = models.TextField(max_length=2083, null=False, blank=False)
+    description_url = models.TextField(null=True, blank=True)
+    plan = models.ForeignKey(ClassPlan, related_name='links', on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.link)

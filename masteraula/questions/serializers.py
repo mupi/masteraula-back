@@ -823,8 +823,7 @@ class ClassPlanSerializer(serializers.ModelSerializer):
     teaching_levels_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingLevel.objects.all())
     documents_ids = ModelListSerializer(write_only=True, many=True, queryset=Document.objects.all())
     teaching_years_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingYear.objects.all())
-    links_ids = ModelListSerializer(write_only=True, many=True, queryset=Link.objects.all())
-
+    links = LinkSerializer(many=True)
 
     class Meta:
         model = ClassPlan
@@ -848,7 +847,6 @@ class ClassPlanSerializer(serializers.ModelSerializer):
             'teaching_levels_ids',
             'documents_ids',
             'teaching_years_ids',
-            'links_ids',
 
             'duration',
             'comment',
@@ -878,20 +876,44 @@ class ClassPlanSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(_("At least one teaching level id"))
         return list(set(value))
     
+    def validate_duration(self, value):
+        if value == 0:
+            value = None
+        return value
+           
+    def validate_links(self, value):
+        if len(value) > 0:
+            for lin in value:
+                for i, (k,v) in enumerate(lin.items()):
+                    if k =="link" and "://" not in v:
+                        lin[k] =  "https://" + v
+        return value
+        
     def create(self, validated_data):
+        links = validated_data.pop('links', None)
         for key in list(validated_data.keys()):
             if key.endswith('_ids'):
                 validated_data[key[:-4]] = validated_data.pop(key)
         
         plan = super().create(validated_data)
 
+        if links != None:
+            for lin in links:
+                Link.objects.create(plan=plan, **lin)
+
         return ClassPlan.objects.get(id=plan.id)
     
     def update(self, instance, validated_data):
+        links = validated_data.pop('links', None)
         for key in list(validated_data.keys()):
             if key.endswith('_ids'):
                 validated_data[key[:-4]] = validated_data.pop(key)
         
         plan = super().update(instance, validated_data)
+
+        if links != None:
+            plan.links.all().delete()
+            for lin in links:
+                Link.objects.create(plan=plan, **lin)
 
         return ClassPlan.objects.get(id=plan.id)
