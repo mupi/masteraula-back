@@ -420,6 +420,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if self.action == 'copy_document':
             queryset = Document.objects.get_questions_prefetched() \
                 .filter(Q(documentpublication__isnull=False)|Q(owner=self.request.user)).filter(disabled=False).distinct()
+        if self.action == 'my_documents_cards':
+            queryset = Document.objects.filter(owner=self.request.user, disabled=False, questions__isnull=False).distinct()
         return queryset
 
     def get_serializer_class(self):
