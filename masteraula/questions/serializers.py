@@ -904,6 +904,10 @@ class ClassPlanSerializer(serializers.ModelSerializer):
         return ClassPlan.objects.get(id=plan.id)
     
     def update(self, instance, validated_data):
+        learning_objects_ids = validated_data.pop('learning_objects_ids', None)
+        documents_ids = validated_data.pop('documents_ids', None)
+        teaching_years_ids = validated_data.pop('teaching_years_ids', None)
+
         links = validated_data.pop('links', None)
         for key in list(validated_data.keys()):
             if key.endswith('_ids'):
@@ -915,5 +919,20 @@ class ClassPlanSerializer(serializers.ModelSerializer):
             plan.links.all().delete()
             for lin in links:
                 Link.objects.create(plan=plan, **lin)
+
+        plan.learning_objects.clear()
+        if learning_objects_ids != None:
+            for l in learning_objects_ids:
+                plan.learning_objects.add(l)
+
+        plan.documents.clear()
+        if documents_ids != None:
+            for d in documents_ids:
+                plan.documents.add(d)
+        
+        plan.teaching_years.clear()
+        if teaching_years_ids != None:
+            for t in teaching_years_ids:
+                plan.teaching_years.add(t)
 
         return ClassPlan.objects.get(id=plan.id)
