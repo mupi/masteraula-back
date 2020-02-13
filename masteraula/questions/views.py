@@ -14,7 +14,7 @@ from rest_framework import (generics, response, viewsets, status, mixins,
 from rest_framework.decorators import detail_route, list_route, permission_classes
 from rest_framework.response import Response
 
-from django.db.models import Count, Q, Case, When, Subquery, OuterRef, IntegerField, Value, Prefetch
+from django.db.models import Count, Q, Case, When, Subquery, OuterRef, IntegerField, Value, Prefetch, Max
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, FileResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
@@ -25,7 +25,7 @@ from masteraula.users.models import User
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label)
+                    Synonym, Label, Link, TeachingYear, ClassPlan)
 
 from .models import DocumentLimitExceedException
 
@@ -35,7 +35,7 @@ from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
 from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex
-from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission
+from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission, ClassPlanPermission
 from . import serializers as serializers
 
 current_milli_time = lambda: int(round(time.time() * 1000))
@@ -44,6 +44,11 @@ class DocumentPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 10
     max_page_size = 80
+
+class DocumentCardPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 16
+    max_page_size = 64
 
 class QuestionPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
@@ -64,6 +69,11 @@ class TopicPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 54
     max_page_size = 106
+
+class ClassPlanPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 10
+    max_page_size = 80
 
 class QuestionSearchView(viewsets.ReadOnlyModelViewSet):   
     pagination_class = QuestionPagination
@@ -410,6 +420,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if self.action == 'copy_document':
             queryset = Document.objects.get_questions_prefetched() \
                 .filter(Q(documentpublication__isnull=False)|Q(owner=self.request.user)).filter(disabled=False).distinct()
+        if self.action == 'my_documents_cards':
+            queryset = Document.objects.filter(owner=self.request.user, disabled=False, questions__isnull=False).distinct()
         return queryset
 
     def get_serializer_class(self):
@@ -508,6 +520,20 @@ class DocumentViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(serializer.data)
 
         serializer = serializers.DocumentListSerializer(queryset, many=True)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @list_route(methods=['get'])
+    def my_documents_cards(self, request):       
+        queryset = self.get_queryset().order_by("id")
+       
+        self.pagination_class = DocumentCardPagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = serializers.DocumentListInfoSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = serializers.DocumentListInfoSerializer(queryset, many=True)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -676,3 +702,68 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
             'synonyms': synonym_serializer.data,
             'topics': topic_serialzier.data
         })
+
+class LinkViewSet(viewsets.ModelViewSet):
+    queryset = Link.objects.all()
+    serializer_class = serializers.LinkSerializer
+    pagination_class = None
+
+class TeachingYearViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = TeachingYear.objects.all()
+    serializer_class = serializers.TeachingYearSerializer
+    pagination_class = None
+
+class ClassPlanViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.ClassPlanSerializer
+    pagination_class = ClassPlanPagination
+    permission_classes = (permissions.IsAuthenticated, ClassPlanPermission, )
+
+    def get_queryset(self):
+        queryset = ClassPlan.objects.get_classplan_prefetched().filter(owner=self.request.user)
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+    
+    @list_route(methods=['get'])
+    def my_plans(self, request):
+        order_field = request.query_params.get('order_field', None)
+        order_type = request.query_params.get('order', None)
+
+        queryset = self.get_queryset()
+        if order_field == 'create_date':
+            if order_type == 'desc':
+                queryset = queryset.order_by('-create_date')
+            else:
+                queryset = queryset.order_by('create_date')
+
+        elif order_field == 'name':
+            if order_type =='desc':
+                queryset = queryset.order_by('-name')
+            else:
+                queryset = queryset.order_by('name')
+        
+        elif order_field == 'duration':
+            if order_type =='desc':
+                queryset = queryset.order_by('-duration')
+            else:
+                queryset = queryset.order_by('duration')
+        
+        elif order_field == 'disciplines':
+            if order_type =='desc':
+                queryset = queryset.annotate(order_temp=Max("disciplines__name")).order_by("-order_temp") 
+            else:
+                queryset = queryset.annotate(order_temp=Max("disciplines__name")).order_by("order_temp")
+
+        else:
+            queryset = queryset.order_by('-create_date')
+
+        self.pagination_class = ClassPlanPagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = serializers.ClassPlanSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = serializers.ClassPlanSerializer(queryset, many=True)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

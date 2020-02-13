@@ -6,7 +6,7 @@ from import_export.formats import base_formats
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
                      Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, Search,
-                     DocumentDownload, DocumentPublication, Synonym, Label)
+                     DocumentDownload, DocumentPublication, Synonym, Label, Link, TeachingYear, ClassPlan)
 
 class SearchResource(resources.ModelResource):
     
@@ -115,6 +115,28 @@ class TopicsInline(admin.StackedInline):
     model = Question.topics.through
     raw_id_fields=('topic',)
 
+    extra = 1
+
+class ClassPlanLearningObjectInline(admin.TabularInline):
+    model = LearningObject.plans_obj.through
+    show_change_link = True
+    raw_id_fields = ('learningobject',)
+    extra = 1
+
+class ClassPlanDocumentInline(admin.TabularInline):
+    model = Document.plans_doc.through
+    show_change_link = True
+    raw_id_fields = ('document',)
+    extra = 1
+
+class ClassPlanTopicsInline(admin.StackedInline):
+    model = ClassPlan.topics.through
+    raw_id_fields=('topic',)
+
+    extra = 1
+
+class ClassPlanLinksInline(admin.TabularInline):
+    model = Link
     extra = 1
 
 class TopicChildsInline(admin.StackedInline):
@@ -309,6 +331,27 @@ class DocumentPublicationModelAdmin(admin.ModelAdmin):
     def document__name(self, obj):
         return obj.document.name
 
+class TeachingYearModelAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name',)
+    search_fields = ['id', 'name',]
+    list_per_page = 100
+
+class LinkModelAdmin(admin.ModelAdmin):
+    raw_id_fields = ('plan', )
+    list_display = ('id', 'link',)
+    search_fields = ['id',]
+    list_per_page = 100
+
+class ClassPlanModelAdmin(admin.ModelAdmin):
+    raw_id_fields = ('owner', )
+    list_display = ('id', 'name', 'create_date', 'duration')
+    search_fields = ('id', 'name', 'description')
+    exclude = ('topics', 'learning_objects', 'links', 'documents')
+
+    inlines = [ClassPlanDocumentInline, ClassPlanLearningObjectInline, ClassPlanLinksInline, ClassPlanTopicsInline]
+
+    list_per_page = 100
+
 admin.site.register(Discipline, DisciplineModelAdmin)
 admin.site.register(Descriptor, DescriptorModelAdmin)
 admin.site.register(TeachingLevel, TeachingLeveltModelAdmin)
@@ -325,3 +368,6 @@ admin.site.register(Search, SearchModelAdmin)
 admin.site.register(DocumentDownload, DocumentDownloadModelAdmin)
 admin.site.register(DocumentPublication, DocumentPublicationModelAdmin)
 admin.site.register(Synonym, SynonymModelAdmin)
+admin.site.register(TeachingYear, TeachingYearModelAdmin)
+admin.site.register(ClassPlan, ClassPlanModelAdmin)
+admin.site.register(Link, LinkModelAdmin)

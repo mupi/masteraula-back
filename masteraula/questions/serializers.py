@@ -23,7 +23,9 @@ from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Question,
                     Alternative, Document, DocumentQuestion, Header, Year,
-                    Source, Topic, LearningObject, Search, DocumentDownload, Synonym, Label,)
+                    Source, Topic, LearningObject, Search, DocumentDownload, Synonym, Label, ClassPlan, TeachingYear, Link)
+
+from django.db.models import Prefetch
 
 import unicodedata
 import ast
@@ -580,6 +582,54 @@ class DocumentListSerializer(serializers.ModelSerializer):
             'secret' : { 'required' : True }
         }
 
+class DocumentListInfoSerializer(serializers.ModelSerializer):
+    create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
+    questions_quantity = serializers.SerializerMethodField()
+    questions_topics = serializers.SerializerMethodField('questions_topics_serializer')
+
+    def questions_topics_serializer(self, obj):
+        questions = obj.questions.prefetch_related(Prefetch('topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')))
+        topic = []
+        for q in questions:
+            topic += q.get_all_topics()
+        topic = list(set(topic))
+        return TopicSimpleSerializer(topic, many=True).data
+
+    questions_disciplines = serializers.SerializerMethodField('questions_disciplines_serializer')
+
+    def questions_disciplines_serializer(self, obj):
+        questions = obj.questions.prefetch_related('disciplines')
+        discipline = []
+        for q in questions:
+            discipline += q.disciplines.all()
+        discipline = list(set(discipline))
+        return DisciplineSerializer(discipline, many=True).data
+
+    class Meta:
+        model = Document
+        fields = (
+            'id',
+            'name',
+            'owner',
+            'create_date',
+            'questions_quantity',
+            'questions_topics',
+            'questions_disciplines',
+        )
+        extra_kwargs = {
+            'owner' : { 'read_only' : True },
+            'create_date' : { 'read_only' : True },
+            'secret' : { 'required' : True }
+        }
+
+    def get_questions_quantity(self, obj):
+        try:
+            obj._prefetched_objects_cache['questions']
+            return len([1 for question in obj.questions.all() if not question.disabled])
+        except (AttributeError, KeyError):
+            return obj.questions.filter(disabled=False).count()
+
 class DocumentDetailSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionListDetailSerializer(many=True, source='documentquestion_set', read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
@@ -742,3 +792,147 @@ class SearchSerializer(serializers.ModelSerializer):
             'year',
             'date_search',
         )
+
+class LinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Link
+        fields = (
+            'id',
+            'link',
+            'description_url',
+        )
+
+class TeachingYearSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeachingYear
+        fields = (
+            'id',
+            'name',
+        )
+
+class ClassPlanSerializer(serializers.ModelSerializer):
+    owner = UserDetailsSerializer(read_only=True)
+    create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
+    topics = TopicSimpleSerializer(read_only=True, many=True)
+    learning_objects = LearningObjectSerializer(many=True, read_only=True)
+    documents = DocumentListInfoSerializer(many=True,read_only=True)
+
+    learning_objects_ids = ModelListSerializer(write_only=True, allow_null=True, required=False, many=True, queryset=LearningObject.objects.all())
+    topics_ids = ModelListSerializer(write_only=True, many=True, queryset=Topic.objects.all())
+    disciplines_ids = ModelListSerializer(write_only=True, many=True, queryset=Discipline.objects.all())
+    teaching_levels_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingLevel.objects.all())
+    documents_ids = ModelListSerializer(write_only=True, many=True, queryset=Document.objects.all())
+    teaching_years_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingYear.objects.all())
+    links = LinkSerializer(many=True)
+
+    class Meta:
+        model = ClassPlan
+        fields = (
+            'id',
+            'owner',
+            'create_date',
+            'name',
+
+            'disciplines',
+            'teaching_levels',
+            'topics',
+            'learning_objects',
+            'documents', 
+            'links',
+            'teaching_years',
+
+            'learning_objects_ids',
+            'topics_ids',
+            'disciplines_ids',
+            'teaching_levels_ids',
+            'documents_ids',
+            'teaching_years_ids',
+
+            'duration',
+            'comment',
+            'description',
+            'pdf',
+        )
+
+        extra_kwargs = {
+            'name' : { 'required' : True},
+            'disciplines' : { 'required' : True},
+            'teaching_levels' : { 'required' : True}
+        }
+        depth = 1
+
+    def validate_disciplines_ids(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError(_("At least one discipline id"))
+        return list(set(value))
+
+    def validate_topics_ids(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError(_("At least one topic id"))
+        return list(set(value))
+
+    def validate_teaching_levels_ids(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError(_("At least one teaching level id"))
+        return list(set(value))
+    
+    def validate_duration(self, value):
+        if value == 0:
+            value = None
+        return value
+           
+    def validate_links(self, value):
+        if len(value) > 0:
+            for lin in value:
+                for i, (k,v) in enumerate(lin.items()):
+                    if k =="link" and "://" not in v:
+                        lin[k] =  "https://" + v
+        return value
+        
+    def create(self, validated_data):
+        links = validated_data.pop('links', None)
+        for key in list(validated_data.keys()):
+            if key.endswith('_ids'):
+                validated_data[key[:-4]] = validated_data.pop(key)
+        
+        plan = super().create(validated_data)
+
+        if links != None:
+            for lin in links:
+                Link.objects.create(plan=plan, **lin)
+
+        return ClassPlan.objects.get(id=plan.id)
+    
+    def update(self, instance, validated_data):
+        learning_objects_ids = validated_data.pop('learning_objects_ids', None)
+        documents_ids = validated_data.pop('documents_ids', None)
+        teaching_years_ids = validated_data.pop('teaching_years_ids', None)
+
+        links = validated_data.pop('links', None)
+        for key in list(validated_data.keys()):
+            if key.endswith('_ids'):
+                validated_data[key[:-4]] = validated_data.pop(key)
+        
+        plan = super().update(instance, validated_data)
+
+        if links != None:
+            plan.links.all().delete()
+            for lin in links:
+                Link.objects.create(plan=plan, **lin)
+
+        plan.learning_objects.clear()
+        if learning_objects_ids != None:
+            for l in learning_objects_ids:
+                plan.learning_objects.add(l)
+
+        plan.documents.clear()
+        if documents_ids != None:
+            for d in documents_ids:
+                plan.documents.add(d)
+        
+        plan.teaching_years.clear()
+        if teaching_years_ids != None:
+            for t in teaching_years_ids:
+                plan.teaching_years.add(t)
+
+        return ClassPlan.objects.get(id=plan.id)

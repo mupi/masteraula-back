@@ -2,11 +2,13 @@
 import datetime
 import uuid
 import operator
+import magic
 
 from django.db import models
 from django.db.models import Prefetch, Q
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
 
 from functools import reduce
 
@@ -22,6 +24,9 @@ class Discipline(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        ordering = ['-name']
 
 class TeachingLevel(models.Model):
     name = models.CharField(max_length=50, null=False, blank=False)
@@ -402,7 +407,7 @@ class DocumentQuestionManager(models.Manager):
 
     def get_questions_prefetched(self, topics=True):
         qs = self.all().select_related('question').prefetch_related(
-            'question__tags', 'question__disciplines', 'question__teaching_levels', 'question__alternatives',
+            'question__tags', 'question__disciplines', 'question__teaching_levels', 'question__alternatives', 
             self.learning_objects_prefetch
         )
         if topics:
@@ -456,7 +461,6 @@ class Header(models.Model):
         self.save()
 
 class Search(models.Model):
-   
     term = models.TextField(null=False, blank=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE) 
 
@@ -486,3 +490,73 @@ class DocumentPublication(models.Model):
     user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
     create_date = models.DateTimeField(auto_now_add=True)
+
+class TeachingYear(models.Model):
+    name = models.CharField(max_length=10)
+
+    def __str__(self):
+        return str(self.name)
+
+class ClassPlanManager(models.Manager):
+    topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline'))
+
+    learning_objects_prefetch = Prefetch(
+        'learning_objects',
+        queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags', 'questions')
+    )
+
+    documents_prefetch = Prefetch(
+        'documents',
+        queryset=Document.objects.all().select_related('owner').prefetch_related('questions')
+    )
+
+    def get_classplan_prefetched(self):
+        qs = self.all().select_related('owner').prefetch_related(
+            'teaching_levels', 'links', 'teaching_years', self.learning_objects_prefetch, self.topics_prefetch, self.documents_prefetch
+        )
+        return qs
+
+class ClassPlan(models.Model):
+
+    def validate_pdf(fileobj):
+        max_size = 2*(1024 * 1024)
+        if fileobj.size > max_size:
+            raise ValidationError(_('Max file size is 2MB'))
+
+        filetype = magic.from_buffer(fileobj.read())
+        if not "PDF" in filetype:
+            raise ValidationError("File is not PDF.")
+
+
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    create_date = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=200)
+
+    disciplines = models.ManyToManyField(Discipline, blank=True)
+    teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)
+    topics = models.ManyToManyField(Topic, blank=True)
+    learning_objects = models.ManyToManyField('LearningObject', related_name='plans_obj', blank=True)
+    documents = models.ManyToManyField(Document, related_name='plans_doc', blank=True)
+    teaching_years = models.ManyToManyField(TeachingYear, blank=True)
+
+    duration = models.PositiveIntegerField(null=True, blank=True)
+    comment = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    pdf = models.FileField(null=True, blank=True, upload_to='documents_pdf', validators=[validate_pdf])
+
+    objects = ClassPlanManager()
+
+    def __str__(self):
+        return str(self.name)
+    
+    class Meta:
+        ordering = ['id']
+
+class Link(models.Model):
+    link = models.TextField(max_length=2083, null=False, blank=False)
+    description_url = models.TextField(null=True, blank=True)
+    plan = models.ForeignKey(ClassPlan, related_name='links', on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.link)
