@@ -138,6 +138,7 @@ class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
     tags = indexes.CharField(boost=1000)
     is_image = indexes.BooleanField()
     is_text = indexes.BooleanField()
+    object_types = indexes.MultiValueField()
 
     def get_model(self):
         return LearningObject
@@ -156,6 +157,10 @@ class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_is_image(self, obj):
         return obj.image != None and obj.image != ''
+   
+    def prepare_object_types(self, obj):
+        object_types = [e for e in obj.object_types]
+        return object_types
     
     def prepare_tags(self, obj):
         return ' '.join([ stripaccents(tag.name) for tag in obj.tags.all() ])
