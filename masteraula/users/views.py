@@ -14,12 +14,12 @@ from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .models import User, City, State, School, Subscription
-from .serializers import CitySerializer, StateSerializer, SchoolSerializer,ResendConfirmationEmailSerializer, SocialOnlyLoginSerializer, SubscriptionSerializer
+from .serializers import CitySerializer, StateSerializer, SchoolSerializer,ResendConfirmationEmailSerializer, SocialOnlyLoginSerializer, SubscriptionSerializer, DashboardSerializer
 
 
 class CityViewSet(viewsets.ReadOnlyModelViewSet):
@@ -85,6 +85,14 @@ class GoogleConnect(SocialConnectView):
     adapter_class = GoogleOAuth2Adapter
     client_class = OAuth2Client
 
+class DashboardViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = DashboardSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def get_queryset(self):
+        queryset = User.objects.filter(id=self.request.user.id).order_by('-id')
+        return queryset
+    
 @api_view()
 def null_view(request):
     return Response(status=status.HTTP_400_BAD_REQUEST)

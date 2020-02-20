@@ -22,8 +22,10 @@ from rest_framework import serializers, exceptions
 
 from requests.exceptions import HTTPError
 
+from django.db.models import Count
+
 from .models import User, Profile, City, State, School, Subscription
-from masteraula.questions.models import Discipline
+from masteraula.questions.models import Discipline, Question, Document, ClassPlan, DocumentDownload, LearningObject, Topic
 
 class CitySerializer(serializers.ModelSerializer):
     class Meta:
@@ -400,3 +402,89 @@ class SocialOnlyLoginSerializer(SocialLoginSerializer):
         attrs['user'] = login.account.user
 
         return attrs
+
+class TopicListSerializer(serializers.ModelSerializer):
+    num_questions = serializers.IntegerField(read_only=True)
+    per_questions = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Topic
+        fields = (
+            'id',
+            'name',
+            'num_questions',
+            'per_questions'
+        )
+    
+    def get_per_questions(self, obj):
+        qtde_questions = Question.objects.filter(disabled=False).count()
+        per_questions = (obj.num_questions * 100) / qtde_questions
+        return round(per_questions, 2)
+
+class DashboardSerializer(serializers.ModelSerializer):
+    questions = serializers.SerializerMethodField()
+    documents = serializers.SerializerMethodField()
+    documents_questions = serializers.SerializerMethodField()
+    downloads = serializers.SerializerMethodField()
+    plans = serializers.SerializerMethodField()
+    total_questions = serializers.SerializerMethodField()
+    total_objects = serializers.SerializerMethodField()
+    total_topics = serializers.SerializerMethodField()
+    topics_questions = serializers.SerializerMethodField('topics_questions_serializer')
+
+    def topics_questions_serializer(self, obj):
+        topics = Topic.objects.all().annotate(num_questions=Count('question')).order_by('-num_questions')
+        return TopicListSerializer(topics[:10], many=True).data
+    
+    class Meta:
+        model = User
+        fields = (
+            'questions',
+            'documents', 
+            'documents_questions', 
+            'downloads', 'plans', 
+            'total_questions', 
+            'total_objects', 
+            'total_topics', 
+            'topics_questions'
+            )
+    
+    def get_questions(self, obj):
+        question = Question.objects.filter(author=obj, disabled=False).count()
+        return question
+
+    def get_documents(self, obj):
+        documents = Document.objects.filter(owner=obj, disabled=False).count()
+        return documents
+
+    def get_documents_questions(self, obj):
+        documents = Document.objects.filter(owner=obj).prefetch_related('questions')
+        dup_questions = []
+
+        for doc in documents:
+            for q in doc.questions.all():
+                if q.id not in dup_questions:
+                    dup_questions.append(q.id)
+
+        questions = Question.objects.filter(id__in=dup_questions).count()
+        return questions
+
+    def get_downloads(self, obj):
+        downloads = DocumentDownload.objects.filter(user=obj).count()
+        return downloads
+
+    def get_plans(self, obj):
+        plans = ClassPlan.objects.filter(owner=obj).count()
+        return plans
+
+    def get_total_questions(self, obj):
+        questions = Question.objects.filter(disabled=False).count()
+        return questions
+
+    def get_total_objects(self, obj):
+        objects = LearningObject.objects.all().count()
+        return objects
+
+    def get_total_topics(self, obj):
+        topics = Topic.objects.all().count()
+        return topics
