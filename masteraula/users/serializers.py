@@ -429,10 +429,10 @@ class DashboardSerializer(serializers.ModelSerializer):
         topics = Topic.objects.filter(question__isnull=False).annotate(
             num_questions=Count('question')).order_by('-num_questions')
 
-        serializer_topics = TopicListSerializer(topics[:3], many=True).data
+        serializer_topics = TopicListSerializer(topics[:9], many=True).data
 
         count = 0
-        for t in topics[3:]:
+        for t in topics[9:]:
             count = count + t.num_questions
         serializer_topics.append({"name": "Outros", "num_questions": count})
         return serializer_topics
