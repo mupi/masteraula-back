@@ -160,14 +160,15 @@ class QuestionManager(models.Manager):
         topics = query_params.getlist('topics', None)
         labels = query_params.getlist('labels', None)
        
+        print(disciplines)
         if disciplines:
-            queryset = queryset.filter(disciplines__in=disciplines).distinct()
+            queryset = queryset.filter(disciplines__in=disciplines)
         if teaching_levels:
             queryset = queryset.filter(teaching_levels__in=teaching_levels).distinct()
         if difficulties:
             queryset = queryset.filter(difficulty__in=difficulties).distinct()
         if years:
-            queryset = queryset.filter(year__in=years).distinct()
+            queryset = queryset.filter(year__in=years)
         if sources:
             query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             queryset = queryset.filter(query)
