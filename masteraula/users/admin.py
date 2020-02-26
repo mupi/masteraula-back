@@ -13,6 +13,10 @@ from import_export import resources, widgets
 from import_export.fields import Field
 from import_export.formats import base_formats
 
+from django.db.models import Q, Count
+
+from masteraula.questions.models import Question, Document, ClassPlan, DocumentDownload
+
 class SchoolInline(admin.TabularInline):
     model = User.schools.through
 
@@ -84,11 +88,43 @@ class MyUserAdmin(ExportMixin, AuthUserAdmin):
     fieldsets = (
             ('User Profile', {'fields': ('name', 'city', 'schools', 'disciplines',)}),
     ) + AuthUserAdmin.fieldsets
-    list_display = ('id', 'username', 'name', 'is_superuser', 'date_joined')
-    search_fields = ['id', 'name', 'email', 'disciplines__name', 'schools__name', 'date_joined']
-    
-    def get_export_formats(self):
-        
+    list_display = ('id', 'username', 'name', 'questions', 'documents', 'downloads', 'plans', 'is_superuser', 'date_joined')
+    search_fields = ['id', 'name', 'email', 'schools__name', 'date_joined']
+   
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.annotate(
+            _document_count=Count("document",  distinct=True, filter=Q(document__disabled=False)),
+            _question_count=Count("question",  distinct=True, filter=Q(question__disabled=False)),
+            _download_count=Count("documentdownload", distinct=True),
+            _plan_count=Count("classplan", distinct=True),
+        )
+        return queryset
+
+    def questions(self, obj):
+        return obj._question_count
+
+    def documents(self, obj):
+        return obj._document_count
+
+    # def documents_questions(self, obj):
+    #     documents = Document.objects.filter(owner=obj).prefetch_related('questions')
+    #     dup_questions = []
+
+    #     for doc in documents:
+    #         dup_questions += doc.questions.all()
+    #     dup_questions = list(set(dup_questions))
+                
+    #     questions = Question.objects.filter(id__in=dup_questions).count()
+    #     return str(questions)
+
+    def downloads(self, obj):
+        return obj._download_count
+
+    def plans(self, obj):
+        return obj._plan_count
+
+    def export_formats(self):      
         formats = (
                 base_formats.CSV,
                 base_formats.XLS,
