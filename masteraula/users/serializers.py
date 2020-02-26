@@ -85,8 +85,8 @@ class DisciplineSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     city = CityEditSerializer(required=False, allow_null=True)
-    schools = SchoolSerializer(many = True, required=False, read_only=True)
-    disciplines = DisciplineSerializer(many = True, required = False)
+    schools = SchoolSerializer(many=True, required=False, read_only=True)
+    disciplines = DisciplineSerializer(many=True, required=False)
     groups = serializers.SerializerMethodField()
     socialaccounts = serializers.SerializerMethodField()
     subscription = serializers.SerializerMethodField()
@@ -405,7 +405,6 @@ class SocialOnlyLoginSerializer(SocialLoginSerializer):
 
 class TopicListSerializer(serializers.ModelSerializer):
     num_questions = serializers.IntegerField(read_only=True)
-    per_questions = serializers.SerializerMethodField()
 
     class Meta:
         model = Topic
@@ -413,14 +412,8 @@ class TopicListSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'num_questions',
-            'per_questions'
         )
     
-    def get_per_questions(self, obj):
-        qtde_questions = Question.objects.filter(disabled=False).count()
-        per_questions = (obj.num_questions * 100) / qtde_questions
-        return round(per_questions, 2)
-
 class DashboardSerializer(serializers.ModelSerializer):
     questions = serializers.SerializerMethodField()
     documents = serializers.SerializerMethodField()
@@ -433,8 +426,16 @@ class DashboardSerializer(serializers.ModelSerializer):
     topics_questions = serializers.SerializerMethodField('topics_questions_serializer')
 
     def topics_questions_serializer(self, obj):
-        topics = Topic.objects.all().annotate(num_questions=Count('question')).order_by('-num_questions')
-        return TopicListSerializer(topics[:10], many=True).data
+        topics = Topic.objects.filter(question__isnull=False).annotate(
+            num_questions=Count('question')).order_by('-num_questions')
+
+        serializer_topics = TopicListSerializer(topics[:3], many=True).data
+
+        count = 0
+        for t in topics[3:]:
+            count = count + t.num_questions
+        serializer_topics.append({"name": "Outros", "num_questions": count})
+        return serializer_topics
     
     class Meta:
         model = User
@@ -442,11 +443,12 @@ class DashboardSerializer(serializers.ModelSerializer):
             'questions',
             'documents', 
             'documents_questions', 
-            'downloads', 'plans', 
+            'downloads',
+            'plans',
             'total_questions', 
             'total_objects', 
             'total_topics', 
-            'topics_questions'
+            'topics_questions',
             )
     
     def get_questions(self, obj):
