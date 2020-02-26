@@ -31,6 +31,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     source = indexes.CharField(model_attr='source', null=True)
     difficulty = indexes.CharField()
     author = indexes.CharField(model_attr='author')
+    author_id = indexes.IntegerField()
     authorship = indexes.CharField()
     disabled = indexes.BooleanField(model_attr='disabled')
 
@@ -75,6 +76,9 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_labels(self, obj):
         return [ label.pk for label in obj.labels.all() ]
+        
+    def prepare_author_id(self, obj):
+        return obj.author.id
 
     @staticmethod
     def filter_question_search(text, query_params):
@@ -106,7 +110,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         if sources:
             params['source__in'] = sources
         if author:
-            params['author__id'] = author
+            params['author_id'] = author
         if topics:
             params['topics_ids'] = topics
         if labels:
