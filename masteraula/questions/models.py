@@ -160,7 +160,6 @@ class QuestionManager(models.Manager):
         topics = query_params.getlist('topics', None)
         labels = query_params.getlist('labels', None)
        
-        print(disciplines)
         if disciplines:
             queryset = queryset.filter(disciplines__in=disciplines)
         if teaching_levels:
