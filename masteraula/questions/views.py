@@ -579,7 +579,15 @@ class DocumentDownloadViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         return serializers.DocumentDownloadSerializer
-
+    
+    def list(self, request, *args, **kwargs):
+        response = super(DocumentDownloadViewSet, self).list(request, *args, **kwargs)
+        try:
+            total = DocumentDownload.objects.filter(user=self.request.user).count()
+            response.data['total_downloads'] = total
+        except:
+            pass
+        return response
 
 class DocumentPublicationViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
