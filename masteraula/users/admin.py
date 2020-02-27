@@ -29,6 +29,11 @@ class SchoolModelAdmin(admin.ModelAdmin):
     
 
 class MyUserAdminResource(resources.ModelResource):
+    questions = Field(column_name='questions')
+    documents= Field(column_name='documents')
+    downloads = Field(column_name='downloads')
+    plans = Field(column_name='plans')
+
     class Meta:
         model = User
         fields = ('id','name', 'username', 'email', 'about', 'city', 'schools', 'disciplines', 'date_joined')
@@ -36,6 +41,31 @@ class MyUserAdminResource(resources.ModelResource):
         widgets = {
                 'date_joined': {'format': '%d/%m/%Y'},
                 }
+
+    def dehydrate_questions(self, obj):
+        questions = Question.objects.filter(author=obj, disabled=False).count()
+        data = "Active:" + str(questions) + "  Total:" + str(obj._question_count)
+        return data
+
+    def dehydrate_documents(self, obj):
+        documents = Document.objects.filter(owner=obj).prefetch_related('questions')
+    
+        dup_questions = []
+
+        for doc in documents:
+            for q in doc.questions.all():
+                if q.id not in dup_questions:
+                    dup_questions.append(q.id)
+
+        questions = Question.objects.filter(id__in=dup_questions).count()
+        data = "Active:" + str(documents.filter(disabled=False).count()) + "  Total:" + str(obj._document_count) + "  Questions used:" + str(questions)
+        return data
+
+    def dehydrate_downloads(self, obj):
+        return obj._download_count
+
+    def dehydrate_plans(self, obj):
+        return obj._plan_count
 
     def dehydrate_city(self,user):
         if user.city:
@@ -46,8 +76,8 @@ class MyUserAdminResource(resources.ModelResource):
         list_disciplines = []
         for i in itens:
             list_disciplines.append(i.name)
-
-        return(', '.join(list_disciplines))
+        list_disciplines = ' '.join(list_disciplines)
+        return(list_disciplines)
 
     def dehydrate_schools(self,user):
         itens = user.schools.all()
@@ -55,7 +85,12 @@ class MyUserAdminResource(resources.ModelResource):
         for i in itens:
             list_schools.append(i.name)
 
-        return(', '.join(list_schools))
+        return(' '.join(list_schools))
+
+    def dehydrate_about(self,user):
+        about = user.about
+        about = about.replace(",", "")
+        return about
 
 class MyUserChangeForm(UserChangeForm):
     class Meta(UserChangeForm.Meta):
@@ -88,14 +123,14 @@ class MyUserAdmin(ExportMixin, AuthUserAdmin):
     fieldsets = (
             ('User Profile', {'fields': ('name', 'city', 'schools', 'disciplines',)}),
     ) + AuthUserAdmin.fieldsets
-    list_display = ('id', 'username', 'name', 'questions', 'documents', 'downloads', 'plans', 'is_superuser', 'date_joined')
-    search_fields = ['id', 'name', 'email', 'schools__name', 'date_joined']
+    list_display = ('id', 'username', 'name', 'questions', 'documents', 'documentdownload', 'plans', 'is_superuser', 'date_joined')
+    search_fields = ['id', 'name', 'email', 'date_joined']
    
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         queryset = queryset.annotate(
-            _document_count=Count("document",  distinct=True, filter=Q(document__disabled=False)),
-            _question_count=Count("question",  distinct=True, filter=Q(question__disabled=False)),
+            _document_count=Count("document",  distinct=True),
+            _question_count=Count("question",  distinct=True),
             _download_count=Count("documentdownload", distinct=True),
             _plan_count=Count("classplan", distinct=True),
         )
@@ -107,18 +142,7 @@ class MyUserAdmin(ExportMixin, AuthUserAdmin):
     def documents(self, obj):
         return obj._document_count
 
-    # def documents_questions(self, obj):
-    #     documents = Document.objects.filter(owner=obj).prefetch_related('questions')
-    #     dup_questions = []
-
-    #     for doc in documents:
-    #         dup_questions += doc.questions.all()
-    #     dup_questions = list(set(dup_questions))
-                
-    #     questions = Question.objects.filter(id__in=dup_questions).count()
-    #     return str(questions)
-
-    def downloads(self, obj):
+    def documentdownload(self, obj):
         return obj._download_count
 
     def plans(self, obj):
