@@ -137,10 +137,14 @@ class DataUsersView(SuperuserMixin, TemplateView):
             if date:  
                 documents = Document.objects.filter(owner=user).prefetch_related('questions').filter(create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
                 doc_downloads = DocumentDownload.objects.filter(user=user).filter(download_date__year=int(date.split('-')[0]), download_date__month=int(date.split('-')[1]))
+                questions = Question.objects.filter(author=user).filter(create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
+                questions_inative = questions.filter(disabled=True).filter(create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1])).count()
     
             else:
                 documents = Document.objects.filter(owner=user).prefetch_related('questions')
                 doc_downloads = DocumentDownload.objects.filter(user=user)
+                questions = Question.objects.filter(author=user)
+                questions_inative = questions.filter(disabled=True).count()
 
             q_downloads = 0
             check_doc = []
@@ -153,8 +157,6 @@ class DataUsersView(SuperuserMixin, TemplateView):
                     if q.id not in check_dup_questions:
                         check_dup_questions.append(q.id)
 
-            questions = Question.objects.filter(author=user)
-            questions_inative = questions.filter(disabled=True).count()
             disciplines = '-'.join([disciplines.name for disciplines in user.disciplines.all()])
             city = user.city
             doc_inative = documents.filter(disabled=True)
