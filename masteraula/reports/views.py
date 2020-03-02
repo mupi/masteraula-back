@@ -108,6 +108,72 @@ class NumberDocumentsView(SuperuserMixin, TemplateView):
         response['Content-Disposition'] = 'attachment; filename="relatorio_provas.csv"'
         return response
 
+class DataUsersView(SuperuserMixin, TemplateView):
+    login_url = '/admin/login/'
+    template_name = 'reports/data_users.html'
+
+    def get(self, request, *args, **kwargs):
+        context= self.get_context_data(**kwargs)
+        context['data'] = School.objects.all().order_by('name')
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):      
+        data = 'Usuário,Email,Disciplinas,Cidade,Qtde de Provas,Qtde de Provas Inativas,Qtde de Questões em Provas,Qtde de Questões,Qtde de Questões Inativas,Qtde de downloads (provas)\n'  
+        id_users =  request.POST.get('id_users', None)
+        date = self.request.POST.get('date')   
+        
+        try:
+            if id_users:
+                users = User.objects.filter(id__in=id_users.split(','))
+            else:
+                users = User.objects.all()
+        except:
+            return render(request, self.template_name, {'not_found' : True})
+
+        if users.count() == 0:
+            return render(request, self.template_name, {'not_found' : True})
+
+        for user in users:
+            if date:  
+                documents = Document.objects.filter(owner=user).prefetch_related('questions').filter(create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
+                doc_downloads = DocumentDownload.objects.filter(user=user).filter(download_date__year=int(date.split('-')[0]), download_date__month=int(date.split('-')[1]))
+    
+            else:
+                documents = Document.objects.filter(owner=user).prefetch_related('questions')
+                doc_downloads = DocumentDownload.objects.filter(user=user)
+
+            q_downloads = 0
+            check_doc = []
+            check_dup_questions = []
+            dup_questions = []
+            dup_doc = [] 
+           
+            for doc in documents:
+                for q in doc.questions.all():
+                    if q.id not in check_dup_questions:
+                        check_dup_questions.append(q.id)
+
+            questions = Question.objects.filter(author=user)
+            questions_inative = questions.filter(disabled=True).count()
+            disciplines = '-'.join([disciplines.name for disciplines in user.disciplines.all()])
+            city = user.city
+            doc_inative = documents.filter(disabled=True)
+
+            data = data + user.name \
+                + ',' + user.email \
+                + ',' + str(disciplines) \
+                + ',' + str(city) \
+                + ',' + str(documents.count()) \
+                + ',' + str(doc_inative.count()) \
+                + ',' + str(len(check_dup_questions)) \
+                + ',' + str(questions.count()) \
+                + ',' + str(questions_inative) \
+                + ',' + str(doc_downloads.count())  + '\n'
+
+        response = HttpResponse(data, 'text/csv')
+        response['Content-Disposition'] = 'attachment; filename="relatorio_escola.csv"'
+        return response
+
 class DataSchoolView(SuperuserMixin, TemplateView):
     login_url = '/admin/login/'
     template_name = 'reports/data_users_school.html'

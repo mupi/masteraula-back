@@ -43,23 +43,10 @@ class MyUserAdminResource(resources.ModelResource):
                 }
 
     def dehydrate_questions(self, obj):
-        questions = Question.objects.filter(author=obj, disabled=False).count()
-        data = "Active:" + str(questions) + "  Total:" + str(obj._question_count)
-        return data
+        return obj._question_count
 
     def dehydrate_documents(self, obj):
-        documents = Document.objects.filter(owner=obj).prefetch_related('questions')
-    
-        dup_questions = []
-
-        for doc in documents:
-            for q in doc.questions.all():
-                if q.id not in dup_questions:
-                    dup_questions.append(q.id)
-
-        questions = Question.objects.filter(id__in=dup_questions).count()
-        data = "Active:" + str(documents.filter(disabled=False).count()) + "  Total:" + str(obj._document_count) + "  Questions used:" + str(questions)
-        return data
+        return obj._document_count
 
     def dehydrate_downloads(self, obj):
         return obj._download_count
