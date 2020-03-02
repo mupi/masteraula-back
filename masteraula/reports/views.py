@@ -158,6 +158,10 @@ class DataUsersView(SuperuserMixin, TemplateView):
 
             disciplines = '-'.join([disciplines.name for disciplines in user.disciplines.all()])
             city = user.city
+
+            if not city:
+                city = ""
+                
             doc_inative = documents.filter(disabled=True)
 
             data = data + user.name \
