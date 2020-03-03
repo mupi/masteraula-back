@@ -117,7 +117,7 @@ class DataUsersView(SuperuserMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):      
-        data = 'Usuário,Email,Disciplinas,Cidade,Qtde de Provas,Qtde de Provas Ativas,Qtde de Questões em Provas,Qtde de Questões,Qtde de Questões Ativas,Qtde de downloads (provas),Qtde de Planos\n'  
+        data = 'Usuário,Email,Disciplinas,Cidade,Qtde de Provas (total),Qtde de Provas Ativas,Qtde de Questões em Provas,Qtde de Questões (total),Qtde de Questões Ativas,Qtde de downloads (provas),Qtde de Planos\n'  
         id_users =  request.POST.get('id_users', None)
         date = self.request.POST.get('date')   
         
