@@ -13,6 +13,10 @@ from import_export import resources, widgets
 from import_export.fields import Field
 from import_export.formats import base_formats
 
+from django.db.models import Q, Count
+
+from masteraula.questions.models import Question, Document, ClassPlan, DocumentDownload
+
 class SchoolInline(admin.TabularInline):
     model = User.schools.through
 
@@ -25,6 +29,11 @@ class SchoolModelAdmin(admin.ModelAdmin):
     
 
 class MyUserAdminResource(resources.ModelResource):
+    questions = Field(column_name='questions')
+    documents= Field(column_name='documents')
+    downloads = Field(column_name='downloads')
+    plans = Field(column_name='plans')
+
     class Meta:
         model = User
         fields = ('id','name', 'username', 'email', 'about', 'city', 'schools', 'disciplines', 'date_joined')
@@ -32,6 +41,18 @@ class MyUserAdminResource(resources.ModelResource):
         widgets = {
                 'date_joined': {'format': '%d/%m/%Y'},
                 }
+
+    def dehydrate_questions(self, obj):
+        return obj._question_count
+
+    def dehydrate_documents(self, obj):
+        return obj._document_count
+
+    def dehydrate_downloads(self, obj):
+        return obj._download_count
+
+    def dehydrate_plans(self, obj):
+        return obj._plan_count
 
     def dehydrate_city(self,user):
         if user.city:
@@ -42,8 +63,8 @@ class MyUserAdminResource(resources.ModelResource):
         list_disciplines = []
         for i in itens:
             list_disciplines.append(i.name)
-
-        return(', '.join(list_disciplines))
+        list_disciplines = ' '.join(list_disciplines)
+        return(list_disciplines)
 
     def dehydrate_schools(self,user):
         itens = user.schools.all()
@@ -51,7 +72,12 @@ class MyUserAdminResource(resources.ModelResource):
         for i in itens:
             list_schools.append(i.name)
 
-        return(', '.join(list_schools))
+        return(' '.join(list_schools))
+
+    def dehydrate_about(self,user):
+        about = user.about
+        about = about.replace(",", "")
+        return about
 
 class MyUserChangeForm(UserChangeForm):
     class Meta(UserChangeForm.Meta):
@@ -84,11 +110,32 @@ class MyUserAdmin(ExportMixin, AuthUserAdmin):
     fieldsets = (
             ('User Profile', {'fields': ('name', 'city', 'schools', 'disciplines',)}),
     ) + AuthUserAdmin.fieldsets
-    list_display = ('id', 'username', 'name', 'is_superuser', 'date_joined')
-    search_fields = ['id', 'name', 'email', 'disciplines__name', 'schools__name', 'date_joined']
-    
-    def get_export_formats(self):
-        
+    list_display = ('id', 'username', 'name', 'questions', 'documents', 'documentdownload', 'plans', 'is_superuser', 'date_joined')
+    search_fields = ['id', 'name', 'email', 'date_joined']
+   
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.annotate(
+            _document_count=Count("document",  distinct=True),
+            _question_count=Count("question",  distinct=True),
+            _download_count=Count("documentdownload", distinct=True),
+            _plan_count=Count("classplan", distinct=True),
+        )
+        return queryset
+
+    def questions(self, obj):
+        return obj._question_count
+
+    def documents(self, obj):
+        return obj._document_count
+
+    def documentdownload(self, obj):
+        return obj._download_count
+
+    def plans(self, obj):
+        return obj._plan_count
+
+    def export_formats(self):      
         formats = (
                 base_formats.CSV,
                 base_formats.XLS,

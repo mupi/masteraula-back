@@ -11,6 +11,7 @@ urlpatterns = [
     url(r'^uncategorized_questions/$', views.UncategorizedTagsView.as_view(), name='uncategorized_questions'),
     url(r'^number_documents/$', views.NumberDocumentsView.as_view(), name='number_documents'),
     url(r'^data_users_school/$', views.DataSchoolView.as_view(), name='data_users_school'),
+    url(r'^data_users/$', views.DataUsersView.as_view(), name='data_users'),
     url(r'^questions_per_topic/$', views.QuestionPerTopicView.as_view(), name='questions_per_topic'),
 
     url(r'^statements_with_div/$', statements_views.StatementsWithDivView.as_view(), name='statements_with_div'),

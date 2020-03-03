@@ -12,7 +12,7 @@ from django.utils.decorators import method_decorator
 
 from django.contrib.auth.mixins import UserPassesTestMixin
 
-from masteraula.questions.models import Question, Discipline, Document, LearningObject, User, Alternative, DocumentDownload, Topic
+from masteraula.questions.models import Question, Discipline, Document, LearningObject, User, Alternative, DocumentDownload, Topic, ClassPlan
 from masteraula.users.models import School
 
 from .serializers import QuestionStatementEditSerializer, LearningObjectEditSerializer, AlternativeEditSerializer
@@ -106,6 +106,82 @@ class NumberDocumentsView(SuperuserMixin, TemplateView):
     
         response = HttpResponse(data, 'text/csv')
         response['Content-Disposition'] = 'attachment; filename="relatorio_provas.csv"'
+        return response
+
+class DataUsersView(SuperuserMixin, TemplateView):
+    login_url = '/admin/login/'
+    template_name = 'reports/data_users.html'
+
+    def get(self, request, *args, **kwargs):
+        context= self.get_context_data(**kwargs)
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):      
+        data = 'Usuário,Email,Disciplinas,Cidade,Qtde de Provas (total),Qtde de Provas Ativas,Qtde de Questões em Provas,Qtde de Questões (total),Qtde de Questões Ativas,Qtde de downloads (provas),Qtde de Planos\n'  
+        id_users =  request.POST.get('id_users', None)
+        date = self.request.POST.get('date')   
+        
+        try:
+            if id_users:
+                users = User.objects.filter(id__in=id_users.split(','))
+            else:
+                users = User.objects.all()
+        except:
+            return render(request, self.template_name, {'not_found' : True})
+
+        if len(users) == 0:
+            return render(request, self.template_name, {'not_found' : True})
+
+        for user in users:
+            if date:  
+                if int(date.split('-')[0]) < 2018:
+                    return render(request, self.template_name, {'not_found_date' : True})
+
+                documents = Document.objects.prefetch_related('questions').filter(owner=user, create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
+                doc_downloads = DocumentDownload.objects.filter(user=user, download_date__year=int(date.split('-')[0]), download_date__month=int(date.split('-')[1]))
+                questions = Question.objects.filter(author=user, create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
+                plans = ClassPlan.objects.filter(owner=user, create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
+    
+            else:
+                documents = Document.objects.filter(owner=user).prefetch_related('questions')
+                doc_downloads = DocumentDownload.objects.filter(user=user)
+                questions = Question.objects.filter(author=user)
+                plans = ClassPlan.objects.filter(owner=user)
+
+            q_downloads = 0
+            check_doc = []
+            check_dup_questions = []
+            dup_questions = []
+            dup_doc = [] 
+           
+            for doc in documents:
+                for q in doc.questions.all():
+                    if q.id not in check_dup_questions:
+                        check_dup_questions.append(q.id)
+
+            disciplines = '-'.join([disciplines.name for disciplines in user.disciplines.all()])
+            city = user.city
+
+            if not city:
+                city = ""
+                
+            doc_inative = documents.filter(disabled=False)
+            questions_inative = questions.filter(disabled=False)
+
+            data = data + user.name \
+                + ',' + user.email \
+                + ',' + str(disciplines) \
+                + ',' + str(city) \
+                + ',' + str(len(documents)) \
+                + ',' + str(len(doc_inative)) \
+                + ',' + str(len(check_dup_questions)) \
+                + ',' + str(len(questions)) \
+                + ',' + str(len(questions_inative)) \
+                + ',' + str(len(doc_downloads)) \
+                + ',' + str(len(plans)) + '\n'
+
+        response = HttpResponse(data, 'text/csv')
+        response['Content-Disposition'] = 'attachment; filename="relatorio-geral-usuarios.csv"'
         return response
 
 class DataSchoolView(SuperuserMixin, TemplateView):
