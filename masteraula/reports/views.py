@@ -12,7 +12,7 @@ from django.utils.decorators import method_decorator
 
 from django.contrib.auth.mixins import UserPassesTestMixin
 
-from masteraula.questions.models import Question, Discipline, Document, LearningObject, User, Alternative, DocumentDownload, Topic
+from masteraula.questions.models import Question, Discipline, Document, LearningObject, User, Alternative, DocumentDownload, Topic, ClassPlan
 from masteraula.users.models import School
 
 from .serializers import QuestionStatementEditSerializer, LearningObjectEditSerializer, AlternativeEditSerializer
@@ -117,7 +117,7 @@ class DataUsersView(SuperuserMixin, TemplateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):      
-        data = 'Usuário,Email,Disciplinas,Cidade,Qtde de Provas,Qtde de Provas Inativas,Qtde de Questões em Provas,Qtde de Questões,Qtde de Questões Inativas,Qtde de downloads (provas)\n'  
+        data = 'Usuário,Email,Disciplinas,Cidade,Qtde de Provas,Qtde de Provas Ativas,Qtde de Questões em Provas,Qtde de Questões,Qtde de Questões Ativas,Qtde de downloads (provas),Qtde de Planos\n'  
         id_users =  request.POST.get('id_users', None)
         date = self.request.POST.get('date')   
         
@@ -129,21 +129,24 @@ class DataUsersView(SuperuserMixin, TemplateView):
         except:
             return render(request, self.template_name, {'not_found' : True})
 
-        if users.count() == 0:
+        if len(users) == 0:
             return render(request, self.template_name, {'not_found' : True})
 
         for user in users:
             if date:  
-                documents = Document.objects.filter(owner=user).prefetch_related('questions').filter(create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
-                doc_downloads = DocumentDownload.objects.filter(user=user).filter(download_date__year=int(date.split('-')[0]), download_date__month=int(date.split('-')[1]))
-                questions = Question.objects.filter(author=user).filter(create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
-                questions_inative = questions.filter(disabled=True).filter(create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1])).count()
+                if int(date.split('-')[0]) < 2018:
+                    return render(request, self.template_name, {'not_found_date' : True})
+
+                documents = Document.objects.prefetch_related('questions').filter(owner=user, create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
+                doc_downloads = DocumentDownload.objects.filter(user=user, download_date__year=int(date.split('-')[0]), download_date__month=int(date.split('-')[1]))
+                questions = Question.objects.filter(author=user, create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
+                plans = ClassPlan.objects.filter(owner=user, create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
     
             else:
                 documents = Document.objects.filter(owner=user).prefetch_related('questions')
                 doc_downloads = DocumentDownload.objects.filter(user=user)
                 questions = Question.objects.filter(author=user)
-                questions_inative = questions.filter(disabled=True).count()
+                plans = ClassPlan.objects.filter(owner=user)
 
             q_downloads = 0
             check_doc = []
@@ -162,21 +165,23 @@ class DataUsersView(SuperuserMixin, TemplateView):
             if not city:
                 city = ""
                 
-            doc_inative = documents.filter(disabled=True)
+            doc_inative = documents.filter(disabled=False)
+            questions_inative = questions.filter(disabled=False)
 
             data = data + user.name \
                 + ',' + user.email \
                 + ',' + str(disciplines) \
                 + ',' + str(city) \
-                + ',' + str(documents.count()) \
-                + ',' + str(doc_inative.count()) \
+                + ',' + str(len(documents)) \
+                + ',' + str(len(doc_inative)) \
                 + ',' + str(len(check_dup_questions)) \
-                + ',' + str(questions.count()) \
-                + ',' + str(questions_inative) \
-                + ',' + str(doc_downloads.count())  + '\n'
+                + ',' + str(len(questions)) \
+                + ',' + str(len(questions_inative)) \
+                + ',' + str(len(doc_downloads)) \
+                + ',' + str(len(plans)) + '\n'
 
         response = HttpResponse(data, 'text/csv')
-        response['Content-Disposition'] = 'attachment; filename="relatorio_escola.csv"'
+        response['Content-Disposition'] = 'attachment; filename="relatorio-geral-usuarios.csv"'
         return response
 
 class DataSchoolView(SuperuserMixin, TemplateView):

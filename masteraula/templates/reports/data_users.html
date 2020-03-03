@@ -12,7 +12,7 @@
     <br>
     <br>  
     Data: 
-    <input type="month" name="date"> 
+    <input type="month" name="date" min="2018-01"> 
     
     <br> 
     <br>
@@ -32,6 +32,16 @@
         </div>
         
     {% endif %}
+    {% if not_found_date %}
+    <br>
+        <div class="alert alert-danger">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            Ano: A partir de 2018            
+
+        </div>
+        
+    {% endif %}
+    
     <br>
     <br>    
     <input type="submit" value="Enviar">
