@@ -163,22 +163,23 @@ class QuestionManager(models.Manager):
         if disciplines:
             queryset = queryset.filter(disciplines__in=disciplines)
         if teaching_levels:
-            queryset = queryset.filter(teaching_levels__in=teaching_levels).distinct()
+            queryset = queryset.filter(teaching_levels__in=teaching_levels)
         if difficulties:
-            queryset = queryset.filter(difficulty__in=difficulties).distinct()
+            queryset = queryset.filter(difficulty__in=difficulties)
         if years:
             queryset = queryset.filter(year__in=years)
         if sources:
             query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             queryset = queryset.filter(query)
         if author:
-            queryset = queryset.filter(author__id=author).order_by('-create_date')
+            queryset = queryset.filter(author__id=author)
         if topics:
             for topic in topics:
                 queryset = queryset.filter(topics__id=topic)
         if labels:
-            queryset = queryset.filter(labels__in=labels).distinct()
-
+            queryset = queryset.filter(labels__in=labels)
+        
+        queryset = queryset.distinct()
         return queryset
 
 class Question(models.Model):
