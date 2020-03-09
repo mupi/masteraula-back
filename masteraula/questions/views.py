@@ -727,11 +727,17 @@ class ClassPlanViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, ClassPlanPermission, )
 
     def get_queryset(self):
-        queryset = ClassPlan.objects.get_classplan_prefetched().filter(owner=self.request.user)
+        queryset = ClassPlan.objects.get_classplan_prefetched().filter(owner=self.request.user, disabled=False)
         return queryset
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+    
+    def destroy(self, request, pk=None):
+        plan = self.get_object()
+        plan.disabled = True
+        plan.save()
+        return Response(status = status.HTTP_204_NO_CONTENT)
     
     @list_route(methods=['get'])
     def my_plans(self, request):

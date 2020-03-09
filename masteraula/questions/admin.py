@@ -344,7 +344,7 @@ class LinkModelAdmin(admin.ModelAdmin):
 
 class ClassPlanModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', )
-    list_display = ('id', 'name', 'create_date', 'duration')
+    list_display = ('id', 'name', 'create_date', 'duration', 'disabled')
     search_fields = ('id', 'name', 'description')
     exclude = ('topics', 'learning_objects', 'links', 'documents')
 

@@ -545,6 +545,8 @@ class ClassPlan(models.Model):
     comment = models.TextField(null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     pdf = models.FileField(null=True, blank=True, upload_to='documents_pdf', validators=[validate_pdf])
+    disabled = models.BooleanField(null=False, blank=True, default=False)
+
 
     objects = ClassPlanManager()
 
