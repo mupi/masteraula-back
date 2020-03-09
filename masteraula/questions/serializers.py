@@ -643,6 +643,7 @@ class DocumentDetailSerializer(serializers.ModelSerializer):
             'questions',
             'create_date',
             'secret',
+            'disabled'
         )
         extra_kwargs = {
             'owner' : { 'read_only' : True },
