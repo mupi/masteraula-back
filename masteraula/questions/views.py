@@ -422,6 +422,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 .filter(Q(documentpublication__isnull=False)|Q(owner=self.request.user)).filter(disabled=False).distinct()
         if self.action == 'my_documents_cards':
             queryset = Document.objects.filter(owner=self.request.user, disabled=False, questions__isnull=False).distinct()
+        if self.action == 'retrieve':
+            queryset = Document.objects.get_questions_prefetched().filter(owner=self.request.user)
         return queryset
 
     def get_serializer_class(self):
@@ -429,8 +431,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
             return serializers.DocumentListSerializer
         if self.action == 'create':
             return serializers.DocumentCreatesSerializer
-        return serializers.DocumentDetailSerializer
-       
+        return serializers.DocumentDetailSerializer   
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
