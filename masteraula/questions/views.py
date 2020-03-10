@@ -781,3 +781,32 @@ class ClassPlanViewSet(viewsets.ModelViewSet):
         serializer = serializers.ClassPlanSerializer(queryset, many=True)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @detail_route(methods=['post'])
+    def copy_plan(self, request, pk=None):
+        obj = self.get_object()
+        disciplines = [dis for dis in obj.disciplines.all()]
+        links = [lin for lin in obj.links.all()]
+
+        obj.pk = None
+        obj.name = obj.name + ' (Cópia)'
+        obj.owner = self.request.user
+        obj.save()
+
+        for d in obj.documents.all():
+            if d.disabled == False:
+                obj.documents.add(d)
+       
+        obj.topics.add(*obj.topics.all())
+        obj.learning_objects.add(*obj.learning_objects.all())
+        obj.teaching_levels.add(*obj.teaching_levels.all())
+        obj.teaching_years.add(*obj.teaching_years.all())
+        obj.disciplines.add(*disciplines)
+
+        new_links = []
+        for lin in links:
+            new_links.append(Link(link=lin.link, description_url=lin.description_url, plan=obj))
+        Link.objects.bulk_create(new_links)  
+
+        serializer = serializers.ClassPlanSerializer(obj)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
