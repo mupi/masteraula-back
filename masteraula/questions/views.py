@@ -456,8 +456,9 @@ class DocumentViewSet(viewsets.ModelViewSet):
             if q.disabled == False:
                 new_questions.append(DocumentQuestion(document=obj, question=q, order=count))
         DocumentQuestion.objects.bulk_create(new_questions) 
-       
-        serializer = serializers.DocumentCreatesSerializer(obj)
+
+        new_obj = Document.objects.get(pk=obj.id)
+        serializer = serializers.DocumentCreatesSerializer(new_obj)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     @detail_route(methods=['post'])
