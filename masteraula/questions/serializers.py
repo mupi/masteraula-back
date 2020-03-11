@@ -290,6 +290,9 @@ class QuestionSerializer(serializers.ModelSerializer):
     teaching_levels_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingLevel.objects.all())
     source_id = serializers.PrimaryKeyRelatedField(write_only=True, required=False, allow_null=True, queryset=Source.objects.all())
 
+    documents_quantity  = serializers.SerializerMethodField()
+    users_quantity = serializers.SerializerMethodField()
+
     class Meta:
         model = Question
         fields = (
@@ -320,9 +323,25 @@ class QuestionSerializer(serializers.ModelSerializer):
             # 'credit_cost',
             'tags',   
             'disabled',
+            'documents_quantity',
+            'users_quantity'
         )
 
         depth = 1
+
+    def get_documents_quantity(self, obj):
+        documents = Document.objects.filter(questions__id=obj.id, disabled = False).count()
+        return documents
+    
+    def get_users_quantity(self, obj):
+        documents = Document.objects.filter(questions__id=obj.id, disabled = False)
+        try:
+            user = self.context.get('request').user
+            users = User.objects.filter(document__id__in=documents).exclude(id=user.id).count()
+        except:
+            users = None
+    
+        return users
 
     def validate_alternatives(self, value):
         if value:
@@ -565,6 +584,9 @@ class DocumentQuestionListDetailSerializer(serializers.ModelSerializer):
 class DocumentListSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionSerializer(many=True, source='documentquestion_set', read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
+    questions_quantity = serializers.SerializerMethodField()
+    plans_quantity = serializers.SerializerMethodField()
+
 
     class Meta:
         model = Document
@@ -575,12 +597,25 @@ class DocumentListSerializer(serializers.ModelSerializer):
             'questions',
             'create_date',
             'secret',
+            'questions_quantity',
+            'plans_quantity'
         )
         extra_kwargs = {
             'owner' : { 'read_only' : True },
             'create_date' : { 'read_only' : True },
             'secret' : { 'required' : True }
         }
+
+    def get_questions_quantity(self, obj):
+        try:
+            obj._prefetched_objects_cache['questions']
+            return len([1 for question in obj.questions.all() if not question.disabled])
+        except (AttributeError, KeyError):
+            return obj.questions.filter(disabled=False).count()
+    
+    def get_plans_quantity(self, obj):
+        plans = ClassPlan.objects.filter(documents__id=obj.id, disabled=False).count()
+        return plans
 
 class DocumentListInfoSerializer(serializers.ModelSerializer):
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
