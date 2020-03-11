@@ -611,7 +611,7 @@ class DocumentListSerializer(serializers.ModelSerializer):
             obj._prefetched_objects_cache['questions']
             return len([1 for question in obj.questions.all() if not question.disabled])
         except (AttributeError, KeyError):
-            return obj.questions.filter(disabled=False).count()
+            return obj.questions.count()
     
     def get_plans_quantity(self, obj):
         plans = ClassPlan.objects.filter(documents__id=obj.id, disabled=False).count()
