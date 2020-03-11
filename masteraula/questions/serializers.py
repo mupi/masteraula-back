@@ -700,6 +700,7 @@ class DocumentDetailSerializer(serializers.ModelSerializer):
 class DocumentCreatesSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionListDetailSerializer(many=True, source='documentquestion_set', read_only=True)
     idQuestion = serializers.IntegerField(required=False, allow_null=True) 
+    questions_quantity = serializers.SerializerMethodField()
   
     class Meta:
         model = Document
@@ -711,6 +712,7 @@ class DocumentCreatesSerializer(serializers.ModelSerializer):
             'questions',
             'create_date',
             'secret',
+            'questions_quantity'
         )
         extra_kwargs = {
             'owner' : { 'read_only' : True },
@@ -718,6 +720,14 @@ class DocumentCreatesSerializer(serializers.ModelSerializer):
             'secret' : { 'required' : True },
             'documentquestion_set' : { 'read_only' : True}
               }
+    
+    def get_questions_quantity(self, obj):
+        try:
+            obj._prefetched_objects_cache['questions']
+            return len([1 for question in obj.questions.all() if not question.disabled])
+        except (AttributeError, KeyError):
+            return obj.questions.filter(disabled=False).count()
+
 
     def validate_questions(self, value):
         documentQuestions = sorted(value, key=lambda k: k['order'])
