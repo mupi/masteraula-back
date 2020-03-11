@@ -151,7 +151,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
         question = get_object_or_404(self.get_queryset(), pk=pk)
         serializer_question = self.serializer_class(question, context=self.get_serializer_context())
 
-        documents = Document.objects.filter(questions__id=pk, owner=request.user).order_by('create_date')
+        documents = Document.objects.filter(questions__id=pk, owner=request.user, disabled=False).order_by('create_date')
         serializer_documents = serializers.ListDocumentQuestionSerializer(documents, many = True)
 
         return_data = serializer_question.data
