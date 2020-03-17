@@ -514,11 +514,16 @@ class ClassPlanManager(models.Manager):
 
     def get_classplan_prefetched(self):
         qs = self.all().select_related('owner').prefetch_related(
-            'teaching_levels', 'links', 'teaching_years', self.learning_objects_prefetch, self.topics_prefetch, self.documents_prefetch
+            'teaching_levels', 'links', 'teaching_years', 'stations', self.learning_objects_prefetch, self.topics_prefetch, self.documents_prefetch
         )
         return qs
 
 class ClassPlan(models.Model):
+
+    TYPE_PLAN = (
+            ('T', _('Traditional')),
+            ('S', _('Station')),
+        )
 
     def validate_pdf(fileobj):
         max_size = 2*(1024 * 1024)
@@ -546,7 +551,7 @@ class ClassPlan(models.Model):
     description = models.TextField(null=True, blank=True)
     pdf = models.FileField(null=True, blank=True, upload_to='documents_pdf', validators=[validate_pdf])
     disabled = models.BooleanField(null=False, blank=True, default=False)
-
+    plan_types = models.CharField(max_length=1, choices = TYPE_PLAN, null=True, blank=True)
 
     objects = ClassPlanManager()
 
@@ -563,3 +568,15 @@ class Link(models.Model):
 
     def __str__(self):
         return str(self.link)
+
+class Station(models.Model):
+    description_station = models.TextField(null=False, blank=False)
+
+    learning_object = models.ManyToManyField('LearningObject', related_name='station_obj', blank=True)
+    document = models.ManyToManyField(Document, related_name='station_doc', blank=True)
+    question = models.ManyToManyField(Question, related_name='station_question', blank=True)
+
+    plan = models.ForeignKey(ClassPlan, related_name='stations', on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.description_station)

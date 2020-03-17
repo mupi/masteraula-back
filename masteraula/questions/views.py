@@ -25,7 +25,7 @@ from masteraula.users.models import User
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label, Link, TeachingYear, ClassPlan)
+                    Synonym, Label, Link, TeachingYear, ClassPlan, Station)
 
 from .models import DocumentLimitExceedException
 
@@ -712,6 +712,11 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
             'synonyms': synonym_serializer.data,
             'topics': topic_serialzier.data
         })
+
+class StationViewSet(viewsets.ModelViewSet):
+    queryset = Station.objects.all()
+    serializer_class = serializers.StationSerializer
+    pagination_class = None
 
 class LinkViewSet(viewsets.ModelViewSet):
     queryset = Link.objects.all()

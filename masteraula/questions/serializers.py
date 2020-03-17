@@ -23,7 +23,7 @@ from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Question,
                     Alternative, Document, DocumentQuestion, Header, Year,
-                    Source, Topic, LearningObject, Search, DocumentDownload, Synonym, Label, ClassPlan, TeachingYear, Link)
+                    Source, Topic, LearningObject, Search, DocumentDownload, Synonym, Label, ClassPlan, TeachingYear, Link, Station)
 
 from django.db.models import Prefetch
 
@@ -839,6 +839,21 @@ class SearchSerializer(serializers.ModelSerializer):
             'date_search',
         )
 
+class StationSerializer(serializers.ModelSerializer):
+    learning_object = LearningObjectSerializer(many=True, read_only=True)
+    document = DocumentListInfoSerializer(many=True,read_only=True)
+    question = QuestionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Station
+        fields = (
+            'id',
+            'description_station',
+            'learning_object',
+            'document',
+            'question'
+        )
+
 class LinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Link
@@ -870,6 +885,7 @@ class ClassPlanSerializer(serializers.ModelSerializer):
     documents_ids = ModelListSerializer(write_only=True, many=True, queryset=Document.objects.all())
     teaching_years_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingYear.objects.all())
     links = LinkSerializer(many=True)
+    stations = StationSerializer(many=True)
 
     class Meta:
         model = ClassPlan
@@ -898,6 +914,9 @@ class ClassPlanSerializer(serializers.ModelSerializer):
             'comment',
             'description',
             'pdf',
+
+            'plan_types',
+            'stations'
         )
 
         extra_kwargs = {
@@ -937,6 +956,8 @@ class ClassPlanSerializer(serializers.ModelSerializer):
         
     def create(self, validated_data):
         links = validated_data.pop('links', None)
+        stations = validated_data.pop('stations', None)
+
         for key in list(validated_data.keys()):
             if key.endswith('_ids'):
                 validated_data[key[:-4]] = validated_data.pop(key)
@@ -947,6 +968,11 @@ class ClassPlanSerializer(serializers.ModelSerializer):
             for lin in links:
                 Link.objects.create(plan=plan, **lin)
 
+        if stations != None:
+            plan.stations.all().delete()
+            for st in stations:
+                Station.objects.create(plan=plan, **st)
+
         return ClassPlan.objects.get(id=plan.id)
     
     def update(self, instance, validated_data):
@@ -955,6 +981,8 @@ class ClassPlanSerializer(serializers.ModelSerializer):
         teaching_years_ids = validated_data.pop('teaching_years_ids', None)
 
         links = validated_data.pop('links', None)
+        stations = validated_data.pop('stations', None)
+
         for key in list(validated_data.keys()):
             if key.endswith('_ids'):
                 validated_data[key[:-4]] = validated_data.pop(key)
@@ -965,6 +993,11 @@ class ClassPlanSerializer(serializers.ModelSerializer):
             plan.links.all().delete()
             for lin in links:
                 Link.objects.create(plan=plan, **lin)
+        
+        if stations != None:
+            plan.stations.all().delete()
+            for st in stations:
+                Station.objects.create(plan=plan, **st)
 
         plan.learning_objects.clear()
         if learning_objects_ids != None:
