@@ -840,18 +840,25 @@ class SearchSerializer(serializers.ModelSerializer):
         )
 
 class StationSerializer(serializers.ModelSerializer):
-    learning_object = LearningObjectSerializer(many=True, read_only=True)
-    document = DocumentListInfoSerializer(many=True,read_only=True)
-    question = QuestionSerializer(many=True, read_only=True)
+    learning_object = LearningObjectSerializer(required=False)
+    document = DocumentListInfoSerializer(required=False)
+    question = QuestionSerializer(required=False)
+    learning_object_ids = serializers.IntegerField(required=False)
+    document_ids = serializers.IntegerField(required=False)
+    question_ids = serializers.IntegerField(required=False)
 
     class Meta:
         model = Station
+
         fields = (
             'id',
             'description_station',
             'learning_object',
             'document',
-            'question'
+            'question',
+            'learning_object_ids',
+            'document_ids',
+            'question_ids'
         )
 
 class LinkSerializer(serializers.ModelSerializer):
@@ -915,7 +922,7 @@ class ClassPlanSerializer(serializers.ModelSerializer):
             'description',
             'pdf',
 
-            'plan_types',
+            'plan_type',
             'stations'
         )
 
@@ -967,12 +974,23 @@ class ClassPlanSerializer(serializers.ModelSerializer):
         if links != None:
             for lin in links:
                 Link.objects.create(plan=plan, **lin)
-
+        
         if stations != None:
             plan.stations.all().delete()
             for st in stations:
-                Station.objects.create(plan=plan, **st)
+                es = Station.objects.create(plan=plan, description_station=st['description_station'])
+                
+                if 'question_ids' in st:
+                    es.question_id = st['question_ids']
 
+                if 'learning_object_ids' in st:
+                    es.learning_object_id = st['learning_object_ids']
+                
+                if 'document_ids' in st:
+                    es.document_id = st['document_ids']
+
+                es.save()
+    
         return ClassPlan.objects.get(id=plan.id)
     
     def update(self, instance, validated_data):
@@ -997,7 +1015,18 @@ class ClassPlanSerializer(serializers.ModelSerializer):
         if stations != None:
             plan.stations.all().delete()
             for st in stations:
-                Station.objects.create(plan=plan, **st)
+                es = Station.objects.create(plan=plan, description_station=st['description_station'])
+                
+                if 'question_ids' in st:
+                    es.question_id = st['question_ids']
+
+                if 'learning_object_ids' in st:
+                    es.learning_object_id = st['learning_object_ids']
+                
+                if 'document_ids' in st:
+                    es.document_id = st['document_ids']
+
+                es.save()
 
         plan.learning_objects.clear()
         if learning_objects_ids != None:

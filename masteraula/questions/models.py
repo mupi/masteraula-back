@@ -551,7 +551,7 @@ class ClassPlan(models.Model):
     description = models.TextField(null=True, blank=True)
     pdf = models.FileField(null=True, blank=True, upload_to='documents_pdf', validators=[validate_pdf])
     disabled = models.BooleanField(null=False, blank=True, default=False)
-    plan_types = models.CharField(max_length=1, choices = TYPE_PLAN, null=True, blank=True)
+    plan_type = models.CharField(max_length=1, choices = TYPE_PLAN, null=True, blank=True)
 
     objects = ClassPlanManager()
 
@@ -572,9 +572,9 @@ class Link(models.Model):
 class Station(models.Model):
     description_station = models.TextField(null=False, blank=False)
 
-    learning_object = models.ManyToManyField('LearningObject', related_name='station_obj', blank=True)
-    document = models.ManyToManyField(Document, related_name='station_doc', blank=True)
-    question = models.ManyToManyField(Question, related_name='station_question', blank=True)
+    learning_object = models.ForeignKey(LearningObject, related_name='station_obj', null=True, blank=True)
+    document = models.ForeignKey(Document, related_name='station_doc', null=True, blank=True)
+    question = models.ForeignKey(Question, related_name='station_question', null=True, blank=True)
 
     plan = models.ForeignKey(ClassPlan, related_name='stations', on_delete=models.CASCADE, null=True, blank=True)
 
