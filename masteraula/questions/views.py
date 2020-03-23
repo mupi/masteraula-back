@@ -716,7 +716,7 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
 class StationViewSet(viewsets.ModelViewSet):
     queryset = Station.objects.all()
     serializer_class = serializers.StationSerializer
-    pagination_class = None
+    permission_classes = (permissions.IsAuthenticated, )
 
 class LinkViewSet(viewsets.ModelViewSet):
     queryset = Link.objects.all()

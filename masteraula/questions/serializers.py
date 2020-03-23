@@ -840,12 +840,12 @@ class SearchSerializer(serializers.ModelSerializer):
         )
 
 class StationSerializer(serializers.ModelSerializer):
-    learning_object = LearningObjectSerializer(required=False)
-    document = DocumentListInfoSerializer(required=False)
-    question = QuestionSerializer(required=False)
-    learning_object_ids = serializers.IntegerField(required=False)
-    document_ids = serializers.IntegerField(required=False)
-    question_ids = serializers.IntegerField(required=False)
+    learning_object = LearningObjectSerializer(required=False, read_only= True)
+    document = DocumentListInfoSerializer(required=False, read_only= True)
+    question = QuestionSerializer(required=False, read_only= True)
+    learning_object_ids = serializers.IntegerField(required=False, allow_null=True)
+    document_ids = serializers.IntegerField(required=False, allow_null=True)
+    question_ids = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:
         model = Station
@@ -860,6 +860,42 @@ class StationSerializer(serializers.ModelSerializer):
             'document_ids',
             'question_ids'
         )
+
+    def create(self, validated_data):
+        learning_object_ids = validated_data.pop('learning_object_ids', None)
+        document_ids = validated_data.pop('document_ids', None)
+        question_ids = validated_data.pop('question_ids', None)
+
+        station = super().create(validated_data)
+
+        if question_ids:
+            station.question_id = question_ids
+
+        if learning_object_ids:
+            station.learning_object_id = learning_object_ids
+        
+        if document_ids:
+            station.document_id = document_ids
+
+        station.save()
+    
+        return Station.objects.get(id=station.id)
+    
+    def update(self, instance, validated_data):
+        learning_object_ids = validated_data.pop('learning_object_ids', None)
+        document_ids = validated_data.pop('document_ids', None)
+        question_ids = validated_data.pop('question_ids', None)
+
+        station = super().update(instance, validated_data)
+
+        station.question_id = question_ids
+        station.learning_object_id = learning_object_ids
+        station.document_id = document_ids
+        station.plan = plan
+
+        station.save()
+    
+        return Station.objects.get(id=station.id)
 
 class LinkSerializer(serializers.ModelSerializer):
     class Meta:
@@ -960,7 +996,7 @@ class ClassPlanSerializer(serializers.ModelSerializer):
                     if k =="link" and "://" not in v:
                         lin[k] =  "https://" + v
         return value
-        
+     
     def create(self, validated_data):
         links = validated_data.pop('links', None)
         stations = validated_data.pop('stations', None)
