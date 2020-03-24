@@ -25,7 +25,7 @@ from masteraula.users.models import User
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label, Link, TeachingYear, ClassPlan)
+                    Synonym, Label, Link, TeachingYear, ClassPlan, Station)
 
 from .models import DocumentLimitExceedException
 
@@ -414,7 +414,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Document.objects.get_questions_prefetched().filter(owner=self.request.user, disabled=False)
         if (self.action=='generate_list'):
-            queryset = Document.objects.get_generate_document().filter(owner=self.request.user, disabled=False)
+            queryset = Document.objects.get_generate_document().filter(owner=self.request.user)
         if self.action == 'add_question' or self.action == 'remove_question' or self.action == 'update' or self.action == 'partial_update':
             queryset = Document.objects.filter(owner=self.request.user, disabled=False)
         if self.action == 'copy_document':
@@ -712,6 +712,11 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
             'synonyms': synonym_serializer.data,
             'topics': topic_serialzier.data
         })
+
+class StationViewSet(viewsets.ModelViewSet):
+    queryset = Station.objects.all()
+    serializer_class = serializers.StationSerializer
+    permission_classes = (permissions.IsAuthenticated, )
 
 class LinkViewSet(viewsets.ModelViewSet):
     queryset = Link.objects.all()

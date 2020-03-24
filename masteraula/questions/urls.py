@@ -32,6 +32,7 @@ router.register(r'synonym_autocomplete', views.AutocompleteSearchViewSet, base_n
 router.register(r'class_plans', views.ClassPlanViewSet, base_name="class_plans")
 router.register(r'links', views.LinkViewSet, base_name="links")
 router.register(r'teaching_years', views.TeachingYearViewSet, base_name="teaching_years")
+router.register(r'stations', views.StationViewSet, base_name="stations")
 
 urlpatterns = [
     url(r'^', include(router.urls)),

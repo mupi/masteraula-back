@@ -23,7 +23,7 @@ from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Question,
                     Alternative, Document, DocumentQuestion, Header, Year,
-                    Source, Topic, LearningObject, Search, DocumentDownload, Synonym, Label, ClassPlan, TeachingYear, Link)
+                    Source, Topic, LearningObject, Search, DocumentDownload, Synonym, Label, ClassPlan, TeachingYear, Link, Station)
 
 from django.db.models import Prefetch
 
@@ -839,6 +839,64 @@ class SearchSerializer(serializers.ModelSerializer):
             'date_search',
         )
 
+class StationSerializer(serializers.ModelSerializer):
+    learning_object = LearningObjectSerializer(required=False, read_only= True)
+    document = DocumentListInfoSerializer(required=False, read_only= True)
+    question = QuestionSerializer(required=False, read_only= True)
+    learning_object_ids = serializers.IntegerField(required=False, allow_null=True)
+    document_ids = serializers.IntegerField(required=False, allow_null=True)
+    question_ids = serializers.IntegerField(required=False, allow_null=True)
+
+    class Meta:
+        model = Station
+
+        fields = (
+            'id',
+            'description_station',
+            'learning_object',
+            'document',
+            'question',
+            'learning_object_ids',
+            'document_ids',
+            'question_ids'
+        )
+
+    def create(self, validated_data):
+        learning_object_ids = validated_data.pop('learning_object_ids', None)
+        document_ids = validated_data.pop('document_ids', None)
+        question_ids = validated_data.pop('question_ids', None)
+
+        station = super().create(validated_data)
+
+        if question_ids:
+            station.question_id = question_ids
+
+        if learning_object_ids:
+            station.learning_object_id = learning_object_ids
+        
+        if document_ids:
+            station.document_id = document_ids
+
+        station.save()
+    
+        return Station.objects.get(id=station.id)
+    
+    def update(self, instance, validated_data):
+        learning_object_ids = validated_data.pop('learning_object_ids', None)
+        document_ids = validated_data.pop('document_ids', None)
+        question_ids = validated_data.pop('question_ids', None)
+
+        station = super().update(instance, validated_data)
+
+        station.question_id = question_ids
+        station.learning_object_id = learning_object_ids
+        station.document_id = document_ids
+        station.plan = plan
+
+        station.save()
+    
+        return Station.objects.get(id=station.id)
+
 class LinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Link
@@ -870,6 +928,7 @@ class ClassPlanSerializer(serializers.ModelSerializer):
     documents_ids = ModelListSerializer(write_only=True, many=True, queryset=Document.objects.all())
     teaching_years_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingYear.objects.all())
     links = LinkSerializer(many=True)
+    stations = StationSerializer(many=True)
 
     class Meta:
         model = ClassPlan
@@ -898,6 +957,9 @@ class ClassPlanSerializer(serializers.ModelSerializer):
             'comment',
             'description',
             'pdf',
+
+            'plan_type',
+            'stations'
         )
 
         extra_kwargs = {
@@ -934,9 +996,11 @@ class ClassPlanSerializer(serializers.ModelSerializer):
                     if k =="link" and "://" not in v:
                         lin[k] =  "https://" + v
         return value
-        
+     
     def create(self, validated_data):
         links = validated_data.pop('links', None)
+        stations = validated_data.pop('stations', None)
+
         for key in list(validated_data.keys()):
             if key.endswith('_ids'):
                 validated_data[key[:-4]] = validated_data.pop(key)
@@ -946,7 +1010,23 @@ class ClassPlanSerializer(serializers.ModelSerializer):
         if links != None:
             for lin in links:
                 Link.objects.create(plan=plan, **lin)
+        
+        if stations != None:
+            plan.stations.all().delete()
+            for st in stations:
+                es = Station.objects.create(plan=plan, description_station=st['description_station'])
+                
+                if 'question_ids' in st:
+                    es.question_id = st['question_ids']
 
+                if 'learning_object_ids' in st:
+                    es.learning_object_id = st['learning_object_ids']
+                
+                if 'document_ids' in st:
+                    es.document_id = st['document_ids']
+
+                es.save()
+    
         return ClassPlan.objects.get(id=plan.id)
     
     def update(self, instance, validated_data):
@@ -955,6 +1035,8 @@ class ClassPlanSerializer(serializers.ModelSerializer):
         teaching_years_ids = validated_data.pop('teaching_years_ids', None)
 
         links = validated_data.pop('links', None)
+        stations = validated_data.pop('stations', None)
+
         for key in list(validated_data.keys()):
             if key.endswith('_ids'):
                 validated_data[key[:-4]] = validated_data.pop(key)
@@ -965,6 +1047,22 @@ class ClassPlanSerializer(serializers.ModelSerializer):
             plan.links.all().delete()
             for lin in links:
                 Link.objects.create(plan=plan, **lin)
+        
+        if stations != None:
+            plan.stations.all().delete()
+            for st in stations:
+                es = Station.objects.create(plan=plan, description_station=st['description_station'])
+                
+                if 'question_ids' in st:
+                    es.question_id = st['question_ids']
+
+                if 'learning_object_ids' in st:
+                    es.learning_object_id = st['learning_object_ids']
+                
+                if 'document_ids' in st:
+                    es.document_id = st['document_ids']
+
+                es.save()
 
         plan.learning_objects.clear()
         if learning_objects_ids != None:

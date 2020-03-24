@@ -498,6 +498,18 @@ class TeachingYear(models.Model):
     def __str__(self):
         return str(self.name)
 
+class Station(models.Model):
+    description_station = models.TextField(null=False, blank=False)
+
+    learning_object = models.ForeignKey(LearningObject, related_name='station_obj', null=True, blank=True)
+    document = models.ForeignKey(Document, related_name='station_doc', null=True, blank=True)
+    question = models.ForeignKey(Question, related_name='station_question', null=True, blank=True)
+
+    plan = models.ForeignKey('ClassPlan', related_name='stations', on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.description_station)
+
 class ClassPlanManager(models.Manager):
     topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
         'parent', 'discipline', 'parent__parent', 'parent__discipline'))
@@ -512,13 +524,23 @@ class ClassPlanManager(models.Manager):
         queryset=Document.objects.all().select_related('owner').prefetch_related('questions')
     )
 
+    stations_prefetch = Prefetch(
+        'stations',
+        queryset=Station.objects.all().select_related('plan').prefetch_related('question', 'document', 'learning_object')
+    )
+
     def get_classplan_prefetched(self):
         qs = self.all().select_related('owner').prefetch_related(
-            'teaching_levels', 'links', 'teaching_years', self.learning_objects_prefetch, self.topics_prefetch, self.documents_prefetch
+            'disciplines', 'teaching_levels', 'links', 'teaching_years', self.learning_objects_prefetch, self.topics_prefetch, self.documents_prefetch, self.stations_prefetch
         )
         return qs
 
 class ClassPlan(models.Model):
+
+    TYPE_PLAN = (
+            ('T', _('Traditional')),
+            ('S', _('Station')),
+        )
 
     def validate_pdf(fileobj):
         max_size = 2*(1024 * 1024)
@@ -546,7 +568,7 @@ class ClassPlan(models.Model):
     description = models.TextField(null=True, blank=True)
     pdf = models.FileField(null=True, blank=True, upload_to='documents_pdf', validators=[validate_pdf])
     disabled = models.BooleanField(null=False, blank=True, default=False)
-
+    plan_type = models.CharField(max_length=1, choices = TYPE_PLAN, null=True, blank=True)
 
     objects = ClassPlanManager()
 
@@ -563,3 +585,4 @@ class Link(models.Model):
 
     def __str__(self):
         return str(self.link)
+
