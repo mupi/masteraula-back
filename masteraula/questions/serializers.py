@@ -996,7 +996,13 @@ class ClassPlanSerializer(serializers.ModelSerializer):
                     if k =="link" and "://" not in v:
                         lin[k] =  "https://" + v
         return value
-     
+
+    def validate_stations(self, value):
+        for v in value:
+            if 'description_station' in v and len(v) > 2: 
+                raise serializers.ValidationError(_("Only one material"))
+        return value
+
     def create(self, validated_data):
         links = validated_data.pop('links', None)
         stations = validated_data.pop('stations', None)
