@@ -794,6 +794,7 @@ class ClassPlanViewSet(viewsets.ModelViewSet):
         obj = self.get_object()
         disciplines = [dis for dis in obj.disciplines.all()]
         links = [lin for lin in obj.links.all()]
+        stations = [st for st in obj.stations.all()]
 
         obj.pk = None
         obj.name = obj.name + ' (Cópia)'
@@ -814,6 +815,23 @@ class ClassPlanViewSet(viewsets.ModelViewSet):
         for lin in links:
             new_links.append(Link(link=lin.link, description_url=lin.description_url, plan=obj))
         Link.objects.bulk_create(new_links)  
+
+        new_stations = []
+        for st in stations:
+            learning_object = None
+            if st.learning_object:
+                learning_object = st.learning_object
+            
+            question = None
+            if st.question:
+                question = st.question
+            
+            document = None
+            if st.document:
+                document = st.document
+
+            new_stations.append(Station(description_station=st.description_station, learning_object=learning_object, question=question, document=document, plan=obj))
+        Station.objects.bulk_create(new_stations)  
 
         serializer = serializers.ClassPlanSerializer(obj)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
