@@ -519,14 +519,26 @@ class ClassPlanManager(models.Manager):
         queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags', 'questions')
     )
 
-    documents_prefetch = Prefetch(
-        'documents',
-        queryset=Document.objects.all().select_related('owner').prefetch_related('questions')
+    stations_prefetch_topics = Prefetch('question__topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')
     )
 
+    stations_prefetch_learning_objects = Prefetch('question__learning_objects',
+        queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags', 'questions')
+    )
+
+    stations_prefetch_labels = Prefetch('question__labels', queryset=Label.objects.prefetch_related('question_set').select_related(
+        'owner'
+    ))
+
+    documents_prefetch = Prefetch(
+        'documents',
+        queryset=Document.objects.all().select_related('owner').prefetch_related('question__tags', 'question__disciplines', 'question__teaching_levels', 'question__alternatives', stations_prefetch_topics, stations_prefetch_learning_objects, stations_prefetch_labels)
+    )
+    
     stations_prefetch = Prefetch(
         'stations',
-        queryset=Station.objects.all().select_related('plan').prefetch_related('question', 'document', 'learning_object')
+        queryset=Station.objects.all().select_related('plan').prefetch_related('question__tags', 'question__disciplines', 'question__teaching_levels', 'question__alternatives', stations_prefetch_topics, stations_prefetch_learning_objects, stations_prefetch_labels, 'learning_object__tags', 'document')
     )
 
     def get_classplan_prefetched(self):
