@@ -586,3 +586,18 @@ class Link(models.Model):
     def __str__(self):
         return str(self.link)
 
+class FaqCategory(models.Model):
+    name = models.CharField(max_length=50, null=False, blank=False)
+    description_category = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return str(self.description_category)
+
+    class Meta:
+        verbose_name = "Faq Category"
+        verbose_name_plural = "FAQ categories"
+
+class FaqQuestion(models.Model):
+    faq_question = models.TextField()
+    faq_answer = models.TextField()
+    category = models.ForeignKey(FaqCategory, related_name='category_questions', on_delete=models.CASCADE, null=True, blank=True)

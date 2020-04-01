@@ -23,7 +23,8 @@ from masteraula.users.serializers import UserDetailsSerializer
 
 from .models import (Discipline, TeachingLevel, LearningObject, Question,
                     Alternative, Document, DocumentQuestion, Header, Year,
-                    Source, Topic, LearningObject, Search, DocumentDownload, Synonym, Label, ClassPlan, TeachingYear, Link, Station)
+                    Source, Topic, LearningObject, Search, DocumentDownload, 
+                    Synonym, Label, ClassPlan, TeachingYear, Link, Station, FaqQuestion, FaqCategory)
 
 from django.db.models import Prefetch
 
@@ -1086,3 +1087,47 @@ class ClassPlanSerializer(serializers.ModelSerializer):
                 plan.teaching_years.add(t)
 
         return ClassPlan.objects.get(id=plan.id)
+
+class FaqQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FaqQuestion
+        fields = (
+            'id',
+            'faq_question',
+            'faq_answer',
+        )
+
+class FaqCategorySerializer(serializers.ModelSerializer):
+    category_questions = FaqQuestionSerializer(many=True)
+
+    class Meta:
+        model = FaqCategory
+        fields = (
+            'id',
+            'name',
+            'description_category',
+            'category_questions'
+        )
+    
+    def create(self, validated_data):
+        category_questions = validated_data.pop('category_questions', None)
+                
+        question = super().create(validated_data)
+
+        if category_questions != None:
+            for cq in category_questions:
+                FaqQuestion.objects.create(category=question, **cq)
+        
+        return FaqCategory.objects.get(id=question.id)
+    
+    def update(self, instance, validated_data):
+        category_questions = validated_data.pop('category_questions', None)
+       
+        question = super().update(instance, validated_data)
+
+        if category_questions != None:
+            question.category_questions.all().delete()
+            for cq in category_questions:
+                FaqQuestion.objects.create(category=question, **cq)
+    
+        return FaqCategory.objects.get(id=question.id)

@@ -6,7 +6,7 @@ from import_export.formats import base_formats
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
                      Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, Search,
-                     DocumentDownload, DocumentPublication, Synonym, Label, Link, TeachingYear, ClassPlan, Station)
+                     DocumentDownload, DocumentPublication, Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, FaqQuestion)
 
 class SearchResource(resources.ModelResource):
     
@@ -102,6 +102,11 @@ class DocumentQuestionsInline(admin.TabularInline):
 
 class AlternativesInline(admin.TabularInline):
     model = Alternative
+    show_change_link = True
+    extra = 1
+
+class FaqQuestionInline(admin.TabularInline):
+    model = FaqQuestion
     show_change_link = True
     extra = 1
 
@@ -363,6 +368,13 @@ class ClassPlanModelAdmin(admin.ModelAdmin):
 
     list_per_page = 100
 
+class FaqCategoryModelAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'description_category')
+    search_fields = ['id', '']
+    list_per_page = 100
+
+    inlines = [FaqQuestionInline, ]
+
 admin.site.register(Discipline, DisciplineModelAdmin)
 admin.site.register(Descriptor, DescriptorModelAdmin)
 admin.site.register(TeachingLevel, TeachingLeveltModelAdmin)
@@ -383,3 +395,4 @@ admin.site.register(TeachingYear, TeachingYearModelAdmin)
 admin.site.register(ClassPlan, ClassPlanModelAdmin)
 admin.site.register(Link, LinkModelAdmin)
 admin.site.register(Station, StationModelAdmin)
+admin.site.register(FaqCategory, FaqCategoryModelAdmin)

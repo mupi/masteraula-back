@@ -25,7 +25,7 @@ from masteraula.users.models import User
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label, Link, TeachingYear, ClassPlan, Station)
+                    Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory)
 
 from .models import DocumentLimitExceedException
 
@@ -78,7 +78,7 @@ class ClassPlanPagination(pagination.PageNumberPagination):
 class QuestionSearchView(viewsets.ReadOnlyModelViewSet):   
     pagination_class = QuestionPagination
     serializer_class = serializers.QuestionSerializer
-    permission_classes = (permissions.IsAuthenticated, QuestionPermission, )
+    permission_classes = (permissions.IsAuthenticated, QuestionPermission, ) 
      
     def paginate_queryset(self, search_queryset):
         page = super().paginate_queryset(search_queryset)
@@ -835,3 +835,9 @@ class ClassPlanViewSet(viewsets.ModelViewSet):
 
         serializer = serializers.ClassPlanSerializer(obj)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class FaqCategoryViewSet(viewsets.ModelViewSet):
+    queryset = FaqCategory.objects.all()
+    serializer_class = serializers.FaqCategorySerializer    
+    pagination_class = None
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,) 
