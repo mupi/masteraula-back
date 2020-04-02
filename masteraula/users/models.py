@@ -109,7 +109,12 @@ class Contact(models.Model):
     
     def email_contact(self, obj):
         plaintext = get_template('contact/faq_message.txt')
-        context_message = { 'name': obj['name'], 'email': obj['email'], 'phone': obj['phone'], 'message': obj['message']}
+        if not 'phone' in obj:
+            phone = ""
+        else:
+            phone = obj['phone']
+
+        context_message = { 'name': obj['name'], 'email': obj['email'], 'phone': phone, 'message': obj['message']}
 
         sub = '[Masteraula - FAQ] Mensagem enviada por ' + obj['name']
         subject, from_email, to = sub, settings.DEFAULT_FROM_EMAIL, settings.DEFAULT_FROM_EMAIL
