@@ -18,8 +18,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from .models import User, City, State, School, Subscription
-from .serializers import CitySerializer, StateSerializer, SchoolSerializer,ResendConfirmationEmailSerializer, SocialOnlyLoginSerializer, SubscriptionSerializer, DashboardSerializer
+from .models import User, City, State, School, Subscription, Contact
+from .serializers import CitySerializer, StateSerializer, SchoolSerializer,ResendConfirmationEmailSerializer, SocialOnlyLoginSerializer, SubscriptionSerializer, DashboardSerializer, ContactSerializer
 
 
 class CityViewSet(viewsets.ReadOnlyModelViewSet):
@@ -92,7 +92,19 @@ class DashboardViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         queryset = User.objects.filter(id=self.request.user.id).order_by('-id')
         return queryset
-    
+
+class ContactViewSet(viewsets.ModelViewSet):
+    queryset = Contact.objects.all()
+    pagination_class = None
+    serializer_class = ContactSerializer
+
+    def create(self, request, *args, **kwargs):             
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response({"Success": "Message sent."}, status=status.HTTP_201_CREATED, headers=headers)
+
 @api_view()
 def null_view(request):
     return Response(status=status.HTTP_400_BAD_REQUEST)

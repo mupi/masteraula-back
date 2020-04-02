@@ -5,6 +5,10 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.core import validators
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import get_template
+from django.template import Context
+from django.conf import settings
 
 import datetime
 from dateutil import relativedelta
@@ -86,3 +90,35 @@ class Subscription(models.Model):
     start_date = models.DateTimeField(auto_now_add=True)
     expiration_date = models.DateTimeField(default=next_month)
     note = models.TextField(null=True, blank=True)
+
+class Contact(models.Model):
+    name = models.CharField(blank=False, null=False, max_length=255,
+            validators=[
+                validators.RegexValidator(
+                    regex='^[A-Za-zÀ-ÿ-´\' ]+$',
+                    message=_('Name should contain only valid characters'),
+                ),
+            ],)
+    email = models.EmailField(blank=False, null=False) 
+    phone = models.CharField(max_length=15, null=True, blank=True)
+    message = models.TextField(null=False, blank=False)
+    create_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+    
+    def email_contact(self, obj):
+        plaintext = get_template('contact/faq_message.txt')
+        if not 'phone' in obj:
+            phone = ""
+        else:
+            phone = obj['phone']
+
+        context_message = { 'name': obj['name'], 'email': obj['email'], 'phone': phone, 'message': obj['message']}
+
+        sub = '[Masteraula - FAQ] Mensagem enviada por ' + obj['name']
+        subject, from_email, to = sub, settings.DEFAULT_FROM_EMAIL, settings.DEFAULT_FROM_EMAIL
+        text_content = plaintext.render(context_message)
+        msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
+        msg.send()  
+    
