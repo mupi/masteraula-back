@@ -150,3 +150,8 @@ class SubscriptionModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'start_date', 'expiration_date')
     search_fields = ['id', 'user',]
     raw_id_fields = ('user',)
+
+@admin.register(Contact)
+class ContactModelAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'email', 'message', 'create_date')
+    search_fields = ['id', 'name',]

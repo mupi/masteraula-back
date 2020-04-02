@@ -86,3 +86,19 @@ class Subscription(models.Model):
     start_date = models.DateTimeField(auto_now_add=True)
     expiration_date = models.DateTimeField(default=next_month)
     note = models.TextField(null=True, blank=True)
+
+class Contact(models.Model):
+    name = models.CharField(blank=False, null=False, max_length=255,
+            validators=[
+                validators.RegexValidator(
+                    regex='^[A-Za-zÀ-ÿ-´\' ]+$',
+                    message=_('Name should contain only valid characters'),
+                ),
+            ],)
+    email = models.EmailField(blank=False, null=False) 
+    phone = models.CharField(max_length=15, null=True, blank=True)
+    message = models.TextField(null=False, blank=False)
+    create_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name

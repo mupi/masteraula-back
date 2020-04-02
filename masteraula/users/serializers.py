@@ -24,7 +24,7 @@ from requests.exceptions import HTTPError
 
 from django.db.models import Count
 
-from .models import User, Profile, City, State, School, Subscription
+from .models import User, Profile, City, State, School, Subscription, Contact
 from masteraula.questions.models import Discipline, Question, Document, ClassPlan, DocumentDownload, LearningObject, Topic
 
 class CitySerializer(serializers.ModelSerializer):
@@ -490,3 +490,17 @@ class DashboardSerializer(serializers.ModelSerializer):
     def get_total_topics(self, obj):
         topics = Topic.objects.all().count()
         return topics
+
+class ContactSerializer(serializers.ModelSerializer):      
+    create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
+
+    class Meta:
+        model = Contact
+        fields = (
+            'id',
+            'name',
+            'email',
+            'phone',
+            'message',
+            'create_date',
+        )
