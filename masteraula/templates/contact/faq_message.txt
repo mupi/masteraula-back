@@ -1,0 +1,7 @@
+Foi enviada a seguinte mensagem através do formulário de contato [FAQ]:
+
+Nome: {{ name }}
+E-mail: {{ email }}
+Telefone: {{ phone }}
+Mensagem: {{ message }}
+

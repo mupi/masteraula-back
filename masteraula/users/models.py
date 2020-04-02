@@ -5,6 +5,10 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.core import validators
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import get_template
+from django.template import Context
+from django.conf import settings
 
 import datetime
 from dateutil import relativedelta
@@ -102,3 +106,14 @@ class Contact(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def email_contact(self, obj):
+        plaintext = get_template('contact/faq_message.txt')
+        context_message = { 'name': obj['name'], 'email': obj['email'], 'phone': obj['phone'], 'message': obj['message']}
+
+        sub = '[Masteraula - FAQ] Mensagem enviada por ' + obj['name']
+        subject, from_email, to = sub, settings.DEFAULT_FROM_EMAIL, settings.DEFAULT_FROM_EMAIL
+        text_content = plaintext.render(context_message)
+        msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
+        msg.send()  
+    

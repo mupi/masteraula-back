@@ -504,3 +504,8 @@ class ContactSerializer(serializers.ModelSerializer):
             'message',
             'create_date',
         )
+
+    def create(self, validated_data):
+        contact = Contact.objects.create(**validated_data)
+        contact.email_contact(validated_data)
+        return contact
