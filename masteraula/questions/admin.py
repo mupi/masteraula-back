@@ -6,7 +6,7 @@ from import_export.formats import base_formats
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
                      Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, Search,
-                     DocumentDownload, DocumentPublication, Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, FaqQuestion)
+                     DocumentDownload, DocumentPublication, Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, FaqQuestion, DocumentOnline, Result, DocumentQuestionOnline, StudentAnswer)
 
 class SearchResource(resources.ModelResource):
     
@@ -370,10 +370,38 @@ class ClassPlanModelAdmin(admin.ModelAdmin):
 
 class FaqCategoryModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'description_category')
-    search_fields = ['id', '']
+    search_fields = ['id',]
     list_per_page = 100
 
     inlines = [FaqQuestionInline, ]
+
+class DocumentQuestionOnlineInline(admin.TabularInline):
+    model = DocumentOnline.questions_document.through
+    show_change_link = True
+    raw_id_fields = ('question', )
+    extra = 1
+
+class DocumentOnlineModelAdmin(admin.ModelAdmin):
+    raw_id_fields = ('owner', 'document',)
+    list_display = ('link', 'owner', 'name', 'create_date')
+    list_per_page = 100
+
+    inlines = [DocumentQuestionOnlineInline, ]
+
+class StudentAnswerInline(admin.TabularInline):
+    model = StudentAnswer
+    show_change_link = True
+    # raw_id_fields = ('student_question', )
+
+    extra = 1
+
+class ResultModelAdmin(admin.ModelAdmin):
+    raw_id_fields = ('results', )
+    list_display = ('id', 'student_name', 'student_levels', 'total_score',)
+    list_per_page = 100
+
+    inlines = [StudentAnswerInline, ]
+
 
 admin.site.register(Discipline, DisciplineModelAdmin)
 admin.site.register(Descriptor, DescriptorModelAdmin)
@@ -396,3 +424,6 @@ admin.site.register(ClassPlan, ClassPlanModelAdmin)
 admin.site.register(Link, LinkModelAdmin)
 admin.site.register(Station, StationModelAdmin)
 admin.site.register(FaqCategory, FaqCategoryModelAdmin)
+admin.site.register(DocumentOnline, DocumentOnlineModelAdmin)
+admin.site.register(Result, ResultModelAdmin)
+# admin.site.register(DocumentQuestionOnline)

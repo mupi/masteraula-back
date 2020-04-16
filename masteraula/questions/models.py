@@ -601,3 +601,43 @@ class FaqQuestion(models.Model):
     faq_question = models.TextField()
     faq_answer = models.TextField()
     category = models.ForeignKey(FaqCategory, related_name='category_questions', on_delete=models.CASCADE, null=True, blank=True)
+
+class DocumentOnline(models.Model):
+    link = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    document = models.ForeignKey(Document, on_delete=models.CASCADE)
+    name = models.CharField(max_length=200)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    create_date = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateTimeField()
+    finish_date = models.DateTimeField()
+    duration = models.PositiveIntegerField(null=True, blank=True)
+    questions_document = models.ManyToManyField(Question, through='DocumentQuestionOnline', related_name='questions_document')
+
+    def __str__(self):
+        return str(self.name)
+
+    class Meta:
+        verbose_name = "Document Online"
+        verbose_name_plural = "Documents Online"
+
+class Result(models.Model):
+    results = models.ForeignKey(DocumentOnline, related_name='results', on_delete=models.CASCADE, verbose_name="document")
+    student_name = models.CharField(max_length=200)
+    student_levels = models.CharField(max_length=200)
+    start = models.DateTimeField(auto_now_add=True)
+    finish = models.DateTimeField()
+    total_score =  models.PositiveIntegerField(null=True, blank=True)
+    
+class DocumentQuestionOnline(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    document = models.ForeignKey(DocumentOnline, on_delete=models.CASCADE)
+    score = models.PositiveIntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return str(self.pk)
+
+class StudentAnswer(models.Model):
+    answer = models.TextField(null=True, blank=True)
+    score_answer = models.PositiveIntegerField(null=True, blank=True)
+    student_answer = models.ForeignKey(Result, related_name='student_answer', on_delete=models.CASCADE)
+    student_question = models.ForeignKey(DocumentQuestionOnline, related_name='student_question', on_delete=models.CASCADE)

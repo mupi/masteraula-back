@@ -24,7 +24,8 @@ from masteraula.users.serializers import UserDetailsSerializer
 from .models import (Discipline, TeachingLevel, LearningObject, Question,
                     Alternative, Document, DocumentQuestion, Header, Year,
                     Source, Topic, LearningObject, Search, DocumentDownload, 
-                    Synonym, Label, ClassPlan, TeachingYear, Link, Station, FaqQuestion, FaqCategory)
+                    Synonym, Label, ClassPlan, TeachingYear, Link, Station, FaqQuestion, FaqCategory, DocumentOnline,
+                    Result, DocumentQuestionOnline, StudentAnswer)
 
 from django.db.models import Prefetch
 
@@ -292,6 +293,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     source_id = serializers.PrimaryKeyRelatedField(write_only=True, required=False, allow_null=True, queryset=Source.objects.all())
 
     documents_quantity  = serializers.SerializerMethodField()
+    type_question = serializers.SerializerMethodField()
     users_quantity = serializers.SerializerMethodField()
 
     class Meta:
@@ -301,6 +303,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             'author',
             'authorship',
             'create_date',
+            'type_question',
 
             'statement',
             'learning_objects',
@@ -325,10 +328,17 @@ class QuestionSerializer(serializers.ModelSerializer):
             'tags',   
             'disabled',
             'documents_quantity',
-            'users_quantity'
+            'users_quantity' 
         )
 
         depth = 1
+
+    def get_type_question(self, obj):
+        alternatives = Alternative.objects.filter(question=obj.id) 
+    
+        if len(alternatives) > 0:
+            return ("Objetiva")
+        return("Dissertativa")
 
     def get_documents_quantity(self, obj):
         documents = Document.objects.filter(questions__id=obj.id, disabled = False).count()
@@ -587,6 +597,7 @@ class DocumentListSerializer(serializers.ModelSerializer):
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
     questions_quantity = serializers.SerializerMethodField()
     plans_quantity = serializers.SerializerMethodField()
+    documents_online = serializers.SerializerMethodField()
 
 
     class Meta:
@@ -599,13 +610,17 @@ class DocumentListSerializer(serializers.ModelSerializer):
             'create_date',
             'secret',
             'questions_quantity',
-            'plans_quantity'
+            'plans_quantity',
+            'documents_online'
         )
         extra_kwargs = {
             'owner' : { 'read_only' : True },
             'create_date' : { 'read_only' : True },
             'secret' : { 'required' : True }
         }
+    def get_documents_online(self, obj):
+        document_count = DocumentOnline.objects.filter(document=obj)
+        return len(document_count)
 
     def get_questions_quantity(self, obj):
         try:
@@ -665,6 +680,14 @@ class DocumentListInfoSerializer(serializers.ModelSerializer):
             return len([1 for question in obj.questions.all() if not question.disabled])
         except (AttributeError, KeyError):
             return obj.questions.filter(disabled=False).count()
+
+class DocumentInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Document
+        fields = (
+            'id',
+            'name',
+        )
 
 class DocumentDetailSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionListDetailSerializer(many=True, source='documentquestion_set', read_only=True)
@@ -1131,3 +1154,89 @@ class FaqCategorySerializer(serializers.ModelSerializer):
                 FaqQuestion.objects.create(category=question, **cq)
     
         return FaqCategory.objects.get(id=question.id)
+
+class DocumentQuestionOnlineSerializer(serializers.ModelSerializer):
+    question = QuestionSerializer(read_only=True)
+
+    class Meta:
+        model = DocumentQuestionOnline
+        fields = (
+            'question',
+            'score'
+        )
+
+class StudentAnswerSerializer(serializers.ModelSerializer):
+    student_question = DocumentQuestionOnlineSerializer()
+    class Meta:
+        model = StudentAnswer
+        fields = (
+            'answer',
+            'score_answer',
+            'student_question'
+        )
+
+class ResultSerializer(serializers.ModelSerializer):
+    student_answer = StudentAnswerSerializer(many=True)
+    class Meta:
+        model = Result
+        fields = (
+            'student_name',
+            'student_levels',
+            'start',
+            'finish',
+            'student_answer',
+            'total_score'
+        )
+
+class DocumentOnlineSerializer(serializers.ModelSerializer):
+    owner = UserDetailsSerializer(read_only=True)   
+    create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
+    questions_document = DocumentQuestionOnlineSerializer(many=True, source='documentquestiononline_set', read_only=True)
+    document =  DocumentInfoSerializer(read_only= True)
+    results =  ResultSerializer(many=True)
+    questions_quantity = serializers.SerializerMethodField()
+    types_questions = serializers.SerializerMethodField()
+    media_questions = serializers.SerializerMethodField()
+    application = serializers.SerializerMethodField()
+    document_finish = serializers.SerializerMethodField()
+   
+    class Meta:
+        model = DocumentOnline
+        fields = (
+            'link',
+            'name',
+            'document',
+            'questions_quantity',
+            'owner',
+            'create_date',
+            'start_date',
+            'finish_date',
+            'duration',
+            'questions_document',
+            'results',
+            'types_questions',
+            'media_questions',
+            'application',
+            'document_finish',
+        )
+
+    def get_questions_quantity(self, obj):
+        return obj.document.questions.filter(disabled=False).count()
+    
+    def get_types_questions(self, obj):
+        dic = { 'dissertation_quantity': 1, 'objective_quantity':2}
+        return dic
+
+    def get_media_questions(self, obj):
+        return 4
+    
+    def get_application(self, obj):
+        dic = { 'exam_quantity': 1, 'authoral_quantity':2}
+        return dic
+      
+    def get_document_finish(self, obj):
+        return 4
+
+
+
+

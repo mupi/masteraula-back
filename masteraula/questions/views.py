@@ -25,7 +25,7 @@ from masteraula.users.models import User
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory)
+                    Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, DocumentOnline)
 
 from .models import DocumentLimitExceedException
 
@@ -841,3 +841,12 @@ class FaqCategoryViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.FaqCategorySerializer    
     pagination_class = None
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,) 
+
+class DocumentOnlineViewSet(viewsets.ModelViewSet):
+    queryset = DocumentOnline.objects.all()
+    serializer_class = serializers.DocumentOnlineSerializer    
+    pagination_class = None
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+    
