@@ -1259,10 +1259,20 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
         
         document = super().create(validated_data)
 
-        for q in questions_documents['questions_document']:
-            DocumentQuestionOnline.objects.create(document=document, question_id=q['question'], score=q['score'])
+        if len(questions_documents['questions_document'])  > 0:
+            for q in questions_documents['questions_document']:
+                DocumentQuestionOnline.objects.create(document=document, question_id=q['question'], score=q['score'])
     
         return DocumentOnline.objects.get(link=document.link)
 
-
-
+    def update(self, instance, validated_data):
+        questions_documents = self.context.get('request').data
+        document = super().update(instance, validated_data)
+        
+        if len(questions_documents['questions_document'])  > 0:        
+            for q in questions_documents['questions_document']:
+                score = DocumentQuestionOnline.objects.get(id=q['id'])
+                score.score = q['score']
+                score.save()
+    
+        return DocumentOnline.objects.get(link=document.link)

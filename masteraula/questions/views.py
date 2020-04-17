@@ -45,6 +45,11 @@ class DocumentPagination(pagination.PageNumberPagination):
     page_size = 10
     max_page_size = 80
 
+class DocumentOnlinePagination(pagination.PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 10
+    max_page_size = 80
+
 class DocumentCardPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 16
@@ -843,13 +848,16 @@ class FaqCategoryViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,) 
 
 class DocumentOnlineViewSet(viewsets.ModelViewSet):
-    queryset = DocumentOnline.objects.all()
     serializer_class = serializers.DocumentOnlineSerializer    
-    pagination_class = None
+    pagination_class = DocumentOnlinePagination
+
+    def get_queryset(self):
+        queryset = DocumentOnline.objects.all()
+        if self.action == 'list':
+            queryset = queryset.filter(document=self.request.query_params['id'])
+        return queryset.order_by('name')
 
     def perform_create(self, serializer):
-        print(self.request)
         document = Document.objects.get(id=self.request.query_params['id'])
-
         serializer.save(owner=self.request.user, document=document)
     
