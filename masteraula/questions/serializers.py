@@ -1178,6 +1178,7 @@ class DocumentQuestionOnlineSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentQuestionOnline
         fields = (
+            'id',
             'question',
             'score'
         )
@@ -1216,6 +1217,7 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
     media_questions = serializers.SerializerMethodField()
     application = serializers.SerializerMethodField()
     document_finish = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
    
     class Meta:
         model = DocumentOnline
@@ -1235,6 +1237,7 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
             'media_questions',
             'application',
             'document_finish',
+            'status'
         )
 
     def get_questions_quantity(self, obj):
@@ -1253,6 +1256,9 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
       
     def get_document_finish(self, obj):
         return 4
+    
+    def get_status(self, obj):
+        return True
     
     def create(self, validated_data):
         questions_documents = self.context.get('request').data
