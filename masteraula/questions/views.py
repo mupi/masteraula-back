@@ -848,5 +848,8 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
     pagination_class = None
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        print(self.request)
+        document = Document.objects.get(id=self.request.query_params['id'])
+
+        serializer.save(owner=self.request.user, document=document)
     

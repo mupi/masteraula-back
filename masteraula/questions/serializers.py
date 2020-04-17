@@ -598,10 +598,6 @@ class DocumentListSerializer(serializers.ModelSerializer):
     questions_quantity = serializers.SerializerMethodField()
     plans_quantity = serializers.SerializerMethodField()
     documents_online = serializers.SerializerMethodField()
-    types_questions = serializers.SerializerMethodField()
-    media_questions = serializers.SerializerMethodField()
-    application = serializers.SerializerMethodField()
-
 
     class Meta:
         model = Document
@@ -615,27 +611,13 @@ class DocumentListSerializer(serializers.ModelSerializer):
             'questions_quantity',
             'plans_quantity',
             'documents_online',
-            'types_questions',
-            'media_questions',
-            'application',
         )
         extra_kwargs = {
             'owner' : { 'read_only' : True },
             'create_date' : { 'read_only' : True },
             'secret' : { 'required' : True }
         }
-    
-    def get_types_questions(self, obj):
-        dic = { 'dissertation_quantity': 1, 'objective_quantity':2}
-        return dic
-
-    def get_media_questions(self, obj):
-        return 4
-    
-    def get_application(self, obj):
-        dic = { 'exam_quantity': 1, 'authoral_quantity':2}
-        return dic
-
+   
     def get_documents_online(self, obj):
         document_count = DocumentOnline.objects.filter(document=obj)
         return len(document_count)
@@ -710,7 +692,10 @@ class DocumentInfoSerializer(serializers.ModelSerializer):
 class DocumentDetailSerializer(serializers.ModelSerializer):
     questions = DocumentQuestionListDetailSerializer(many=True, source='documentquestion_set', read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
-  
+    types_questions = serializers.SerializerMethodField()
+    media_questions = serializers.SerializerMethodField()
+    application = serializers.SerializerMethodField()
+   
     class Meta:
         model = Document
         fields = (
@@ -720,7 +705,10 @@ class DocumentDetailSerializer(serializers.ModelSerializer):
             'questions',
             'create_date',
             'secret',
-            'disabled'
+            'disabled',
+            'types_questions',
+            'media_questions',
+            'application',
         )
         extra_kwargs = {
             'owner' : { 'read_only' : True },
@@ -729,6 +717,17 @@ class DocumentDetailSerializer(serializers.ModelSerializer):
             'documentquestion_set' : { 'read_only' : True}
               }
 
+    def get_types_questions(self, obj):
+        dic = { 'dissertation_quantity': 1, 'objective_quantity':2}
+        return dic
+
+    def get_media_questions(self, obj):
+        return 4
+    
+    def get_application(self, obj):
+        dic = { 'exam_quantity': 1, 'authoral_quantity':2}
+        return dic
+        
     def create(self, validated_data):
         document = Document.objects.create(**validated_data)
 
@@ -1211,7 +1210,7 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
     questions_document = DocumentQuestionOnlineSerializer(many=True, source='documentquestiononline_set', read_only=True)
     document =  DocumentInfoSerializer(read_only= True)
-    results =  ResultSerializer(many=True)
+    results =  ResultSerializer(many=True, read_only= True)
     questions_quantity = serializers.SerializerMethodField()
     types_questions = serializers.SerializerMethodField()
     media_questions = serializers.SerializerMethodField()
@@ -1254,7 +1253,16 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
       
     def get_document_finish(self, obj):
         return 4
+    
+    def create(self, validated_data):
+        questions_documents = self.context.get('request').data
+        
+        document = super().create(validated_data)
 
+        for q in questions_documents['questions_document']:
+            DocumentQuestionOnline.objects.create(document=document, question_id=q['question'], score=q['score'])
+    
+        return DocumentOnline.objects.get(link=document.link)
 
 
 
