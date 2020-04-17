@@ -598,6 +598,9 @@ class DocumentListSerializer(serializers.ModelSerializer):
     questions_quantity = serializers.SerializerMethodField()
     plans_quantity = serializers.SerializerMethodField()
     documents_online = serializers.SerializerMethodField()
+    types_questions = serializers.SerializerMethodField()
+    media_questions = serializers.SerializerMethodField()
+    application = serializers.SerializerMethodField()
 
 
     class Meta:
@@ -611,13 +614,28 @@ class DocumentListSerializer(serializers.ModelSerializer):
             'secret',
             'questions_quantity',
             'plans_quantity',
-            'documents_online'
+            'documents_online',
+            'types_questions',
+            'media_questions',
+            'application',
         )
         extra_kwargs = {
             'owner' : { 'read_only' : True },
             'create_date' : { 'read_only' : True },
             'secret' : { 'required' : True }
         }
+    
+    def get_types_questions(self, obj):
+        dic = { 'dissertation_quantity': 1, 'objective_quantity':2}
+        return dic
+
+    def get_media_questions(self, obj):
+        return 4
+    
+    def get_application(self, obj):
+        dic = { 'exam_quantity': 1, 'authoral_quantity':2}
+        return dic
+
     def get_documents_online(self, obj):
         document_count = DocumentOnline.objects.filter(document=obj)
         return len(document_count)
