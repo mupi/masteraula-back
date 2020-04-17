@@ -635,6 +635,10 @@ class DocumentQuestionOnline(models.Model):
 
     def __str__(self):
         return str(self.pk)
+    
+    class Meta:
+        verbose_name = "Document Question Online"
+        verbose_name_plural = "Document Question Online"
 
 class StudentAnswer(models.Model):
     answer = models.TextField(null=True, blank=True)

@@ -391,7 +391,7 @@ class DocumentOnlineModelAdmin(admin.ModelAdmin):
 class StudentAnswerInline(admin.TabularInline):
     model = StudentAnswer
     show_change_link = True
-    # raw_id_fields = ('student_question', )
+    raw_id_fields = ('student_question', )
 
     extra = 1
 
@@ -402,6 +402,10 @@ class ResultModelAdmin(admin.ModelAdmin):
 
     inlines = [StudentAnswerInline, ]
 
+class DocumentQuestionOnlineModelAdmin(admin.ModelAdmin):
+    raw_id_fields = ('question', 'document')
+    list_display = ('id', 'document', 'score')
+    list_per_page = 100
 
 admin.site.register(Discipline, DisciplineModelAdmin)
 admin.site.register(Descriptor, DescriptorModelAdmin)
@@ -426,4 +430,4 @@ admin.site.register(Station, StationModelAdmin)
 admin.site.register(FaqCategory, FaqCategoryModelAdmin)
 admin.site.register(DocumentOnline, DocumentOnlineModelAdmin)
 admin.site.register(Result, ResultModelAdmin)
-# admin.site.register(DocumentQuestionOnline)
+admin.site.register(DocumentQuestionOnline, DocumentQuestionOnlineModelAdmin)
