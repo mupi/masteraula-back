@@ -624,7 +624,7 @@ class Result(models.Model):
     results = models.ForeignKey(DocumentOnline, related_name='results', on_delete=models.CASCADE, verbose_name="document")
     student_name = models.CharField(max_length=200)
     student_levels = models.CharField(max_length=200)
-    start = models.DateTimeField(auto_now_add=True)
+    start = models.DateTimeField()
     finish = models.DateTimeField()
     total_score =  models.PositiveIntegerField(null=True, blank=True)
     
@@ -643,5 +643,5 @@ class DocumentQuestionOnline(models.Model):
 class StudentAnswer(models.Model):
     answer = models.TextField(null=True, blank=True)
     score_answer = models.PositiveIntegerField(null=True, blank=True)
-    student_answer = models.ForeignKey(Result, related_name='student_answer', on_delete=models.CASCADE)
+    student_answer = models.ForeignKey(Result, related_name='student_answer', on_delete=models.CASCADE, null=True, blank=True)
     student_question = models.ForeignKey(DocumentQuestionOnline, related_name='student_question', on_delete=models.CASCADE)

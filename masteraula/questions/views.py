@@ -25,7 +25,7 @@ from masteraula.users.models import User
 
 from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, DocumentOnline)
+                    Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, DocumentOnline, Result)
 
 from .models import DocumentLimitExceedException
 
@@ -861,3 +861,24 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
         document = Document.objects.get(id=self.request.query_params['id'])
         serializer.save(owner=self.request.user, document=document)
     
+    @detail_route(methods=['get'], permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
+    def document_student(self, request, pk=None):
+        document = get_object_or_404(self.get_queryset(), pk=pk)
+        serializer_document = serializers.DocumentOnlineStudentSerializer(document)
+
+        return Response(serializer_document.data, status=status.HTTP_201_CREATED)
+
+    @detail_route(methods=['get'], permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
+    def check_document(self, request, pk=None):
+        document = get_object_or_404(self.get_queryset(), pk=pk)
+        serializer_document = serializers.DocumentOnlineListSerializer(document)
+
+        return Response(serializer_document.data, status=status.HTTP_201_CREATED)
+
+class ResultViewSet(viewsets.ModelViewSet):
+    queryset = Result.objects.all().order_by('id')
+    serializer_class = serializers.ResultSerializer
+
+    def perform_create(self, serializer):
+        document = DocumentOnline.objects.get(link=self.request.query_params['link'])
+        serializer.save(start=datetime.datetime.now(), finish=datetime.datetime.now(), results= document)
