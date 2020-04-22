@@ -1310,7 +1310,7 @@ class ResultSerializer(serializers.ModelSerializer):
 class DocumentOnlineSerializer(serializers.ModelSerializer):
     owner = UserDetailsSerializer(read_only=True)   
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
-    questions_document = DocumentQuestionOnlineSerializer(many=True, source='documentquestiononline_set', required=False)
+    questions_document = DocumentQuestionOnlineSerializer(many=True, source='documentquestiononline_set', required=False, read_only=True)
     document =  DocumentInfoSerializer(read_only= True)
     results =  ResultSerializer(many=True, required=False)
     questions_quantity = serializers.SerializerMethodField()
