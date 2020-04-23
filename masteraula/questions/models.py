@@ -641,7 +641,8 @@ class DocumentQuestionOnline(models.Model):
         verbose_name_plural = "Document Question Online"
 
 class StudentAnswer(models.Model):
-    answer = models.TextField(null=True, blank=True)
+    answer_alternative =  models.ForeignKey(Alternative, on_delete=models.CASCADE, null=True, blank=True)
+    answer_text = models.TextField(null=True, blank=True)
     score_answer = models.PositiveIntegerField(null=True, blank=True)
     student_answer = models.ForeignKey(Result, related_name='student_answer', on_delete=models.CASCADE, null=True, blank=True)
     student_question = models.ForeignKey(DocumentQuestionOnline, related_name='student_question', on_delete=models.CASCADE)

@@ -342,9 +342,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         depth = 1
 
     def get_type_question(self, obj):
-        alternatives = Alternative.objects.filter(question=obj.id) 
-    
-        if len(alternatives) > 0:
+        if len(obj.alternatives.all()) > 1:
             return ("Objetiva")
         return("Dissertativa")
 
@@ -485,9 +483,7 @@ class QuestionStudentSerializer(serializers.ModelSerializer):
         depth = 1
 
     def get_type_question(self, obj):
-        alternatives = Alternative.objects.filter(question=obj.id) 
-    
-        if len(alternatives) > 0:
+        if len(obj.alternatives.all()) > 1:
             return ("Objetiva")
         return("Dissertativa")
 
@@ -760,14 +756,38 @@ class DocumentDetailSerializer(serializers.ModelSerializer):
               }
 
     def get_types_questions(self, obj):
-        dic = { 'dissertation_quantity': 1, 'objective_quantity':2}
+        questions = obj.documentquestion_set.all()
+        dissertation = 0
+        objective = 0
+
+        for q in questions:
+            if len(q.question.alternatives.all()) > 1:
+                objective += 1
+            else:
+                dissertation += 1
+
+        dic = {'dissertation_quantity': dissertation, 'objective_quantity': objective}
         return dic
 
     def get_media_questions(self, obj):
-        return 4
+        questions = obj.documentquestion_set.all()
+        object_count = 0
+
+        for q in questions:
+            object_count += len(q.question.learning_objects.all())
+        return object_count
     
     def get_application(self, obj):
-        dic = { 'exam_quantity': 1, 'authoral_quantity':2}
+        questions = obj.documentquestion_set.all()
+        count_exame = 0
+        count_authoral = 0
+
+        for q in questions:
+            if q.question.authorship != None:
+                count_authoral += 1
+            else:
+                count_exame += 1
+        dic = { 'exam_quantity': count_exame, 'authoral_quantity':count_authoral}
         return dic
         
     def create(self, validated_data):
@@ -1237,14 +1257,27 @@ class DocumentQuestionStudentSerializer(serializers.ModelSerializer):
 
 class StudentAnswerSerializer(serializers.ModelSerializer):
     student_question = DocumentQuestionOnlineSerializer(required=False)
+    review_score = serializers.SerializerMethodField()
+
 
     class Meta:
         model = StudentAnswer
         fields = (
-            'answer',
+            'id',
+            'answer_text',
+            'answer_alternative',
             'score_answer',
-            'student_question'
+            'student_question',
+            'review_score'
+
         )
+    
+    def get_review_score(self, obj):
+        if obj.answer_alternative != None:
+            return True
+        if obj.answer_text != None and obj.score_answer != None:
+            return True
+        return False
 
 class ResultSerializer(serializers.ModelSerializer):
     student_answer = StudentAnswerSerializer(many=True, read_only=True)
@@ -1260,7 +1293,7 @@ class ResultSerializer(serializers.ModelSerializer):
             'start',
             'finish',
             'student_answer',
-            'total_score'
+            'total_score',
         )
     
     def create(self, validated_data):
@@ -1269,13 +1302,41 @@ class ResultSerializer(serializers.ModelSerializer):
         result = super().create(validated_data)
         for q in student_answer['student_answer']:
             
-            if type(q['answer']) != str:
-                answer = str(Alternatives.objects.get(id=q['answer']))
+            if 'answer_text' in q:
+                question = StudentAnswer.objects.create(answer_text=q['answer_text'], score_answer=None, student_question_id=q['student_question'])
+           
             else:
-                answer = q['answer']
+                alternative = Alternative.objects.get(id__in=[q['answer_alternative']])
+                group_question =  DocumentQuestionOnline.objects.get(id=q['student_question'])
+                teste = alternative.is_correct
+                if teste:
+                    score_answer = group_question.score
+                else:
+                    score_answer = 0
 
-            question = StudentAnswer.objects.create(answer=answer, score_answer=int(q['score_answer']), student_question_id=q['student_question'])
+                question = StudentAnswer.objects.create(answer_alternative=alternative, score_answer=score_answer, student_question_id=q['student_question'])
+            
             result.student_answer.add(question)
+
+        total_score = result.student_answer.all()
+        count_score = 0
+        for t in total_score:
+            if t.score_answer:
+                count_score = count_score + t.score_answer
+        
+        result.total_score = count_score
+        result.save()
+                
+        return Result.objects.get(id=result.id)
+
+    def update(self, instance, validated_data):
+        student_answer = self.context.get('request').data
+        result = super().update(instance, validated_data)
+
+        for q in student_answer['student_answer']:
+            question = StudentAnswer.objects.get(id=q['id'])
+            question.score_answer = q['score_answer']
+            question.save()
         
         total_score = result.student_answer.all()
         count_score = 0
@@ -1284,28 +1345,8 @@ class ResultSerializer(serializers.ModelSerializer):
         
         result.total_score = count_score
         result.save()
-                
-        return Result.objects.get(id=result.id)
-
-    # def update(self, instance, validated_data):
-       
-    #     result = super().update(instance, validated_data)
-
-    #     for q in student_answer['student_answer']:
-    #         question = StudentAnswer.objects.create(answer=q['answer'], score_answer=int(q['score_answer']), student_question_id=3)
-    #         result.student_answer.add(question)
-        
-    #     total_score = result.student_answer.all()
-    #     count_score = 0
-    #     for t in total_score:
-    #         count_score = count_score + t.score_answer
-        
-    #     result.total_score = count_score
-    #     result.save()
             
-    #     return Result.objects.get(id=result.id)
-
-
+        return Result.objects.get(id=result.id)
 
 class DocumentOnlineSerializer(serializers.ModelSerializer):
     owner = UserDetailsSerializer(read_only=True)   
@@ -1345,21 +1386,50 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
         return obj.document.questions.filter(disabled=False).count()
     
     def get_types_questions(self, obj):
-        dic = { 'dissertation_quantity': 1, 'objective_quantity':2}
+        questions = obj.documentquestiononline_set.all()
+        dissertation = 0
+        objective = 0
+
+        for q in questions:
+            if len(q.question.alternatives.all()) > 1:
+                objective += 1
+            else:
+                dissertation += 1
+
+        dic = {'dissertation_quantity': dissertation, 'objective_quantity': objective}
         return dic
 
     def get_media_questions(self, obj):
-        return 4
+        questions = obj.documentquestiononline_set.all()
+        object_count = 0
+
+        for q in questions:
+            object_count += len(q.question.learning_objects.all())
+        return object_count
     
     def get_application(self, obj):
-        dic = { 'exam_quantity': 1, 'authoral_quantity':2}
+        questions = obj.documentquestiononline_set.all()
+        count_exame = 0
+        count_authoral = 0
+
+        for q in questions:
+            if q.question.authorship != None:
+                count_authoral += 1
+            else:
+                count_exame += 1
+        dic = { 'exam_quantity': count_exame, 'authoral_quantity':count_authoral}
         return dic
       
     def get_document_finish(self, obj):
-        return 4
+        count = obj.results.count()
+        return count
     
     def get_status(self, obj):
-        return True
+        now = datetime.datetime.now()
+        if now > obj.finish_date.replace(tzinfo=None):
+            return False
+        else:
+            return True
     
     def create(self, validated_data):
         questions_documents = self.context.get('request').data
@@ -1406,7 +1476,17 @@ class DocumentOnlineStudentSerializer(serializers.ModelSerializer):
         )
     
     def get_types_questions(self, obj):
-        dic = { 'dissertation_quantity': 1, 'objective_quantity':2}
+        questions = obj.documentquestiononline_set.all()
+        dissertation = 0
+        objective = 0
+
+        for q in questions:
+            if len(q.question.alternatives.all()) > 1:
+                objective += 1
+            else:
+                dissertation += 1
+
+        dic = {'dissertation_quantity': dissertation, 'objective_quantity': objective}
         return dic
 
 class DocumentOnlineListSerializer(serializers.ModelSerializer):

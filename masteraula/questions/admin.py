@@ -391,7 +391,7 @@ class DocumentOnlineModelAdmin(admin.ModelAdmin):
 class StudentAnswerInline(admin.TabularInline):
     model = StudentAnswer
     show_change_link = True
-    raw_id_fields = ('student_question', )
+    raw_id_fields = ('student_question', 'answer_alternative', )
 
     extra = 1
 

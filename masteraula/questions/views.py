@@ -881,4 +881,4 @@ class ResultViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         document = DocumentOnline.objects.get(link=self.request.query_params['link'])
-        serializer.save(start=datetime.datetime.now(), finish=datetime.datetime.now(), results= document)
+        serializer.save(finish=datetime.datetime.now(), results= document)
