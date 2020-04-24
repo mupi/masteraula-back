@@ -878,6 +878,7 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
 class ResultViewSet(viewsets.ModelViewSet):
     queryset = Result.objects.all().order_by('id')
     serializer_class = serializers.ResultSerializer
+    permission_classes = (permissions.AllowAny,)
 
     def perform_create(self, serializer):
         document = DocumentOnline.objects.get(link=self.request.query_params['link'])

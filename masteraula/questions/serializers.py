@@ -387,11 +387,6 @@ class QuestionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(_("At least one teaching level id"))
         return list(set(value))
 
-    # def validate_tags(self, value):
-    #     if len(value) < 2:
-    #         raise serializers.ValidationError(_("At least two tags"))
-    #     return value
-
     def validate_year(self, value):
         if not value:
             return datetime.date.today().year
@@ -487,6 +482,73 @@ class QuestionStudentSerializer(serializers.ModelSerializer):
             return ("Objetiva")
         return("Dissertativa")
 
+class QuestionResultSerializer(serializers.ModelSerializer):
+    author = UserDetailsSerializer(read_only=True)
+    create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
+    topics = TopicSimpleSerializer(read_only=True, many=True)
+
+    learning_objects = LearningObjectSerializer(many=True, read_only=True)
+    all_topics = serializers.SerializerMethodField('all_topics_serializer')
+    def all_topics_serializer(self, question):
+        return TopicSimpleSerializer(question.get_all_topics(), many=True).data
+
+    alternatives = AlternativeSerializer(many=True, read_only=False, required=False, allow_null=True)
+    tags = TagListSerializer(read_only=False, required=False, allow_null=True) 
+    year = serializers.IntegerField(read_only=False, required=False, allow_null=True)
+    difficulty = serializers.CharField(read_only=False, required=True)
+
+    documents_quantity  = serializers.SerializerMethodField()
+    type_question = serializers.SerializerMethodField()
+    users_quantity = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Question
+        fields = (
+            'id',
+            'author',
+            'authorship',
+            'create_date',
+            'type_question',
+
+            'statement',
+            'learning_objects',
+            'resolution',
+            'difficulty',
+            'alternatives',
+
+            'disciplines',
+            'teaching_levels',
+            'year',
+            'source',
+            'topics',
+            'all_topics',
+
+            'tags',   
+            'disabled',
+            'documents_quantity',
+            'users_quantity' 
+        )
+
+        depth = 1
+
+    def get_type_question(self, obj):
+        if len(obj.alternatives.all()) > 1:
+            return ("Objetiva")
+        return("Dissertativa")
+
+    def get_documents_quantity(self, obj):
+        documents = Document.objects.filter(questions__id=obj.id, disabled = False).count()
+        return documents
+    
+    def get_users_quantity(self, obj):
+        documents = Document.objects.filter(questions__id=obj.id, disabled = False)
+        try:
+            user = self.context.get('request').user
+            users = User.objects.filter(document__id__in=documents).exclude(id=user.id).count()
+        except:
+            users = None
+    
+        return users
 
 class QuestionTagEditSerializer(serializers.ModelSerializer):
     topics_ids = serializers.PrimaryKeyRelatedField(write_only=True, many=True, queryset=Topic.objects.all())
@@ -1235,7 +1297,7 @@ class FaqCategorySerializer(serializers.ModelSerializer):
         return FaqCategory.objects.get(id=question.id)
 
 class DocumentQuestionOnlineSerializer(serializers.ModelSerializer):
-    question = QuestionSerializer(read_only=True)
+    question = QuestionResultSerializer(read_only=True)
 
     class Meta:
         model = DocumentQuestionOnline
