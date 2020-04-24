@@ -1447,7 +1447,9 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
         )
     def get_review_score_doc(self, obj):
         results = Result.objects.filter(results=obj, student_answer__answer_text__isnull=False, student_answer__score_answer__isnull=True)
-        return len(results)
+        if len(results) > 0:
+            return False
+        return True
 
     def get_questions_quantity(self, obj):
         return obj.document.questions.filter(disabled=False).count()
