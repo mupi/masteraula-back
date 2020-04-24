@@ -1422,6 +1422,7 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
     application = serializers.SerializerMethodField()
     document_finish = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
+    review_score_doc = serializers.SerializerMethodField()
    
     class Meta:
         model = DocumentOnline
@@ -1441,8 +1442,12 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
             'media_questions',
             'application',
             'document_finish',
-            'status'
+            'status',
+            'review_score_doc'
         )
+    def get_review_score_doc(self, obj):
+        results = Result.objects.filter(results=obj, student_answer__answer_text__isnull=False, student_answer__score_answer__isnull=True)
+        return len(results)
 
     def get_questions_quantity(self, obj):
         return obj.document.questions.filter(disabled=False).count()
