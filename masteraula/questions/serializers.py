@@ -1343,8 +1343,8 @@ class StudentAnswerSerializer(serializers.ModelSerializer):
 
 class ResultSerializer(serializers.ModelSerializer):
     student_answer = StudentAnswerSerializer(many=True, read_only=True)
-    start = serializers.DateTimeField(format="%Y/%m/%d", required=False)
-    finish = serializers.DateTimeField(format="%Y/%m/%d", required=False)
+    start = serializers.DateTimeField(required=False)
+    finish = serializers.DateTimeField(required=False)
 
     class Meta:
         model = Result
