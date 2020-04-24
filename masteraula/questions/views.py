@@ -861,6 +861,43 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
         document = Document.objects.get(id=self.request.query_params['id'])
         serializer.save(owner=self.request.user, document=document)
     
+    @list_route(methods=['get'])
+    def my_documents_online(self, request):
+        order_field = request.query_params.get('order_field', None)
+        order_type = request.query_params.get('order', None)
+        
+        queryset = self.get_queryset()
+        if order_field == 'name':
+            if order_type =='desc':
+                queryset = queryset.order_by('-name')
+            else:
+                queryset = queryset.order_by('name')
+
+        elif order_field =='question_number':
+            if order_type =='desc':
+                queryset = queryset.annotate(num_questions = Count('questions_document')).order_by('-num_questions')
+            else:
+                queryset = queryset.annotate(num_questions = Count('questions_document')).order_by('num_questions')
+
+        elif order_field =='result':
+            if order_type =='desc':
+                queryset = queryset.annotate(num_results = Count('results')).order_by('-num_results')
+            else:
+                queryset = queryset.annotate(num_results = Count('results')).order_by('num_results')
+
+        else:
+            queryset = queryset.order_by('name')
+
+        self.pagination_class = DocumentOnlinePagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = serializers.DocumentOnlineSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = serializers.DocumentOnlineSerializer(queryset, many=True)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
     @detail_route(methods=['get'], permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
     def document_student(self, request, pk=None):
         document = get_object_or_404(self.get_queryset(), pk=pk)
