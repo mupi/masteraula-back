@@ -852,7 +852,8 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
     pagination_class = DocumentOnlinePagination
 
     def get_queryset(self):
-        queryset = DocumentOnline.objects.all()
+        queryset = DocumentOnline.objects.get_documentonline_prefetch()
+
         if self.action == 'list':
             queryset = queryset.filter(document=self.request.query_params['id'])
         return queryset.order_by('name')
@@ -866,7 +867,7 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
         order_field = request.query_params.get('order_field', None)
         order_type = request.query_params.get('order', None)
         
-        queryset = self.get_queryset()
+        queryset = self.get_queryset().filter(document=self.request.query_params['id'])
         if order_field == 'name':
             if order_type =='desc':
                 queryset = queryset.order_by('-name')
