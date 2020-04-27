@@ -1403,7 +1403,8 @@ class ResultSerializer(serializers.ModelSerializer):
         total_score = result.student_answer.all()
         count_score = 0
         for t in total_score:
-            count_score = count_score + t.score_answer
+            if t.score_answer:
+                count_score = count_score + t.score_answer
         
         result.total_score = count_score
         result.save()
