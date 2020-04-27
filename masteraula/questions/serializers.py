@@ -301,7 +301,6 @@ class QuestionSerializer(serializers.ModelSerializer):
     source_id = serializers.PrimaryKeyRelatedField(write_only=True, required=False, allow_null=True, queryset=Source.objects.all())
 
     documents_quantity  = serializers.SerializerMethodField()
-    type_question = serializers.SerializerMethodField()
     users_quantity = serializers.SerializerMethodField()
 
     class Meta:
@@ -311,7 +310,6 @@ class QuestionSerializer(serializers.ModelSerializer):
             'author',
             'authorship',
             'create_date',
-            'type_question',
 
             'statement',
             'learning_objects',
@@ -340,11 +338,6 @@ class QuestionSerializer(serializers.ModelSerializer):
         )
 
         depth = 1
-
-    def get_type_question(self, obj):
-        if len(obj.alternatives.all()) > 1:
-            return ("Objetiva")
-        return("Dissertativa")
 
     def get_documents_quantity(self, obj):
         documents = Document.objects.filter(questions__id=obj.id, disabled = False).count()
