@@ -914,7 +914,7 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
         return Response(serializer_document.data, status=status.HTTP_201_CREATED)
 
 class ResultViewSet(viewsets.ModelViewSet):
-    queryset = Result.objects.get_result_prefetch().order_by('-id')
+    queryset = Result.objects.all().order_by('-id')
     serializer_class = serializers.ResultSerializer
     permission_classes = (permissions.AllowAny,)
 

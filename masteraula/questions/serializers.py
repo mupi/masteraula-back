@@ -1373,9 +1373,8 @@ class ResultSerializer(serializers.ModelSerializer):
             
             result.student_answer.add(question)
 
-        total_score = result.student_answer.all()
         count_score = 0
-        for t in total_score:
+        for t in result.student_answer.all():
             if t.score_answer:
                 count_score = count_score + t.score_answer
         
@@ -1392,16 +1391,16 @@ class ResultSerializer(serializers.ModelSerializer):
             question = StudentAnswer.objects.get(id=q['id'])
             question.score_answer = q['score_answer']
             question.save()
-        
-        total_score = result.student_answer.all()
+        print(result.total_score)
         count_score = 0
-        for t in total_score:
+        for t in result.student_answer.all():
             if t.score_answer:
                 count_score = count_score + t.score_answer
         
         result.total_score = count_score
         result.save()
-            
+        print(result.total_score)
+    
         return Result.objects.get(id=result.id)
 
 class DocumentOnlineSerializer(serializers.ModelSerializer):
