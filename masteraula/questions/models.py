@@ -608,12 +608,12 @@ class Result(models.Model):
     student_levels = models.CharField(max_length=200)
     start = models.DateTimeField()
     finish = models.DateTimeField()
-    total_score =  models.PositiveIntegerField(null=True, blank=True)
+    total_score =  models.FloatField(null=True, blank=True)
 
 class StudentAnswer(models.Model):
     answer_alternative =  models.ForeignKey(Alternative, on_delete=models.CASCADE, null=True, blank=True)
     answer_text = models.TextField(null=True, blank=True)
-    score_answer = models.PositiveIntegerField(null=True, blank=True)
+    score_answer = models.FloatField(null=True, blank=True)
     student_answer = models.ForeignKey(Result, related_name='student_answer', on_delete=models.CASCADE, null=True, blank=True)
     student_question = models.ForeignKey('DocumentQuestionOnline', related_name='student_question', on_delete=models.CASCADE)
 
@@ -702,7 +702,7 @@ class DocumentQuestionOnlineManager(models.Manager):
 class DocumentQuestionOnline(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     document = models.ForeignKey(DocumentOnline, on_delete=models.CASCADE)
-    score = models.PositiveIntegerField(null=True, blank=True)
+    score = models.FloatField(null=True, blank=True)
 
     objects = DocumentQuestionOnlineManager()
 
