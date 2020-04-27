@@ -1381,7 +1381,7 @@ class ResultSerializer(serializers.ModelSerializer):
         result.total_score = count_score
         result.save()
                 
-        return Result.objects.get(id=result.id)
+        return Result.objects.get_result_prefetch().get(id=result.id)
 
     def update(self, instance, validated_data):
         student_answer = self.context.get('request').data
@@ -1391,7 +1391,7 @@ class ResultSerializer(serializers.ModelSerializer):
             question = StudentAnswer.objects.get(id=q['id'])
             question.score_answer = q['score_answer']
             question.save()
-        print(result.total_score)
+
         count_score = 0
         for t in result.student_answer.all():
             if t.score_answer:
@@ -1399,9 +1399,8 @@ class ResultSerializer(serializers.ModelSerializer):
         
         result.total_score = count_score
         result.save()
-        print(result.total_score)
     
-        return Result.objects.get(id=result.id)
+        return Result.objects.get_result_prefetch().get(id=result.id)
 
 class DocumentOnlineSerializer(serializers.ModelSerializer):
     owner = UserDetailsSerializer(read_only=True)   
@@ -1499,10 +1498,13 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
         document = super().create(validated_data)
 
         if len(questions_documents['questions_document'])  > 0:
+            count_questions = 0
+
             for q in questions_documents['questions_document']:
-                DocumentQuestionOnline.objects.create(document=document, question_id=q['question'], score=q['score'])
+                count_questions += 1
+                DocumentQuestionOnline.objects.create(document=document, question_id=q['question'], score=q['score'], order=count_questions)
     
-        return DocumentOnline.objects.get(link=document.link)
+        return DocumentOnline.objects.get_documentonline_prefetch().get(link=document.link)
 
     def update(self, instance, validated_data):
         questions_documents = self.context.get('request').data
@@ -1514,7 +1516,7 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
                 score.score = q['score']
                 score.save()
     
-        return DocumentOnline.objects.get(link=document.link)
+        return DocumentOnline.objects.get_documentonline_prefetch().get(link=document.link)
 
 class DocumentOnlineStudentSerializer(serializers.ModelSerializer):
     owner = UserDetailsSerializer(read_only=True)   

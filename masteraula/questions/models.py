@@ -732,6 +732,7 @@ class DocumentQuestionOnline(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     document = models.ForeignKey(DocumentOnline, on_delete=models.CASCADE)
     score = models.DecimalField(null=True, blank=True, max_digits=5, decimal_places=2)
+    order = models.PositiveIntegerField(null=True, blank=True)
 
     objects = DocumentQuestionOnlineManager()
 
@@ -741,4 +742,6 @@ class DocumentQuestionOnline(models.Model):
     class Meta:
         verbose_name = "Document Question Online"
         verbose_name_plural = "Document Question Online"
+   
+        ordering = ['order']
 
