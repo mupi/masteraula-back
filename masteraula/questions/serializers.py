@@ -1363,8 +1363,8 @@ class ResultSerializer(serializers.ModelSerializer):
             else:
                 alternative = Alternative.objects.get(id__in=[q['answer_alternative']])
                 group_question =  DocumentQuestionOnline.objects.get(id=q['student_question'])
-                teste = alternative.is_correct
-                if teste:
+                status_correct = alternative.is_correct
+                if status_correct:
                     score_answer = group_question.score
                 else:
                     score_answer = 0
@@ -1501,6 +1501,8 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
             count_questions = 0
 
             for q in questions_documents['questions_document']:
+                # if len(str(q['score'])) > 11:
+                #     raise serializers.ValidationError(_("Maximum number of digits is 10"))
                 count_questions += 1
                 DocumentQuestionOnline.objects.create(document=document, question_id=q['question'], score=q['score'], order=count_questions)
     
