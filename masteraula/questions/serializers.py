@@ -1444,7 +1444,7 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
         return True
 
     def get_questions_quantity(self, obj):
-        return obj.document.questions.filter(disabled=False).count()
+        return obj.document.questions.count()
     
     def get_types_questions(self, obj):
         questions = obj.documentquestiononline_set.all()
@@ -1474,10 +1474,10 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
         count_authoral = 0
 
         for q in questions:
-            if q.question.authorship != None:
-                count_authoral += 1
-            else:
+            if q.question.source != None:
                 count_exame += 1
+            else:
+                count_authoral += 1
         dic = { 'exam_quantity': count_exame, 'authoral_quantity':count_authoral}
         return dic
       
@@ -1558,7 +1558,8 @@ class DocumentOnlineStudentSerializer(serializers.ModelSerializer):
 class DocumentOnlineListSerializer(serializers.ModelSerializer):
     owner = UserDetailsSerializer(read_only=True)   
     document =  DocumentInfoSerializer(read_only= True)
-   
+    status = serializers.SerializerMethodField()
+
     class Meta:
         model = DocumentOnline
         fields = (
@@ -1570,4 +1571,12 @@ class DocumentOnlineListSerializer(serializers.ModelSerializer):
             'start_date',
             'finish_date',
             'duration',
+            'status',
         )
+    
+    def get_status(self, obj):
+        now = datetime.datetime.now()
+        if now > obj.finish_date.replace(tzinfo=None):
+            return False
+        else:
+            return True
