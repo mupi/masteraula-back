@@ -609,6 +609,10 @@ class StudentAnswer(models.Model):
     student_answer = models.ForeignKey('Result', related_name='student_answer', on_delete=models.CASCADE, null=True, blank=True)
     student_question = models.ForeignKey('DocumentQuestionOnline', related_name='student_question', on_delete=models.CASCADE)
 
+    class Meta:   
+        ordering = ['student_question']
+
+
 class ResultManager(models.Manager):
     topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
         'parent', 'discipline', 'parent__parent', 'parent__discipline')
@@ -643,7 +647,6 @@ class Result(models.Model):
     student_levels = models.CharField(max_length=200)
     start = models.DateTimeField()
     finish = models.DateTimeField()
-    total_score =  models.DecimalField(null=True, blank=True, max_digits=10, decimal_places=2)
 
     objects = ResultManager()
 

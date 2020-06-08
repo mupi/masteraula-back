@@ -397,7 +397,7 @@ class StudentAnswerInline(admin.TabularInline):
 
 class ResultModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('results', )
-    list_display = ('id', 'student_name', 'student_levels', 'total_score',)
+    list_display = ('id', 'student_name', 'student_levels', 'results', )
     list_per_page = 100
 
     inlines = [StudentAnswerInline, ]

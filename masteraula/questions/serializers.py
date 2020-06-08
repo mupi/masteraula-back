@@ -1338,6 +1338,7 @@ class ResultSerializer(serializers.ModelSerializer):
     student_answer = StudentAnswerSerializer(many=True, read_only=True)
     start = serializers.DateTimeField(required=False)
     finish = serializers.DateTimeField(required=False)
+    total_score = serializers.SerializerMethodField()
 
     class Meta:
         model = Result
@@ -1351,6 +1352,14 @@ class ResultSerializer(serializers.ModelSerializer):
             'total_score',
         )
     
+    def get_total_score(self, obj):
+        count_score = 0
+        for t in obj.student_answer.all():
+            if t.score_answer:
+                count_score = count_score + t.score_answer
+        
+        return count_score
+
     def create(self, validated_data):
         student_answer = self.context.get('request').data
         
@@ -1373,12 +1382,6 @@ class ResultSerializer(serializers.ModelSerializer):
             
             result.student_answer.add(question)
 
-        count_score = 0
-        for t in result.student_answer.all():
-            if t.score_answer:
-                count_score = count_score + t.score_answer
-        
-        result.total_score = count_score
         result.save()
                 
         return Result.objects.get_result_prefetch().get(id=result.id)
@@ -1392,12 +1395,6 @@ class ResultSerializer(serializers.ModelSerializer):
             question.score_answer = q['score_answer']
             question.save()
 
-        count_score = 0
-        for t in result.student_answer.all():
-            if t.score_answer:
-                count_score = count_score + t.score_answer
-        
-        result.total_score = count_score
         result.save()
     
         return Result.objects.get_result_prefetch().get(id=result.id)
