@@ -1392,6 +1392,10 @@ class ResultSerializer(serializers.ModelSerializer):
 
         for q in student_answer['student_answer']:
             question = StudentAnswer.objects.get(id=q['id'])
+
+            if len(str(q['score_answer'])) > 11:
+                raise serializers.ValidationError(_("Maximum number of digits in score is 10!"))
+            
             question.score_answer = q['score_answer']
             question.save()
 
@@ -1498,8 +1502,8 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
             count_questions = 0
 
             for q in questions_documents['questions_document']:
-                # if len(str(q['score'])) > 11:
-                #     raise serializers.ValidationError(_("Maximum number of digits is 10"))
+                if len(str(q['score'])) > 11:
+                    raise serializers.ValidationError(_("Maximum number of digits in score is 10!"))
                 count_questions += 1
                 DocumentQuestionOnline.objects.create(document=document, question_id=q['question'], score=q['score'], order=count_questions)
     
