@@ -1445,7 +1445,7 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
         return True
 
     def get_questions_quantity(self, obj):
-        return obj.document.questions.count()
+        return obj.questions_document.count()
     
     def get_types_questions(self, obj):
         questions = obj.documentquestiononline_set.all()
