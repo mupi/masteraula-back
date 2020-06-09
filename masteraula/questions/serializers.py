@@ -302,6 +302,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     documents_quantity  = serializers.SerializerMethodField()
     users_quantity = serializers.SerializerMethodField()
+    type_question = serializers.SerializerMethodField()
 
     class Meta:
         model = Question
@@ -334,10 +335,16 @@ class QuestionSerializer(serializers.ModelSerializer):
             'tags',   
             'disabled',
             'documents_quantity',
-            'users_quantity' 
+            'users_quantity',
+            'type_question' 
         )
 
         depth = 1
+
+    def get_type_question(self, obj):
+        if len(obj.alternatives.all()) > 1:
+            return ("Objetiva")
+        return("Dissertativa")
 
     def get_documents_quantity(self, obj):
         documents = Document.objects.filter(questions__id=obj.id, disabled = False).count()
