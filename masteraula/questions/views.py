@@ -914,11 +914,11 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
 
         return Response(serializer_document.data, status=status.HTTP_201_CREATED)
     
-    @detail_route(methods=['get'])
+    @detail_route(methods=['get'], permission_classes=(permissions.IsAuthenticated,))
     def generate_list(self, request, pk=None):
-        # permission_classes=[permissions.IsAuthenticated, 
         document_online = self.get_object()
-        file_name = "Resultados - " + document_online.name
+        # Nome aleatorio para nao causar problemas
+        file_name =  pk + str(current_milli_time()) 
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="' + file_name + '.csv"'
