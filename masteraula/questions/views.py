@@ -3,6 +3,7 @@ import os
 import time
 import datetime
 import operator
+import csv 
 
 from functools import reduce
 
@@ -23,7 +24,7 @@ from taggit.models import Tag
 
 from masteraula.users.models import User
 
-from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
+from .models import (Question, Document, Alternative, Discipline, TeachingLevel, DocumentQuestion, Header, 
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
                     Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, DocumentOnline, Result)
 
@@ -912,6 +913,72 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
         serializer_document = serializers.DocumentOnlineListSerializer(document)
 
         return Response(serializer_document.data, status=status.HTTP_201_CREATED)
+    
+    @detail_route(methods=['get'])
+    def generate_list(self, request, pk=None):
+        # permission_classes=[permissions.IsAuthenticated, 
+        document_online = self.get_object()
+        file_name = "Resultados - " + document_online.name
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="' + file_name + '.csv"'
+        writer = csv.writer(response, delimiter =",", quoting=csv.QUOTE_MINIMAL)
+        title = ["Aluno","Série","Data","Duração(min)","Pontuação Total"]
+
+        for i, t in enumerate(document_online.questions_document.all()):
+                i = i + 1     
+                if len(t.alternatives.all()) == 0: 
+                    title.append('Q' + str(i))
+                else:
+                    question_item = 'a'
+                    for al in t.alternatives.all():
+                        if al.is_correct:
+                            value = question_item
+                        question_item = chr(ord(question_item) + 1)
+                    title.append('Q' + str(i) + '('+ str(value) + ')')
+                title.append('P' + str(i))
+        writer.writerow(title)
+
+        for result in document_online.results.all():
+            duration = divmod((result.finish - result.start).seconds, 60)
+            count_score = 0
+            answer = []
+
+            for i, t in enumerate(result.student_answer.all()):
+                alternative = Alternative.objects.filter(question_id=t.student_question.question.id, is_correct=True)
+
+                if t.answer_alternative != None:
+                    question_item = 'a'
+                    for al in t.student_question.question.alternatives.all():
+                        if t.answer_alternative == al.id:
+                            value = question_item
+                        question_item = chr(ord(question_item) + 1)
+                    answer.append(value)
+
+                else:
+                    answer.append(t.answer_text)
+                
+                if t.score_answer == None:
+                     answer.append(0.00)
+                else:
+                     answer.append(t.score_answer)
+                                            
+                if t.score_answer:
+                    count_score = count_score + t.score_answer
+
+            data = ([
+                result.student_name,
+                result.student_levels,
+                result.start.strftime("%d/%m/%Y"),
+                duration[0],
+                count_score       
+                ])
+            
+            for a in answer:
+                data.append(a)
+            writer.writerow(data)
+       
+        return response
 
 class ResultViewSet(viewsets.ModelViewSet):
     queryset = Result.objects.all().order_by('-id')
