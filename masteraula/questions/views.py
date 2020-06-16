@@ -945,12 +945,10 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
             answer = []
 
             for i, t in enumerate(result.student_answer.all()):
-                alternative = Alternative.objects.filter(question_id=t.student_question.question.id, is_correct=True)
-
                 if t.answer_alternative != None:
                     question_item = 'a'
                     for al in t.student_question.question.alternatives.all():
-                        if t.answer_alternative == al.id:
+                        if t.answer_alternative.id == al.id:
                             value = question_item
                         question_item = chr(ord(question_item) + 1)
                     answer.append(value)
