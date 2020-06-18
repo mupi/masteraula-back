@@ -26,7 +26,7 @@ from masteraula.users.models import User
 
 from .models import (Question, Document, Alternative, Discipline, TeachingLevel, DocumentQuestion, Header, 
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, DocumentOnline, Result)
+                    Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, DocumentOnline, DocumentQuestionOnline, Result)
 
 from .models import DocumentLimitExceedException
 
@@ -914,6 +914,25 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
 
         return Response(serializer_document.data, status=status.HTTP_201_CREATED)
     
+    @detail_route(methods=['post'])
+    def copy_document(self, request, pk=None):
+        obj = self.get_object()
+        questions = [dq for dq in obj.questions_document.all()]
+                                       
+        obj.pk = None
+        obj.name = obj.name + ' (Cópia)'
+        obj.owner = self.request.user
+        obj.save()
+
+        new_questions = []
+        for count, q in enumerate(questions):
+            new_questions.append(DocumentQuestionOnline(document=obj, question=q, order=count))
+        DocumentQuestionOnline.objects.bulk_create(new_questions) 
+
+        new_obj = DocumentOnline.objects.get(pk=obj.pk)
+        serializer = serializers.DocumentOnlineSerializer(new_obj)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     @detail_route(methods=['get'], permission_classes=(permissions.IsAuthenticated,))
     def generate_list(self, request, pk=None):
         document_online = self.get_object()
