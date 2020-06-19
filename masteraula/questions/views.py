@@ -918,7 +918,7 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
     def copy_document(self, request, pk=None):
         obj = self.get_object()
         questions = [dq for dq in obj.questions_document.all()]
-                                       
+
         obj.pk = None
         obj.name = obj.name + ' (Cópia)'
         obj.owner = self.request.user
@@ -926,7 +926,9 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
 
         new_questions = []
         for count, q in enumerate(questions):
-            new_questions.append(DocumentQuestionOnline(document=obj, question=q, order=count))
+            if q.disabled == False:
+                dq = DocumentQuestionOnline.objects.get(question=q.id, document=pk)
+                new_questions.append(DocumentQuestionOnline(document=obj, question=q, order=count, score=dq.score))
         DocumentQuestionOnline.objects.bulk_create(new_questions) 
 
         new_obj = DocumentOnline.objects.get(pk=obj.pk)
