@@ -72,3 +72,4 @@ errors
 .vscode
 
 *.csv
+*.sql*
