@@ -188,15 +188,10 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'logfile' : {
-            'level' : 'ERROR',
-            'class' : 'logging.handlers.WatchedFileHandler',
-            'filename' : '../logs/masteraula.log'
-        },
     },
     'loggers': {
         'django.request': {
-            'handlers': ['logfile'],
+            'handlers': ['console'],
             'level': 'ERROR',
             'propagate': True
         },
