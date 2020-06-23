@@ -26,19 +26,19 @@ build to homolog:
   tags:
     - docker
 
-# deploy to homolog:
-#   stage: deploy
-#   image: hacklab/kubectl:latest
-#   script:
-#     - echo ${kube_config} | base64 -d > ${KUBECONFIG}
-#     - kubectl -n <projet-name>-dev --record deployment.apps/django set image deployment.v1.apps/django django=$DJANGO_HOMOLOG_IMAGE nginx=$NGINX_HOMOLOG_IMAGE
-#   only:
-#     - /feature\/docker-support/
-#   environment: homolog
-#   variables:
-#     GIT_STRATEGY: none
-#   tags:
-#     - docker
+deploy to homolog:
+  stage: deploy
+  image: hacklab/kubectl:latest
+  script:
+    - echo ${kube_config} | base64 -d > ${KUBECONFIG}
+    - kubectl -n masteraula-dev --record deployment.apps/masteraula-back set image deployment.v1.apps/masteraula-back masteraula-back=$DJANGO_HOMOLOG_IMAGE
+  only:
+    - /feature\/docker-support/
+  environment: homolog
+  variables:
+    GIT_STRATEGY: none
+  tags:
+    - docker
 
 #############
 ## Production
