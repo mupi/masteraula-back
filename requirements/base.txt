@@ -64,3 +64,4 @@ python-magic==0.4.15
 
 # Static and Media Storage
 boto3==1.4.5
+boto==2.49.0
