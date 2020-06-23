@@ -30,9 +30,9 @@ COPY ./compose/production/django/entrypoint.sh /entrypoint.sh
 RUN sed -i 's/\r$//g' /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-COPY ./compose/local/django/runserver.sh /runserver.sh
-RUN sed -i 's/\r$//g' /runserver.sh
-RUN chmod +x /runserver.sh
+COPY ./compose/local/django/runserver.sh /gunicorn.sh
+RUN sed -i 's/\r$//g' /gunicorn.sh
+RUN chmod +x /gunicorn.sh
 
 COPY . /app/
 
@@ -40,4 +40,4 @@ RUN export $(cat /app/env.example | grep -v ^# | xargs) && \
     python /app/manage.py collectstatic --noinput
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["/runserver.sh"]
+CMD ["/gunicorn.sh"]
