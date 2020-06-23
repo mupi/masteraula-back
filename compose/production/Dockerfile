@@ -30,7 +30,7 @@ COPY ./compose/production/django/entrypoint.sh /entrypoint.sh
 RUN sed -i 's/\r$//g' /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-COPY ./compose/local/django/runserver.sh /gunicorn.sh
+COPY ./compose/production/django/gunicorn.sh /gunicorn.sh
 RUN sed -i 's/\r$//g' /gunicorn.sh
 RUN chmod +x /gunicorn.sh
 
