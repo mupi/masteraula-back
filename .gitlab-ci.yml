@@ -21,7 +21,7 @@ build to homolog:
     - docker build --build-arg DJANGO_AWS_ACCESS_KEY_ID=${DJANGO_AWS_ACCESS_KEY_ID_DEV} --build-arg DJANGO_AWS_SECRET_ACCESS_KEY=${DJANGO_AWS_SECRET_ACCESS_KEY_DEV} --build-arg DJANGO_AWS_STORAGE_BUCKET_NAME=${DJANGO_AWS_STORAGE_BUCKET_NAME_DEV} -f compose/production/Dockerfile -t $DJANGO_HOMOLOG_IMAGE .
     - docker push $DJANGO_HOMOLOG_IMAGE
   only:
-    - /feature\/docker-support/
+    - /feature-docker-support/
   environment: homolog
   tags:
     - docker
