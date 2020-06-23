@@ -21,7 +21,7 @@ build to homolog:
     - docker build --build-arg DJANGO_AWS_ACCESS_KEY_ID=${DJANGO_AWS_ACCESS_KEY_ID} --build-arg DJANGO_AWS_SECRET_ACCESS_KEY=${DJANGO_AWS_SECRET_ACCESS_KEY} --build-arg DJANGO_AWS_STORAGE_BUCKET_NAME=${DJANGO_AWS_STORAGE_BUCKET_NAME} -f compose/production/Dockerfile -t $DJANGO_HOMOLOG_IMAGE .
     - docker push $DJANGO_HOMOLOG_IMAGE
   only:
-    - /master/
+    - /feature\/docker-support/
   environment: homolog
   tags:
     - docker
@@ -33,7 +33,7 @@ build to homolog:
 #     - echo ${kube_config} | base64 -d > ${KUBECONFIG}
 #     - kubectl -n <projet-name>-dev --record deployment.apps/django set image deployment.v1.apps/django django=$DJANGO_HOMOLOG_IMAGE nginx=$NGINX_HOMOLOG_IMAGE
 #   only:
-#     - /master/
+#     - /feature\/docker-support/
 #   environment: homolog
 #   variables:
 #     GIT_STRATEGY: none
