@@ -33,7 +33,7 @@ deploy to homolog:
     - echo ${kube_config} | base64 -d > ${KUBECONFIG}
     - kubectl -n masteraula-dev --record deployment.apps/masteraula-back set image deployment.v1.apps/masteraula-back masteraula-back=$DJANGO_HOMOLOG_IMAGE
   only:
-    - /feature\/docker-support/
+    - /feature-docker-support/
   environment: homolog
   variables:
     GIT_STRATEGY: none
