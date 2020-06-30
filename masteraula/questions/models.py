@@ -601,3 +601,150 @@ class FaqQuestion(models.Model):
     faq_question = models.TextField()
     faq_answer = models.TextField()
     category = models.ForeignKey(FaqCategory, related_name='category_questions', on_delete=models.CASCADE, null=True, blank=True)
+
+class StudentAnswer(models.Model):
+    answer_alternative =  models.ForeignKey(Alternative, on_delete=models.CASCADE, null=True, blank=True)
+    answer_text = models.TextField(null=True, blank=True)
+    score_answer = models.DecimalField(null=True, blank=True, max_digits=10, decimal_places=2)
+    student_answer = models.ForeignKey('Result', related_name='student_answer', on_delete=models.CASCADE, null=True, blank=True)
+    student_question = models.ForeignKey('DocumentQuestionOnline', related_name='student_question', on_delete=models.CASCADE)
+
+    class Meta:   
+        ordering = ['student_question']
+
+
+class ResultManager(models.Manager):
+    topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')
+    )
+
+    learning_objects_prefetch = Prefetch('learning_objects',
+        queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags', 'questions')
+    )
+
+    labels_prefetch = Prefetch('labels', queryset=Label.objects.prefetch_related('question_set').select_related(
+        'owner'
+    ))
+
+    student_question_prefetch = Prefetch('student_question__question',
+        queryset=Question.objects.all().select_related('author').prefetch_related(
+            'tags', 'disciplines', 'teaching_levels', 'alternatives',
+            topics_prefetch, 
+            learning_objects_prefetch,
+            labels_prefetch
+        )
+    )
+
+    student_answer_prefetch = Prefetch('student_answer', queryset=StudentAnswer.objects.all().prefetch_related('answer_alternative', student_question_prefetch))
+
+    def get_result_prefetch(self):
+        qs = self.all().select_related('results').prefetch_related(self.student_answer_prefetch)
+        return qs
+
+class Result(models.Model):
+    results = models.ForeignKey('DocumentOnline', related_name='results', on_delete=models.CASCADE, verbose_name="document")
+    student_name = models.CharField(max_length=200)
+    student_levels = models.CharField(max_length=200)
+    start = models.DateTimeField()
+    finish = models.DateTimeField()
+
+    objects = ResultManager()
+
+class DocumentOnlineManager(models.Manager):
+
+    topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')
+    )
+
+    learning_objects_prefetch = Prefetch('learning_objects',
+        queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags', 'questions')
+    )
+
+    labels_prefetch = Prefetch('labels', queryset=Label.objects.prefetch_related('question_set').select_related(
+        'owner'
+    ))
+
+    questions_prefetch = Prefetch('documentquestiononline_set__question',
+        queryset=Question.objects.all().select_related('author').prefetch_related(
+            'tags', 'disciplines', 'teaching_levels', 'alternatives',
+            topics_prefetch, 
+            learning_objects_prefetch,
+            labels_prefetch
+        )
+    )
+
+    student_question_prefetch = Prefetch('student_question__question',
+        queryset=Question.objects.all().select_related('author').prefetch_related(
+            'tags', 'disciplines', 'teaching_levels', 'alternatives',
+            topics_prefetch, 
+            learning_objects_prefetch,
+            labels_prefetch
+        )
+    )
+
+    student_answer_prefetch = Prefetch('student_answer', queryset=StudentAnswer.objects.all().prefetch_related('answer_alternative', student_question_prefetch))
+  
+    results_prefetch = Prefetch('results',
+        queryset=Result.objects.all().prefetch_related(student_answer_prefetch)
+    )
+
+    def get_documentonline_prefetch(self):
+        qs = self.all().select_related('owner', 'document').prefetch_related(self.questions_prefetch, self.results_prefetch)
+        return qs
+       
+class DocumentOnline(models.Model):
+    link = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    document = models.ForeignKey(Document, on_delete=models.CASCADE)
+    name = models.CharField(max_length=200)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    create_date = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateTimeField()
+    finish_date = models.DateTimeField()
+    duration = models.PositiveIntegerField(null=True, blank=True)
+    questions_document = models.ManyToManyField(Question, through='DocumentQuestionOnline', related_name='questions_document')
+
+    objects = DocumentOnlineManager()
+
+    def __str__(self):
+        return str(self.name)
+
+    class Meta:
+        verbose_name = "Document Online"
+        verbose_name_plural = "Documents Online"
+
+class DocumentQuestionOnlineManager(models.Manager):
+    topics_prefetch = Prefetch('question__topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')
+    )
+
+    learning_objects_prefetch = Prefetch(
+        'question__learning_objects',
+        queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags')
+    )
+
+    def get_questions_prefetched(self, topics=True):
+        qs = self.all().select_related('question').prefetch_related(
+            'question__tags', 'question__disciplines', 'question__teaching_levels', 'question__alternatives', 
+            self.learning_objects_prefetch
+        )
+        if topics:
+            qs = qs.prefetch_related(self.topics_prefetch)
+        return qs
+    
+class DocumentQuestionOnline(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    document = models.ForeignKey(DocumentOnline, on_delete=models.CASCADE)
+    score = models.DecimalField(null=True, blank=True, max_digits=10, decimal_places=2)
+    order = models.PositiveIntegerField(null=True, blank=True)
+
+    objects = DocumentQuestionOnlineManager()
+
+    def __str__(self):
+        return str(self.pk)
+    
+    class Meta:
+        verbose_name = "Document Question Online"
+        verbose_name_plural = "Document Question Online"
+   
+        ordering = ['order']
+

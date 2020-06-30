@@ -3,6 +3,7 @@ import os
 import time
 import datetime
 import operator
+import csv 
 
 from functools import reduce
 
@@ -23,9 +24,9 @@ from taggit.models import Tag
 
 from masteraula.users.models import User
 
-from .models import (Question, Document, Discipline, TeachingLevel, DocumentQuestion, Header,
+from .models import (Question, Document, Alternative, Discipline, TeachingLevel, DocumentQuestion, Header, 
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory)
+                    Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, DocumentOnline, DocumentQuestionOnline, Result)
 
 from .models import DocumentLimitExceedException
 
@@ -41,6 +42,11 @@ from . import serializers as serializers
 current_milli_time = lambda: int(round(time.time() * 1000))
 
 class DocumentPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 10
+    max_page_size = 80
+
+class DocumentOnlinePagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 10
     max_page_size = 80
@@ -841,3 +847,163 @@ class FaqCategoryViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.FaqCategorySerializer    
     pagination_class = None
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,) 
+
+class DocumentOnlineViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.DocumentOnlineSerializer    
+    pagination_class = DocumentOnlinePagination
+
+    def get_queryset(self):
+        queryset = DocumentOnline.objects.get_documentonline_prefetch()
+
+        if self.action == 'list':
+            queryset = queryset.filter(document=self.request.query_params['id'])
+        return queryset.order_by('name')
+
+    def perform_create(self, serializer):
+        document = Document.objects.get(id=self.request.query_params['id'])
+        serializer.save(owner=self.request.user, document=document)
+    
+    @list_route(methods=['get'])
+    def my_documents_online(self, request):
+        order_field = request.query_params.get('order_field', None)
+        order_type = request.query_params.get('order', None)
+        
+        queryset = self.get_queryset().filter(document=self.request.query_params['id'])
+        if order_field == 'name':
+            if order_type =='desc':
+                queryset = queryset.order_by('-name')
+            else:
+                queryset = queryset.order_by('name')
+
+        elif order_field =='question_number':
+            if order_type =='desc':
+                queryset = queryset.annotate(num_questions = Count('questions_document')).order_by('-num_questions')
+            else:
+                queryset = queryset.annotate(num_questions = Count('questions_document')).order_by('num_questions')
+
+        elif order_field =='result':
+            if order_type =='desc':
+                queryset = queryset.annotate(num_results = Count('results')).order_by('-num_results')
+            else:
+                queryset = queryset.annotate(num_results = Count('results')).order_by('num_results')
+
+        else:
+            queryset = queryset.order_by('name')
+
+        self.pagination_class = DocumentOnlinePagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = serializers.DocumentOnlineSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = serializers.DocumentOnlineSerializer(queryset, many=True)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @detail_route(methods=['get'], permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
+    def document_student(self, request, pk=None):
+        document = get_object_or_404(self.get_queryset(), pk=pk)
+        serializer_document = serializers.DocumentOnlineStudentSerializer(document)
+
+        return Response(serializer_document.data, status=status.HTTP_201_CREATED)
+
+    @detail_route(methods=['get'], permission_classes=(permissions.IsAuthenticatedOrReadOnly,))
+    def check_document(self, request, pk=None):
+        document = get_object_or_404(self.get_queryset(), pk=pk)
+        serializer_document = serializers.DocumentOnlineListSerializer(document)
+
+        return Response(serializer_document.data, status=status.HTTP_201_CREATED)
+    
+    @detail_route(methods=['post'])
+    def copy_document(self, request, pk=None):
+        obj = self.get_object()
+        questions = [dq for dq in obj.questions_document.all()]
+
+        obj.pk = None
+        obj.name = obj.name + ' (Cópia)'
+        obj.owner = self.request.user
+        obj.save()
+
+        new_questions = []
+        for count, q in enumerate(questions):
+            if q.disabled == False:
+                dq = DocumentQuestionOnline.objects.get(question=q.id, document=pk)
+                new_questions.append(DocumentQuestionOnline(document=obj, question=q, order=count, score=dq.score))
+        DocumentQuestionOnline.objects.bulk_create(new_questions) 
+
+        new_obj = DocumentOnline.objects.get(pk=obj.pk)
+        serializer = serializers.DocumentOnlineSerializer(new_obj)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @detail_route(methods=['get'], permission_classes=(permissions.IsAuthenticated,))
+    def generate_list(self, request, pk=None):
+        document_online = self.get_object()
+        # Nome aleatorio para nao causar problemas
+        file_name =  pk + str(current_milli_time()) 
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="' + file_name + '.csv"'
+        writer = csv.writer(response, delimiter =",", quoting=csv.QUOTE_MINIMAL)
+        title = ["Aluno","Série","Data","Duração(min)","Pontuação Total"]
+
+        for i, t in enumerate(document_online.questions_document.all()):
+                i = i + 1     
+                if len(t.alternatives.all()) == 0: 
+                    title.append('Q' + str(i))
+                else:
+                    question_item = 'a'
+                    for al in t.alternatives.all():
+                        if al.is_correct:
+                            value = question_item
+                        question_item = chr(ord(question_item) + 1)
+                    title.append('Q' + str(i) + '('+ str(value) + ')')
+                title.append('P' + str(i))
+        writer.writerow(title)
+
+        for result in document_online.results.all():
+            duration = divmod((result.finish - result.start).seconds, 60)
+            count_score = 0
+            answer = []
+
+            for i, t in enumerate(result.student_answer.all()):
+                if t.answer_alternative != None:
+                    question_item = 'a'
+                    for al in t.student_question.question.alternatives.all():
+                        if t.answer_alternative.id == al.id:
+                            value = question_item
+                        question_item = chr(ord(question_item) + 1)
+                    answer.append(value)
+
+                else:
+                    answer.append(t.answer_text)
+                
+                if t.score_answer == None:
+                     answer.append(0.00)
+                else:
+                     answer.append(t.score_answer)
+                                            
+                if t.score_answer:
+                    count_score = count_score + t.score_answer
+
+            data = ([
+                result.student_name,
+                result.student_levels,
+                result.start.strftime("%d/%m/%Y"),
+                duration[0],
+                count_score       
+                ])
+            
+            for a in answer:
+                data.append(a)
+            writer.writerow(data)
+       
+        return response
+
+class ResultViewSet(viewsets.ModelViewSet):
+    queryset = Result.objects.all().order_by('-id')
+    serializer_class = serializers.ResultSerializer
+    permission_classes = (permissions.AllowAny,)
+
+    def perform_create(self, serializer):
+        document = DocumentOnline.objects.get(link=self.request.query_params['link'])
+        serializer.save(finish=datetime.datetime.now(), results= document)
