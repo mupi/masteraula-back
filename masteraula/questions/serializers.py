@@ -1697,7 +1697,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             for t in tasks:
                 Task.objects.create(activity=activity, **t)
 
-        return Activity.objects.get(id=activity.id)
+        return Activity.objects.get_activities_prefetched().get(id=activity.id)
 
     def update(self, instance, validated_data):
         # m2m
@@ -1722,4 +1722,4 @@ class ActivitySerializer(serializers.ModelSerializer):
             for t in tasks:
                 Task.objects.create(activity=activity, **t)
                 
-        return Activity.objects.get(id=activity.id)
+        return Activity.objects.get_activities_prefetched().get(id=activity.id)

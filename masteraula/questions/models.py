@@ -748,6 +748,36 @@ class DocumentQuestionOnline(models.Model):
    
         ordering = ['order']
 
+class ActivityManager(models.Manager):
+    topics_prefetch = Prefetch('topics', queryset=Topic.objects.prefetch_related('synonym_set').select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')
+    )
+
+    # labels_prefetch = Prefetch('labels', queryset=Label.objects.prefetch_related('question_set').select_related(
+    #     'owner'
+    # ))
+
+    def get_activities_prefetched(self, topics=True):
+        learning_object_prefetch = Prefetch('learning_objects', queryset=LearningObject.objects.select_related('owner').prefetch_related(
+            'tags', 'questions'
+        ))
+
+        qs = self.all().select_related('owner').prefetch_related(
+            'tags', 'disciplines', 'teaching_levels', 'tasks',
+            learning_object_prefetch
+        )
+        if topics:
+            qs = qs.prefetch_related(self.topics_prefetch)
+        return qs
+
+    def get_activities_update_index(self, topics=True):
+        qs = self.all().select_related('owner').prefetch_related(
+            'tags', 'alternatives', 'disciplines', 'teaching_levels', 'learning_objects', 'learning_objects__tags', 'labels',
+        )
+        if topics:
+            qs = qs.prefetch_related(self.topics_prefetch)
+        return qs
+
 class Activity(models.Model):
     LEVEL_CHOICES = (
         ('', _('None')),
@@ -767,6 +797,9 @@ class Activity(models.Model):
 
     disabled = models.BooleanField(null=False, blank=True, default=False)
     secret = models.BooleanField(null=False, blank=True, default=False)
+
+    objects = ActivityManager()
+
 
     class Meta:
         verbose_name = "Activity"
