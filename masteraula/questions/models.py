@@ -815,8 +815,10 @@ class Activity(models.Model):
         return list(set(topics))
 
 class Task(models.Model):
-    description_task = models.TextField(null=True, blank=True)
-    student_expectation = models.TextField(null=True, blank=True)
-    teacher_expectation = models.TextField(null=True, blank=True)
+    description_task = models.TextField()
+    student_expectation = models.TextField()
+    teacher_expectation = models.TextField()
    
-    activity = models.ForeignKey(Activity, related_name='tasks', on_delete=models.CASCADE, null=True, blank=True)
+    activity = models.ForeignKey(Activity, related_name='tasks', on_delete=models.CASCADE)
+
+
