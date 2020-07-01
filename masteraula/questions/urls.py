@@ -36,6 +36,7 @@ router.register(r'stations', views.StationViewSet, base_name="stations")
 router.register(r'faq_categories', views.FaqCategoryViewSet, base_name="faq_categories")
 router.register(r'document_online', views.DocumentOnlineViewSet, base_name="document_online")
 router.register(r'results', views.ResultViewSet, base_name="results")
+router.register(r'activities', views.ActivityViewSet, base_name="activities")
 
 
 urlpatterns = [

@@ -748,3 +748,42 @@ class DocumentQuestionOnline(models.Model):
    
         ordering = ['order']
 
+class Activity(models.Model):
+    LEVEL_CHOICES = (
+        ('', _('None')),
+        ('E', _('Easy')),
+        ('M', _('Medium')),
+        ('H', _('Hard'))
+    )
+
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    create_date = models.DateTimeField(auto_now_add=True)
+    learning_objects = models.ManyToManyField(LearningObject, related_name='activity_obj', blank=True)
+    difficulty = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)
+    disciplines = models.ManyToManyField(Discipline, blank=True)
+    teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)
+    topics = models.ManyToManyField(Topic, blank=True)
+    tags = TaggableManager(blank=True)
+
+    disabled = models.BooleanField(null=False, blank=True, default=False)
+    secret = models.BooleanField(null=False, blank=True, default=False)
+
+    class Meta:
+        verbose_name = "Activity"
+        verbose_name_plural = "Activities"
+
+    def get_all_topics(self):
+        topics = []
+        new_topics = [t for t in self.topics.all()]
+        while new_topics:
+            parents_id = [t.parent for t in new_topics if t.parent]
+            topics = topics + new_topics
+            new_topics = parents_id
+        return list(set(topics))
+
+class Task(models.Model):
+    description_task = models.TextField(null=True, blank=True)
+    student_expectation = models.TextField(null=True, blank=True)
+    teacher_expectation = models.TextField(null=True, blank=True)
+   
+    activity = models.ForeignKey(Activity, related_name='tasks', on_delete=models.CASCADE, null=True, blank=True)

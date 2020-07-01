@@ -26,7 +26,7 @@ from masteraula.users.models import User
 
 from .models import (Question, Document, Alternative, Discipline, TeachingLevel, DocumentQuestion, Header, 
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, DocumentOnline, DocumentQuestionOnline, Result)
+                    Synonym, Label, Link, TeachingYear, ClassPlan, Station,FaqCategory, DocumentOnline, DocumentQuestionOnline, Result, Task, Activity,)
 
 from .models import DocumentLimitExceedException
 
@@ -57,6 +57,11 @@ class DocumentCardPagination(pagination.PageNumberPagination):
     max_page_size = 64
 
 class QuestionPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 16
+    max_page_size = 64
+
+class ActivityPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 16
     max_page_size = 64
@@ -1007,3 +1012,12 @@ class ResultViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         document = DocumentOnline.objects.get(link=self.request.query_params['link'])
         serializer.save(finish=datetime.datetime.now(), results= document)
+
+class ActivityViewSet(viewsets.ModelViewSet):
+    queryset = Activity.objects.all().order_by('-id')
+    serializer_class = serializers.ActivitySerializer
+    pagination_class = ActivityPagination
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)

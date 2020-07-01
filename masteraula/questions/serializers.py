@@ -24,8 +24,10 @@ from masteraula.users.serializers import UserDetailsSerializer
 from .models import (Discipline, TeachingLevel, LearningObject, Question,
                     Alternative, Document, DocumentQuestion, Header, Year,
                     Source, Topic, LearningObject, Search, DocumentDownload, 
-                    Synonym, Label, ClassPlan, TeachingYear, Link, Station, FaqQuestion, FaqCategory, DocumentOnline,
-                    Result, DocumentQuestionOnline, StudentAnswer)
+                    Synonym, Label, ClassPlan, TeachingYear, Link, Station, 
+                    FaqQuestion, FaqCategory, DocumentOnline,
+                    Result, DocumentQuestionOnline, StudentAnswer,
+                    Task, Activity,)
 
 from django.db.models import Prefetch
 
@@ -1588,3 +1590,136 @@ class DocumentOnlineListSerializer(serializers.ModelSerializer):
             return False
         else:
             return True
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = (
+            'id',
+            'description_task',
+            'student_expectation',
+            'teacher_expectation',
+        )
+
+class ActivitySerializer(serializers.ModelSerializer):
+    owner = UserDetailsSerializer(read_only=True)
+    create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
+       
+    topics = TopicSimpleSerializer(read_only=True, many=True)
+    learning_objects = LearningObjectSerializer(many=True, read_only=True)
+
+    all_topics = serializers.SerializerMethodField('all_topics_serializer')
+    def all_topics_serializer(self, obj):
+        return TopicSimpleSerializer(obj.get_all_topics(), many=True).data
+
+    tasks = TaskSerializer(many=True)
+
+    tags = TagListSerializer(read_only=False, required=False, allow_null=True) 
+    difficulty = serializers.CharField(read_only=False, required=True)
+
+    learning_objects_ids = ModelListSerializer(write_only=True, allow_null=True, required=False, many=True, queryset=LearningObject.objects.all())
+    topics_ids = ModelListSerializer(write_only=True, many=True, queryset=Topic.objects.all())
+    disciplines_ids = ModelListSerializer(write_only=True, many=True, queryset=Discipline.objects.all())
+    teaching_levels_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingLevel.objects.all())
+
+
+    class Meta:
+        model = Activity
+        fields = (
+            'id',
+            'owner',
+            'create_date',
+
+            'learning_objects',
+            'difficulty',
+            'disciplines',
+            'teaching_levels',
+            'topics',
+            'all_topics',
+
+            'learning_objects_ids',
+            'topics_ids',
+            'disciplines_ids',
+            'teaching_levels_ids',
+
+            'tasks',
+
+            'tags',   
+            'disabled',
+            'secret',
+
+        )
+
+        depth = 1
+    
+    def validate_disciplines_ids(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError(_("At least one discipline id"))
+        return list(set(value))
+
+    def validate_topics_ids(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError(_("At least one topic id"))
+        return list(set(value))
+
+    def validate_teaching_levels_ids(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError(_("At least one teaching level id"))
+        return list(set(value))
+
+    def validate_year(self, value):
+        if not value:
+            return datetime.date.today().year
+            
+        if value > datetime.date.today().year:
+            raise serializers.ValidationError(_("Year bigger than this year")) 
+        return value
+
+    def create(self, validated_data):
+        # m2m
+        tags = validated_data.pop('tags', None)
+        tasks = validated_data.pop('tasks', None)
+
+        if not tasks:
+            raise serializers.ValidationError(_("Should contain at least one task"))
+
+        for key in list(validated_data.keys()):
+            if key.endswith('_ids'):
+                validated_data[key[:-4]] = validated_data.pop(key)
+          
+        activity = super().create(validated_data)
+
+        if tags != None:
+            tags = [tag for tag in tags if tag.strip() != '']
+            activity.tags.set(*tags, clear=True)
+
+        if tasks != None:
+            for t in tasks:
+                Task.objects.create(activity=activity, **t)
+
+        return Activity.objects.get(id=activity.id)
+
+    def update(self, instance, validated_data):
+        # m2m
+        tags = validated_data.pop('tags', None)
+        tasks = validated_data.pop('tasks', None)
+
+        if not tasks:
+            raise serializers.ValidationError(_("Should contain at least one task"))
+
+        for key in list(validated_data.keys()):
+            if key.endswith('_ids'):
+                validated_data[key[:-4]] = validated_data.pop(key)
+
+        activity = super().update(instance, validated_data)    
+
+        if tags != None:
+            tags = [tag for tag in tags if tag.strip() != '']
+            activity.tags.set(*tags, clear=True)
+
+        if tasks != None:
+            activity.tasks.all().delete()
+            for t in tasks:
+                Task.objects.create(activity=activity, **t)
+                
+        return Activity.objects.get(id=activity.id)

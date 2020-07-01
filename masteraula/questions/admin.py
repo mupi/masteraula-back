@@ -5,8 +5,9 @@ from import_export.fields import Field
 from import_export.formats import base_formats
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
-                     Alternative, Document, DocumentQuestion, Header, Year, Source, Topic, Search,
-                     DocumentDownload, DocumentPublication, Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, FaqQuestion, DocumentOnline, Result, DocumentQuestionOnline, StudentAnswer)
+                     Alternative, Document, DocumentQuestion, Header, Year, Source,Topic, Search,
+                     DocumentDownload, DocumentPublication, Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, FaqQuestion, DocumentOnline, Result, DocumentQuestionOnline, StudentAnswer,
+                     Task, Activity)
 
 class SearchResource(resources.ModelResource):
     
@@ -105,6 +106,11 @@ class AlternativesInline(admin.TabularInline):
     show_change_link = True
     extra = 1
 
+class TaskInline(admin.TabularInline):
+    model = Task
+    show_change_link = True
+    extra = 1
+
 class FaqQuestionInline(admin.TabularInline):
     model = FaqQuestion
     show_change_link = True
@@ -113,13 +119,23 @@ class FaqQuestionInline(admin.TabularInline):
 class TopicQuestionInline(admin.StackedInline):
     model = Topic.question_set.through
     raw_id_fields=('question',)
-
     extra = 1
 
 class TopicsInline(admin.StackedInline):
     model = Question.topics.through
     raw_id_fields=('topic',)
+    extra = 1
 
+class ActivityTopicsInline(admin.StackedInline):
+    model = Activity.topics.through
+    raw_id_fields=('topic',)
+    extra = 1
+
+class ActivityLearningObjectInline(admin.TabularInline):
+    model = LearningObject.activity_obj.through
+
+    show_change_link = True
+    raw_id_fields = ('learningobject',)
     extra = 1
 
 class ClassPlanLearningObjectInline(admin.TabularInline):
@@ -209,7 +225,7 @@ class TopicModelAdmin(admin.ModelAdmin):
 class LabelModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', )
     list_display = ('id', 'owner_id', 'name', 'num_questions')
-    search_fields = ['id', 'name',]
+    search_fields = ['id', 'name', 'owner__id',]
 
     inlines = [LabelQuestionInline, ]
     list_per_page = 100
@@ -407,6 +423,29 @@ class DocumentQuestionOnlineModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'document', 'score')
     list_per_page = 100
 
+class ActivityModelAdmin(ImportMixin, admin.ModelAdmin):
+    raw_id_fields = ('owner', )
+    list_display = ('id', 'owner', 'quantity_task','tasks', 'tag_list', 'create_date', )
+    search_fields = ('id', 'tags__name',)
+    exclude = ('topics', 'learning_objects', )
+
+    inlines = [TaskInline, ActivityTopicsInline, ActivityLearningObjectInline,]
+    
+    list_per_page = 100
+
+    def tag_list(self, obj):
+        return u", ".join(o.name for o in obj.tags.all())
+    
+    def quantity_task(self, obj):
+        return obj.tasks.all().count()
+    
+    def tasks(self, obj):
+        tasks = obj.tasks.all()
+        if tasks.count() > 0:
+            return tasks[0].description_task[:75]
+        else:
+            return ""
+
 admin.site.register(Discipline, DisciplineModelAdmin)
 admin.site.register(Descriptor, DescriptorModelAdmin)
 admin.site.register(TeachingLevel, TeachingLeveltModelAdmin)
@@ -430,4 +469,5 @@ admin.site.register(Station, StationModelAdmin)
 admin.site.register(FaqCategory, FaqCategoryModelAdmin)
 admin.site.register(DocumentOnline, DocumentOnlineModelAdmin)
 admin.site.register(Result, ResultModelAdmin)
+admin.site.register(Activity, ActivityModelAdmin)
 # admin.site.register(DocumentQuestionOnline, DocumentQuestionOnlineModelAdmin)
