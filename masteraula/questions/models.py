@@ -753,9 +753,9 @@ class ActivityManager(models.Manager):
         'parent', 'discipline', 'parent__parent', 'parent__discipline')
     )
 
-    # labels_prefetch = Prefetch('labels', queryset=Label.objects.prefetch_related('question_set').select_related(
-    #     'owner'
-    # ))
+    labels_prefetch = Prefetch('labels', queryset=Label.objects.prefetch_related('question_set').select_related(
+        'owner'
+    ))
 
     def get_activities_prefetched(self, topics=True):
         learning_object_prefetch = Prefetch('learning_objects', queryset=LearningObject.objects.select_related('owner').prefetch_related(
@@ -764,7 +764,7 @@ class ActivityManager(models.Manager):
 
         qs = self.all().select_related('owner').prefetch_related(
             'tags', 'disciplines', 'teaching_levels', 'tasks',
-            learning_object_prefetch
+            self.labels_prefetch, learning_object_prefetch
         )
         if topics:
             qs = qs.prefetch_related(self.topics_prefetch)
@@ -772,7 +772,7 @@ class ActivityManager(models.Manager):
 
     def get_activities_update_index(self, topics=True):
         qs = self.all().select_related('owner').prefetch_related(
-            'tags', 'alternatives', 'disciplines', 'teaching_levels', 'learning_objects', 'learning_objects__tags', 'labels',
+            'tags', 'tasks', 'disciplines', 'teaching_levels', 'learning_objects', 'learning_objects__tags', 'labels',
         )
         if topics:
             qs = qs.prefetch_related(self.topics_prefetch)
@@ -794,6 +794,7 @@ class Activity(models.Model):
     teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)
     topics = models.ManyToManyField(Topic, blank=True)
     tags = TaggableManager(blank=True)
+    labels = models.ManyToManyField(Label, blank=True)
 
     disabled = models.BooleanField(null=False, blank=True, default=False)
     secret = models.BooleanField(null=False, blank=True, default=False)

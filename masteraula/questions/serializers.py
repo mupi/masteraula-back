@@ -1644,7 +1644,8 @@ class ActivitySerializer(serializers.ModelSerializer):
 
             'tasks',
 
-            'tags',   
+            'tags',  
+            'labels', 
             'disabled',
             'secret',
 
