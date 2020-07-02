@@ -788,7 +788,7 @@ class Activity(models.Model):
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     create_date = models.DateTimeField(auto_now_add=True)
-    learning_objects = models.ManyToManyField(LearningObject, related_name='activity_obj', blank=True)
+    learning_objects = models.ManyToManyField(LearningObject, related_name='activities', blank=True)
     difficulty = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)
     disciplines = models.ManyToManyField(Discipline, blank=True)
     teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)

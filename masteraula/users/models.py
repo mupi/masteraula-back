@@ -13,9 +13,6 @@ from django.conf import settings
 import datetime
 from dateutil import relativedelta
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
 #populated by fixture
 class State (models.Model):
     uf = models.CharField(max_length=2, primary_key=True)
@@ -77,18 +74,7 @@ class Profile(models.Model):
     def __str__(self):
         return u'Profile de %s' % (self.user.username)
 
-from masteraula.questions.models import Question, Label
-
-@receiver(post_save, sender=User)
-def update_label(sender, instance, created, **kwargs):
-    if created:
-        label = Label.objects.filter(owner=instance, name="Favoritos")
-        if not label:
-            question = Question.objects.filter(disabled=False).first()
-            label1 = Label.objects.create(owner=instance, name="Favoritos", color="#9AEE2E")
-            label2 = Label.objects.create(owner=instance, name="Ver Mais Tarde", color="#FC1979")
-            question.labels.add(label1, label2)
-            question.save()
+from masteraula.questions.models import Question
 
 class QuestionTransaction(models.Model):
     user = models.ForeignKey('Profile', on_delete=models.CASCADE)

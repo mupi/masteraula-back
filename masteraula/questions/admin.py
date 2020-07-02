@@ -132,7 +132,7 @@ class ActivityTopicsInline(admin.StackedInline):
     extra = 1
 
 class ActivityLearningObjectInline(admin.TabularInline):
-    model = LearningObject.activity_obj.through
+    model = LearningObject.activities.through
 
     show_change_link = True
     raw_id_fields = ('learningobject',)
