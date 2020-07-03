@@ -1,0 +1,28 @@
+{% load search_helpers %}
+
+{{ object.owner.name|stripaccents }}
+
+{% for tag in object.tags.all %}
+    {{ tag.name|stripaccents }}
+{% endfor %}
+
+{% for topic in object.get_all_topics %}
+    {{ topic.name|stripaccents }}
+    {% for synonym in topic.synonym_set.all %}
+        {{ synonym.term|stripaccents }}
+    {% endfor %}
+{% endfor %}
+
+{% for lo in object.learning_objects.all %}
+    {{ lo.source|stripaccents }}
+    {{ lo.text|stripaccents }}
+    {% for tag in lo.tags.all %}
+        {{ tag.name|stripaccents }}
+    {% endfor %}
+{% endfor %}
+
+{% for lo in object.tasks.all %}
+    {{ lo.description_task|stripaccents }}
+    {{ lo.student_expectation|stripaccents }}
+    {{ lo.teacher_expectation|stripaccents }}    
+{% endfor %}
