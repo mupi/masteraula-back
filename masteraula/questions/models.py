@@ -777,6 +777,33 @@ class ActivityManager(models.Manager):
         if topics:
             qs = qs.prefetch_related(self.topics_prefetch)
         return qs
+    
+    def filter_activities_request(self, query_params):
+        queryset = self.get_activities_prefetched()
+        
+        disciplines = query_params.getlist('disciplines', None)
+        teaching_levels = query_params.getlist('teaching_levels', None)
+        difficulties = query_params.getlist('difficulties', None)
+        owner = query_params.get('owner', None)
+        topics = query_params.getlist('topics', None)
+        labels = query_params.getlist('labels', None)
+       
+        if disciplines:
+            queryset = queryset.filter(disciplines__in=disciplines)
+        if teaching_levels:
+            queryset = queryset.filter(teaching_levels__in=teaching_levels)
+        if difficulties:
+            queryset = queryset.filter(difficulty__in=difficulties)
+        if owner:
+            queryset = queryset.filter(owner__id=owner)
+        if topics:
+            for topic in topics:
+                queryset = queryset.filter(topics__id=topic)
+        if labels:
+            queryset = queryset.filter(labels__in=labels)
+        
+        queryset = queryset.distinct()
+        return queryset
 
 class Activity(models.Model):
     LEVEL_CHOICES = (

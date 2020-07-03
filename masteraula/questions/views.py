@@ -1014,13 +1014,16 @@ class ResultViewSet(viewsets.ModelViewSet):
         serializer.save(finish=datetime.datetime.now(), results= document)
 
 class ActivityViewSet(viewsets.ModelViewSet):
-    queryset = Activity.objects.get_activities_prefetched().order_by('-id')
     serializer_class = serializers.ActivitySerializer
     pagination_class = ActivityPagination
     permission_classes = (permissions.IsAuthenticated, )
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    def get_queryset(self):
+        queryset = Activity.objects.filter_activities_request(self.request.query_params)
+        return queryset.order_by('id')
 
 class ActivitySearchView(viewsets.ReadOnlyModelViewSet):   
     pagination_class = ActivityPagination
