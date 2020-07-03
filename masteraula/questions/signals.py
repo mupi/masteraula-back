@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from taggit.models import Tag, TaggedItemBase
-from .models import Question, LearningObject, Topic, Label
+from .models import Question, LearningObject, Topic, Label, Activity
 
 from ..users.models import User
 from django.db.models.signals import post_save, m2m_changed, post_delete, pre_save
 
 from django.dispatch import receiver
-from .search_indexes import QuestionIndex, LearningObjectIndex
-from .tasks import update_question_index, update_learning_object_index, update_questions_topic
+from .search_indexes import QuestionIndex, LearningObjectIndex, ActivityIndex
+from .tasks import update_question_index, update_learning_object_index, update_questions_topic, update_activities_topic, update_activity_index
 
 @receiver(pre_save, sender=User)
 def update_username_same_email(sender, instance, **kwargs):
@@ -52,3 +52,12 @@ def learning_object_post_delete(sender, instance, **kwargs):
 @receiver(post_save, sender=Topic)
 def topic_post_save(sender, instance, **kwargs):
     update_questions_topic.apply_async((instance.id,), countdown=5)
+    update_activities_topic.apply_async((instance.id,), countdown=5)
+
+@receiver(post_save, sender=Activity)
+def activity_post_save(sender, instance, **kwargs):
+    update_activity_index.apply_async((instance.id,), countdown=5)
+
+@receiver(post_delete, sender=Activity)
+def activity_post_delete(sender, instance, **kwargs):
+    ActivityIndex().remove_object(instance)

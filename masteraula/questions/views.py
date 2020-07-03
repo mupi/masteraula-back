@@ -35,7 +35,7 @@ from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
-from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex
+from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex, ActivityIndex
 from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission, ClassPlanPermission
 from . import serializers as serializers
 
@@ -375,7 +375,7 @@ class LabelViewSet(viewsets.ModelViewSet):
 
         headers = self.get_success_headers(list_label.data)
         return Response(list_label.data, status=status.HTTP_201_CREATED, headers=headers)
-    
+       
     @detail_route(methods=['post'])
     def remove_question(self, request, pk=None):
         label = self.get_object()
@@ -1021,3 +1021,37 @@ class ActivityViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+class ActivitySearchView(viewsets.ReadOnlyModelViewSet):   
+    pagination_class = ActivityPagination
+    serializer_class = serializers.ActivitySerializer
+    permission_classes = (permissions.IsAuthenticated,) 
+     
+    def paginate_queryset(self, search_queryset):
+        page = super().paginate_queryset(search_queryset)
+        activities_ids = [res.pk for res in page]
+
+        queryset = Activity.objects.get_activities_prefetched().filter(disabled=False, id__in=activities_ids).order_by('id')
+        order = Case(*[When(id=id, then=pos) for pos, id in enumerate(activities_ids)])
+        queryset = queryset.order_by(order)
+
+        return queryset
+
+    def get_queryset(self):
+        text = self.request.GET.get('text', None)
+
+        if not text:
+            raise exceptions.ValidationError("Invalid search text")
+        text = prepare_document(text)
+        text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
+        
+        if not text:
+            raise exceptions.ValidationError("Invalid search text")
+
+        search_queryset = ActivityIndex.filter_activity_search(text, self.request.query_params)
+
+        disciplines = self.request.query_params.getlist('disciplines', None)
+        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
+        difficulties = self.request.query_params.getlist('difficulties', None)
+        
+        return search_queryset
