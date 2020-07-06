@@ -845,7 +845,7 @@ class Activity(models.Model):
 class Task(models.Model):
     description_task = models.TextField()
     student_expectation = models.TextField()
-    teacher_expectation = models.TextField()
+    teacher_expectation = models.TextField(null=True, blank=True)
    
     activity = models.ForeignKey(Activity, related_name='tasks', on_delete=models.CASCADE)
 
