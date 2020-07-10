@@ -296,9 +296,6 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.LearningObjectSerializer
     permission_classes = (permissions.IsAuthenticated, LearningObjectPermission, )
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
     def paginate_queryset(self, search_queryset):
         search_queryset = search_queryset.load_all()
 
@@ -405,7 +402,7 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
         learning_object = get_object_or_404(self.get_queryset(), pk=pk)
         serializer_learningobject = self.serializer_class(learning_object, context=self.get_serializer_context())
 
-        questions_object = Question.objects.filter(learning_objqects__id=pk).filter(disabled=False).order_by('-create_date')
+        questions_object = Question.objects.filter(learning_objects__id=pk).filter(disabled=False).order_by('-create_date')
         serializer_questions = serializers.QuestionSerializer(questions_object, many = True, context=self.get_serializer_context())
 
         return_data = serializer_learningobject.data
