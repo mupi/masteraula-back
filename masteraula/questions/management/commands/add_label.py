@@ -27,4 +27,7 @@ class Command(BaseCommand):
                 label2 = Label.objects.create(owner=u, name="Ver Mais Tarde", color="#FC1979")
                 question.labels.add(label2)
 
+            print("Criando a label para o usuário :" + str(u.id))
             question.save()
+        
+        print("Etiquetas criadas. Fim!")
