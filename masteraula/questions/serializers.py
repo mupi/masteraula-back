@@ -134,10 +134,6 @@ class LearningObjectSerializer(serializers.ModelSerializer):
 
         extra_kwargs = {
             'owner' : { 'read_only' : True },
-            'source': { 'read_only' : True },
-            'image': { 'read_only' : True },
-            'text': { 'read_only' : True },
-            'object_types': { 'read_only' : True },
         }            
     
     def get_questions_quantity(self, obj):
@@ -150,23 +146,54 @@ class LearningObjectSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         tags = validated_data.pop('tags', None)
         learning_object = super().create(validated_data)
-
+        data = self.context.get('request').data
+        
         if tags != None:
             for t in [tag for tag in tags if tag != '']:
                 learning_object.tags.add(t)
         
+        else:  
+            for key, val in data.items():
+                if key.startswith('tags'):
+                    learning_object.tags.add(val)
+        
+        type_obj = []
+        if 'image' in data:
+            type_obj += "I"
+
+        if data['text'] != "":
+            type_obj += "T"
+
+        learning_object.object_types = type_obj
+        learning_object.save()
+            
         return learning_object
 
     def update(self, instance, validated_data):
         tags = validated_data.pop('tags', None)
-
         learning_object = super().update(instance, validated_data)
+        data = self.context.get('request').data
 
+        learning_object.tags.clear()
         if tags != None:
-            learning_object.tags.clear()
             for t in [tag for tag in tags if tag.strip() != '']:
                 learning_object.tags.add(t)
+        
+        else:
+            for key, val in data.items():
+                if key.startswith('tags'):
+                    learning_object.tags.add(val)
 
+        type_obj = []
+        if 'image' in data:
+            type_obj += "I"
+
+        if data['text'] != "":
+            type_obj += "T"
+
+        learning_object.object_types = type_obj
+        learning_object.save()
+        
         return learning_object
 
 class TopicListSerializer(serializers.ModelSerializer):
