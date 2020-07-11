@@ -388,6 +388,29 @@ class LabelViewSet(viewsets.ModelViewSet):
 
         return Response(status = status.HTTP_204_NO_CONTENT)
 
+    @detail_route(methods=['post'])
+    def add_activity(self, request, pk=None):
+        label = self.get_object()
+        serializer = serializers.ActivityLabelSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        activity_label = serializer.save(label=label)
+        activity_label.activity = Activity.objects.get_activities_prefetched().get(id=activity_label.activity_id)
+
+        list_label = serializers.ActivityLabelListDetailSerializer(activity_label)
+
+        headers = self.get_success_headers(list_label.data)
+        return Response(list_label.data, status=status.HTTP_201_CREATED, headers=headers)
+       
+    @detail_route(methods=['post'])
+    def remove_activity(self, request, pk=None):
+        label = self.get_object()
+
+        serializer = serializers.ActivityLabelSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        activity = serializer.validated_data['activity']
+        label.remove_activity(activity)
+
+        return Response(status = status.HTTP_204_NO_CONTENT)
 
 class LearningObjectViewSet(viewsets.ModelViewSet):
     queryset = LearningObject.objects.all()

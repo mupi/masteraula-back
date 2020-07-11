@@ -1751,3 +1751,44 @@ class ActivitySerializer(serializers.ModelSerializer):
                 Task.objects.create(activity=activity, **t)
                 
         return Activity.objects.get_activities_prefetched().get(id=activity.id)
+
+class ActivityLabelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Label.activity_set.through
+        fields = (
+            'id',
+            'activity',
+            'label',
+        )
+        extra_kwargs = {
+            'label' : { 'read_only' : True }
+        }
+
+    def validate_activity(self, data):
+        if data.disabled:
+            raise serializers.ValidationError(_("This activity is disabled"))
+        return data
+    
+    def create(self, validated_data):
+        label = validated_data['label']
+        try:
+            return label.activity_set.through.get(activity_id=validated_data['activity'].id)
+        except:
+            activityLabel = label.add_activity(validated_data['activity'])
+            return activityLabel
+
+class ActivityLabelListDetailSerializer(serializers.ModelSerializer):
+    activity = ActivitySerializer(read_only=True)
+    label = LabelSerializer(read_only=True)
+
+    class Meta:
+        model = Label.activity_set.through
+       
+        fields = (
+            'id',
+            'activity',
+            'label',
+        )
+        extra_kwargs = {
+            'label' : { 'read_only' : True }
+        }

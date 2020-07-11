@@ -88,6 +88,13 @@ class Label(models.Model):
 
     def remove_question(self, question):
         self.question_set.remove(question.id)
+    
+    def add_activity(self, activity):
+        self.activity_set.add(activity)
+        return Label.activity_set.through.objects.get(activity=activity, label=self)
+
+    def remove_activity(self, activity):
+        self.activity_set.remove(activity.id)
 
 class SynonymManager(models.Manager):
     topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
