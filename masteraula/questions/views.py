@@ -248,6 +248,7 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
     def related_topics(self, request):
         text = request.query_params.get('text', None)
         topics = request.query_params.getlist('topics', [])
+        activities = request.query_params.getlist('activities', None)
        
         if text:
             text = prepare_document(text)
@@ -256,12 +257,21 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
             if not text:
                 raise exceptions.ValidationError("Invalid search text")
 
-            search_queryset = QuestionIndex.filter_question_search(text, request.query_params)
-            questions_ids = [q.pk for q in search_queryset[:]]
+            if activities:
+                search_queryset = ActivityIndex.filter_activity_search(text, request.query_params)
+                questions_ids = [q.pk for q in search_queryset[:]]
+                questions = Activity.objects.prefetch_related(
+                    Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
+                ).filter(id__in=questions_ids)
 
-            questions = Question.objects.prefetch_related(
-                Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
-            ).filter(id__in=questions_ids)
+            else:
+                search_queryset = QuestionIndex.filter_question_search(text, request.query_params)
+                questions_ids = [q.pk for q in search_queryset[:]]
+                
+                questions = Question.objects.prefetch_related(
+                    Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
+                ).filter(id__in=questions_ids)
+
             topics_dict = {}
             for question in questions.only('topics__id', 'topics__name'):
                 for topic in question.topics.all():
@@ -277,7 +287,10 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = sorted(topics_list, key=lambda x : x['num_questions'], reverse=True)
 
         else:
-            questions = Question.objects.filter_questions_request(self.request.query_params).filter(disabled=False)
+            if activities:
+                questions = Activity.objects.filter_activities_request(self.request.query_params).filter(disabled=False)
+            else:
+                questions = Question.objects.filter_questions_request(self.request.query_params).filter(disabled=False)
 
             questions = questions.filter(topics=OuterRef('pk')).values('topics')
             total_question = questions.annotate(cnt=Count('pk')).values('cnt')
