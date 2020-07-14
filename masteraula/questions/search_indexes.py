@@ -208,6 +208,7 @@ class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
     disciplines = indexes.MultiValueField()
     teaching_levels = indexes.MultiValueField()
     labels = indexes.MultiValueField()
+    year = indexes.CharField(null=True)
 
     difficulty = indexes.CharField()
     owner = indexes.CharField(model_attr='owner')
@@ -231,6 +232,9 @@ class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
     
     def prepare_topics_ids(self, obj):
         return [ topic.pk for topic in obj.get_all_topics() ]
+
+    def prepare_topics_ids(self, obj):
+        return str(obj.create_date.year)
 
     def prepare_tags(self, obj):
         return ' '.join([ stripaccents(tag.name) for tag in obj.tags.all() ])

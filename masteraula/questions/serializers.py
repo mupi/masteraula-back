@@ -161,8 +161,9 @@ class LearningObjectSerializer(serializers.ModelSerializer):
         if 'image' in data:
             type_obj += "I"
 
-        if data['text'] != "":
-            type_obj += "T"
+        if 'text' in data:
+            if data['text'] != "":
+                type_obj += "T"
 
         learning_object.object_types = type_obj
         learning_object.save()
@@ -188,8 +189,9 @@ class LearningObjectSerializer(serializers.ModelSerializer):
         if 'image' in data:
             type_obj += "I"
 
-        if data['text'] != "":
-            type_obj += "T"
+        if 'text' in data:
+            if data['text'] != "":
+                type_obj += "T"
 
         learning_object.object_types = type_obj
         learning_object.save()

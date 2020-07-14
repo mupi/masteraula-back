@@ -794,7 +794,8 @@ class ActivityManager(models.Manager):
         owner = query_params.get('owner', None)
         topics = query_params.getlist('topics', None)
         labels = query_params.getlist('labels', None)
-       
+        years = query_params.get('years', None)
+        
         if disciplines:
             queryset = queryset.filter(disciplines__in=disciplines)
         if teaching_levels:
@@ -808,6 +809,8 @@ class ActivityManager(models.Manager):
                 queryset = queryset.filter(topics__id=topic)
         if labels:
             queryset = queryset.filter(labels__in=labels)
+        if years:
+            queryset = queryset.filter(create_date__year=int(years))
         
         queryset = queryset.distinct()
         return queryset
