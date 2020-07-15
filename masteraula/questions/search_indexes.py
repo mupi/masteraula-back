@@ -233,7 +233,7 @@ class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_topics_ids(self, obj):
         return [ topic.pk for topic in obj.get_all_topics() ]
 
-    def prepare_topics_ids(self, obj):
+    def prepare_year(self, obj):
         return str(obj.create_date.year)
 
     def prepare_tags(self, obj):

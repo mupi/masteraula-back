@@ -438,11 +438,24 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
         learning_object = get_object_or_404(self.get_queryset(), pk=pk)
         serializer_learningobject = self.serializer_class(learning_object, context=self.get_serializer_context())
 
-        questions_object = Question.objects.filter(learning_objects__id=pk).filter(disabled=False).order_by('-create_date')
+        questions_object = Question.objects.get_questions_prefetched().filter(learning_objects__id=pk).filter(disabled=False).order_by('-create_date').order_by('?')
+        activities_object = Activity.objects.get_activities_prefetched().filter(learning_objects__id=pk).filter(disabled=False).order_by('-create_date').order_by('?')
+
+        if len(questions_object) >= 4 and len(activities_object) >= 4:
+            questions_object = questions_object[:4]
+            activities_object = activities_object[:4]
+        else:
+            if len(questions_object) < 4:
+                activities_object = activities_object[:(8 - len(questions_object))]
+            if len(activities_object) < 4:
+                questions_object = questions_object[:(8 - len(activities_object))]
+
         serializer_questions = serializers.QuestionSerializer(questions_object, many = True, context=self.get_serializer_context())
+        serializer_activities = serializers.ActivitySerializer(activities_object, many = True, context=self.get_serializer_context())
 
         return_data = serializer_learningobject.data
         return_data['questions'] = serializer_questions.data
+        return_data['activities'] = serializer_activities.data
 
         return Response(return_data)
 
