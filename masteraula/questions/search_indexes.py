@@ -265,7 +265,7 @@ class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
         disciplines = query_params.getlist('disciplines', None)
         teaching_levels = query_params.getlist('teaching_levels', None)
         difficulties = query_params.getlist('difficulties', None)
-        owner = query_params.get('owner', None)
+        owner = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
         labels = query_params.getlist('labels', None)
 
