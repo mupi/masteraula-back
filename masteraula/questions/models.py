@@ -262,6 +262,7 @@ class LearningObject(models.Model):
     object_types = ArrayField(
         models.CharField(max_length=1, choices = TYPE_CHOICES, blank=True)
     )
+    disabled = models.BooleanField(null=False, blank=True, default=False)
 
     tags = TaggableManager(blank=True)
 
@@ -791,7 +792,7 @@ class ActivityManager(models.Manager):
         disciplines = query_params.getlist('disciplines', None)
         teaching_levels = query_params.getlist('teaching_levels', None)
         difficulties = query_params.getlist('difficulties', None)
-        owner = query_params.get('owner', None)
+        owner = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
         labels = query_params.getlist('labels', None)
         years = query_params.get('years', None)
