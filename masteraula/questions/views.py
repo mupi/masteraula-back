@@ -1065,13 +1065,18 @@ class ResultViewSet(viewsets.ModelViewSet):
 class ActivityViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ActivitySerializer
     pagination_class = ActivityPagination
-    permission_classes = (permissions.IsAuthenticated, )
+    permission_classes = (permissions.IsAuthenticated, QuestionPermission)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
     def get_queryset(self):
+        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+            return Activity.objects.all()
+
         queryset = Activity.objects.filter_activities_request(self.request.query_params)
+        if self.action == 'list':
+            queryset = queryset.filter(disabled=False).order_by('id')
         return queryset.order_by('id')
 
 class ActivitySearchView(viewsets.ReadOnlyModelViewSet):   
