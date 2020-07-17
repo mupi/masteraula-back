@@ -168,13 +168,18 @@ class QuestionViewSet(viewsets.ModelViewSet):
         return_data = serializer_question.data
         return_data['documents'] = serializer_documents.data
 
-        related_questions = RelatedQuestions().similar_questions(question)
-        order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_questions)])
+        related_material = RelatedQuestions().similar_questions(question)
+        order_questions = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_material[0])])
+        order_activities = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_material[1])])
 
-        questions_object = Question.objects.get_questions_prefetched().filter(id__in=related_questions).order_by(order)
+        questions_object = Question.objects.get_questions_prefetched().filter(id__in=related_material[0]).order_by(order_questions)
         serializer_questions = serializers.QuestionSerializer(questions_object, many=True, context=self.get_serializer_context())
 
+        activities_object = Activity.objects.get_activities_prefetched().filter(id__in=related_material[1]).order_by(order_activities)
+        serializer_activities = serializers.ActivitySerializer(activities_object, many=True, context=self.get_serializer_context())
+
         return_data['related_questions'] = serializer_questions.data
+        return_data['related_activities'] = serializer_activities.data
     
         return Response(return_data)
 
@@ -1078,6 +1083,33 @@ class ActivityViewSet(viewsets.ModelViewSet):
         if self.action == 'list':
             queryset = queryset.filter(disabled=False).order_by('id')
         return queryset.order_by('id')
+    
+    def retrieve(self, request, pk=None):
+        activity = get_object_or_404(self.get_queryset(), pk=pk)
+        serializer_activity = self.serializer_class(activity, context=self.get_serializer_context())
+
+        return_data = serializer_activity.data
+
+        related_material = RelatedQuestions().similar_questions(activity, activity=True)
+        order_questions = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_material[0])])
+        order_activities = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_material[1])])
+
+        questions_object = Question.objects.get_questions_prefetched().filter(id__in=related_material[0]).order_by(order_questions)
+        serializer_questions = serializers.QuestionSerializer(questions_object, many=True, context=self.get_serializer_context())
+
+        activities_object = Activity.objects.get_activities_prefetched().filter(id__in=related_material[1]).order_by(order_activities)
+        serializer_activities = serializers.ActivitySerializer(activities_object, many=True, context=self.get_serializer_context())
+
+        return_data['related_questions'] = serializer_questions.data
+        return_data['related_activities'] = serializer_activities.data
+    
+        return Response(return_data)
+    
+    def destroy(self, request, pk=None):
+        activity = self.get_object()
+        activity.disabled = True
+        activity.save()
+        return Response(status = status.HTTP_204_NO_CONTENT)
 
 class ActivitySearchView(viewsets.ReadOnlyModelViewSet):   
     pagination_class = ActivityPagination
