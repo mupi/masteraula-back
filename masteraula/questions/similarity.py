@@ -29,7 +29,6 @@ class RelatedQuestions():
 
         # Get activities similar
         activities = Activity.objects.filter(topics__in=question.get_all_topics()).order_by('?')
-        print("TEste aqui", len(activities))
         disciplines_act = Activity.objects.filter(disciplines__in=question.disciplines.all()).exclude(id__in=activities).order_by('?')
         list_activity = []
 
