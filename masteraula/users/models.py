@@ -13,7 +13,6 @@ from django.conf import settings
 import datetime
 from dateutil import relativedelta
 
-
 #populated by fixture
 class State (models.Model):
     uf = models.CharField(max_length=2, primary_key=True)

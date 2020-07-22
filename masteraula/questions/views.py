@@ -26,7 +26,7 @@ from masteraula.users.models import User
 
 from .models import (Question, Document, Alternative, Discipline, TeachingLevel, DocumentQuestion, Header, 
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, DocumentOnline, DocumentQuestionOnline, Result)
+                    Synonym, Label, Link, TeachingYear, ClassPlan, Station,FaqCategory, DocumentOnline, DocumentQuestionOnline, Result, Task, Activity,)
 
 from .models import DocumentLimitExceedException
 
@@ -35,7 +35,7 @@ from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
-from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex
+from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex, ActivityIndex
 from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission, ClassPlanPermission
 from . import serializers as serializers
 
@@ -57,6 +57,11 @@ class DocumentCardPagination(pagination.PageNumberPagination):
     max_page_size = 64
 
 class QuestionPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 16
+    max_page_size = 64
+
+class ActivityPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 16
     max_page_size = 64
@@ -163,13 +168,18 @@ class QuestionViewSet(viewsets.ModelViewSet):
         return_data = serializer_question.data
         return_data['documents'] = serializer_documents.data
 
-        related_questions = RelatedQuestions().similar_questions(question)
-        order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_questions)])
+        related_material = RelatedQuestions().similar_questions(question)
+        order_questions = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_material[0])])
+        order_activities = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_material[1])])
 
-        questions_object = Question.objects.get_questions_prefetched().filter(id__in=related_questions).order_by(order)
+        questions_object = Question.objects.get_questions_prefetched().filter(id__in=related_material[0]).order_by(order_questions)
         serializer_questions = serializers.QuestionSerializer(questions_object, many=True, context=self.get_serializer_context())
 
+        activities_object = Activity.objects.get_activities_prefetched().filter(id__in=related_material[1]).order_by(order_activities)
+        serializer_activities = serializers.ActivitySerializer(activities_object, many=True, context=self.get_serializer_context())
+
         return_data['related_questions'] = serializer_questions.data
+        return_data['related_activities'] = serializer_activities.data
     
         return Response(return_data)
 
@@ -243,6 +253,7 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
     def related_topics(self, request):
         text = request.query_params.get('text', None)
         topics = request.query_params.getlist('topics', [])
+        activities = request.query_params.getlist('activities', None)
        
         if text:
             text = prepare_document(text)
@@ -251,12 +262,21 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
             if not text:
                 raise exceptions.ValidationError("Invalid search text")
 
-            search_queryset = QuestionIndex.filter_question_search(text, request.query_params)
-            questions_ids = [q.pk for q in search_queryset[:]]
+            if activities:
+                search_queryset = ActivityIndex.filter_activity_search(text, request.query_params)
+                questions_ids = [q.pk for q in search_queryset[:]]
+                questions = Activity.objects.prefetch_related(
+                    Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
+                ).filter(id__in=questions_ids)
 
-            questions = Question.objects.prefetch_related(
-                Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
-            ).filter(id__in=questions_ids)
+            else:
+                search_queryset = QuestionIndex.filter_question_search(text, request.query_params)
+                questions_ids = [q.pk for q in search_queryset[:]]
+                
+                questions = Question.objects.prefetch_related(
+                    Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
+                ).filter(id__in=questions_ids)
+
             topics_dict = {}
             for question in questions.only('topics__id', 'topics__name'):
                 for topic in question.topics.all():
@@ -272,7 +292,10 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = sorted(topics_list, key=lambda x : x['num_questions'], reverse=True)
 
         else:
-            questions = Question.objects.filter_questions_request(self.request.query_params).filter(disabled=False)
+            if activities:
+                questions = Activity.objects.filter_activities_request(self.request.query_params).filter(disabled=False)
+            else:
+                questions = Question.objects.filter_questions_request(self.request.query_params).filter(disabled=False)
 
             questions = questions.filter(topics=OuterRef('pk')).values('topics')
             total_question = questions.annotate(cnt=Count('pk')).values('cnt')
@@ -323,7 +346,7 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
 
         params = {}
         if filters:
-            params['object_types__contains'] = filters
+            params['object_types'] = filters
 
         start_offset = (page_no - 1) * 16
 
@@ -370,7 +393,7 @@ class LabelViewSet(viewsets.ModelViewSet):
 
         headers = self.get_success_headers(list_label.data)
         return Response(list_label.data, status=status.HTTP_201_CREATED, headers=headers)
-    
+       
     @detail_route(methods=['post'])
     def remove_question(self, request, pk=None):
         label = self.get_object()
@@ -383,12 +406,35 @@ class LabelViewSet(viewsets.ModelViewSet):
 
         return Response(status = status.HTTP_204_NO_CONTENT)
 
+    @detail_route(methods=['post'])
+    def add_activity(self, request, pk=None):
+        label = self.get_object()
+        serializer = serializers.ActivityLabelSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        activity_label = serializer.save(label=label)
+        activity_label.activity = Activity.objects.get_activities_prefetched().get(id=activity_label.activity_id)
+
+        list_label = serializers.ActivityLabelListDetailSerializer(activity_label)
+
+        headers = self.get_success_headers(list_label.data)
+        return Response(list_label.data, status=status.HTTP_201_CREATED, headers=headers)
+       
+    @detail_route(methods=['post'])
+    def remove_activity(self, request, pk=None):
+        label = self.get_object()
+
+        serializer = serializers.ActivityLabelSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        activity = serializer.validated_data['activity']
+        label.remove_activity(activity)
+
+        return Response(status = status.HTTP_204_NO_CONTENT)
 
 class LearningObjectViewSet(viewsets.ModelViewSet):
     queryset = LearningObject.objects.all()
     serializer_class = serializers.LearningObjectSerializer
     pagination_class = LearningObjectPagination
-    permission_classes = (permissions.IsAuthenticated, permissions.DjangoModelPermissions, LearningObjectPermission, )
+    permission_classes = (permissions.IsAuthenticated, LearningObjectPermission, )
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -397,11 +443,24 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
         learning_object = get_object_or_404(self.get_queryset(), pk=pk)
         serializer_learningobject = self.serializer_class(learning_object, context=self.get_serializer_context())
 
-        questions_object = Question.objects.filter(learning_objects__id=pk).filter(disabled=False).order_by('-create_date')
+        questions_object = Question.objects.get_questions_prefetched().filter(learning_objects__id=pk).filter(disabled=False).order_by('-create_date').order_by('?')
+        activities_object = Activity.objects.get_activities_prefetched().filter(learning_objects__id=pk).filter(disabled=False).order_by('-create_date').order_by('?')
+
+        if len(questions_object) >= 4 and len(activities_object) >= 4:
+            questions_object = questions_object[:4]
+            activities_object = activities_object[:4]
+        else:
+            if len(questions_object) < 4:
+                activities_object = activities_object[:(8 - len(questions_object))]
+            if len(activities_object) < 4:
+                questions_object = questions_object[:(8 - len(activities_object))]
+
         serializer_questions = serializers.QuestionSerializer(questions_object, many = True, context=self.get_serializer_context())
+        serializer_activities = serializers.ActivitySerializer(activities_object, many = True, context=self.get_serializer_context())
 
         return_data = serializer_learningobject.data
         return_data['questions'] = serializer_questions.data
+        return_data['activities'] = serializer_activities.data
 
         return Response(return_data)
 
@@ -1007,3 +1066,81 @@ class ResultViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         document = DocumentOnline.objects.get(link=self.request.query_params['link'])
         serializer.save(finish=datetime.datetime.now(), results= document)
+
+class ActivityViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.ActivitySerializer
+    pagination_class = ActivityPagination
+    permission_classes = (permissions.IsAuthenticated, QuestionPermission)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    def get_queryset(self):
+        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+            return Activity.objects.all()
+
+        queryset = Activity.objects.filter_activities_request(self.request.query_params)
+        if self.action == 'list':
+            queryset = queryset.filter(disabled=False).order_by('id')
+        return queryset.order_by('id')
+    
+    def retrieve(self, request, pk=None):
+        activity = get_object_or_404(self.get_queryset(), pk=pk)
+        serializer_activity = self.serializer_class(activity, context=self.get_serializer_context())
+
+        return_data = serializer_activity.data
+
+        related_material = RelatedQuestions().similar_questions(activity, activity=True)
+        order_questions = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_material[0])])
+        order_activities = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_material[1])])
+
+        questions_object = Question.objects.get_questions_prefetched().filter(id__in=related_material[0]).order_by(order_questions)
+        serializer_questions = serializers.QuestionSerializer(questions_object, many=True, context=self.get_serializer_context())
+
+        activities_object = Activity.objects.get_activities_prefetched().filter(id__in=related_material[1]).order_by(order_activities)
+        serializer_activities = serializers.ActivitySerializer(activities_object, many=True, context=self.get_serializer_context())
+
+        return_data['related_questions'] = serializer_questions.data
+        return_data['related_activities'] = serializer_activities.data
+    
+        return Response(return_data)
+    
+    def destroy(self, request, pk=None):
+        activity = self.get_object()
+        activity.disabled = True
+        activity.save()
+        return Response(status = status.HTTP_204_NO_CONTENT)
+
+class ActivitySearchView(viewsets.ReadOnlyModelViewSet):   
+    pagination_class = ActivityPagination
+    serializer_class = serializers.ActivitySerializer
+    permission_classes = (permissions.IsAuthenticated,) 
+     
+    def paginate_queryset(self, search_queryset):
+        page = super().paginate_queryset(search_queryset)
+        activities_ids = [res.pk for res in page]
+
+        queryset = Activity.objects.get_activities_prefetched().filter(disabled=False, id__in=activities_ids).order_by('id')
+        order = Case(*[When(id=id, then=pos) for pos, id in enumerate(activities_ids)])
+        queryset = queryset.order_by(order)
+
+        return queryset
+
+    def get_queryset(self):
+        text = self.request.GET.get('text', None)
+
+        if not text:
+            raise exceptions.ValidationError("Invalid search text")
+        text = prepare_document(text)
+        text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
+        
+        if not text:
+            raise exceptions.ValidationError("Invalid search text")
+
+        search_queryset = ActivityIndex.filter_activity_search(text, self.request.query_params)
+
+        disciplines = self.request.query_params.getlist('disciplines', None)
+        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
+        difficulties = self.request.query_params.getlist('difficulties', None)
+        
+        return search_queryset

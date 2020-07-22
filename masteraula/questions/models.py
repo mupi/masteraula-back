@@ -88,6 +88,13 @@ class Label(models.Model):
 
     def remove_question(self, question):
         self.question_set.remove(question.id)
+    
+    def add_activity(self, activity):
+        self.activity_set.add(activity)
+        return Label.activity_set.through.objects.get(activity=activity, label=self)
+
+    def remove_activity(self, activity):
+        self.activity_set.remove(activity.id)
 
 class SynonymManager(models.Manager):
     topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
@@ -255,6 +262,7 @@ class LearningObject(models.Model):
     object_types = ArrayField(
         models.CharField(max_length=1, choices = TYPE_CHOICES, blank=True)
     )
+    disabled = models.BooleanField(null=False, blank=True, default=False)
 
     tags = TaggableManager(blank=True)
 
@@ -747,4 +755,109 @@ class DocumentQuestionOnline(models.Model):
         verbose_name_plural = "Document Question Online"
    
         ordering = ['order']
+
+class ActivityManager(models.Manager):
+    topics_prefetch = Prefetch('topics', queryset=Topic.objects.prefetch_related('synonym_set').select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')
+    )
+
+    labels_prefetch = Prefetch('labels', queryset=Label.objects.prefetch_related('question_set').select_related(
+        'owner'
+    ))
+
+    def get_activities_prefetched(self, topics=True):
+        learning_object_prefetch = Prefetch('learning_objects', queryset=LearningObject.objects.select_related('owner').prefetch_related(
+            'tags', 'questions'
+        ))
+
+        qs = self.all().select_related('owner').prefetch_related(
+            'tags', 'disciplines', 'teaching_levels', 'tasks',
+            self.labels_prefetch, learning_object_prefetch
+        )
+        if topics:
+            qs = qs.prefetch_related(self.topics_prefetch)
+        return qs
+
+    def get_activities_update_index(self, topics=True):
+        qs = self.all().select_related('owner').prefetch_related(
+            'tags', 'tasks', 'disciplines', 'teaching_levels', 'learning_objects', 'learning_objects__tags', 'labels',
+        )
+        if topics:
+            qs = qs.prefetch_related(self.topics_prefetch)
+        return qs
+    
+    def filter_activities_request(self, query_params):
+        queryset = self.get_activities_prefetched()
+        
+        disciplines = query_params.getlist('disciplines', None)
+        teaching_levels = query_params.getlist('teaching_levels', None)
+        difficulties = query_params.getlist('difficulties', None)
+        owner = query_params.get('author', None)
+        topics = query_params.getlist('topics', None)
+        labels = query_params.getlist('labels', None)
+        years = query_params.get('years', None)
+        
+        if disciplines:
+            queryset = queryset.filter(disciplines__in=disciplines)
+        if teaching_levels:
+            queryset = queryset.filter(teaching_levels__in=teaching_levels)
+        if difficulties:
+            queryset = queryset.filter(difficulty__in=difficulties)
+        if owner:
+            queryset = queryset.filter(owner__id=owner)
+        if topics:
+            for topic in topics:
+                queryset = queryset.filter(topics__id=topic)
+        if labels:
+            queryset = queryset.filter(labels__in=labels)
+        if years:
+            queryset = queryset.filter(create_date__year=int(years))
+        
+        queryset = queryset.distinct()
+        return queryset
+
+class Activity(models.Model):
+    LEVEL_CHOICES = (
+        ('', _('None')),
+        ('E', _('Easy')),
+        ('M', _('Medium')),
+        ('H', _('Hard'))
+    )
+
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    create_date = models.DateTimeField(auto_now_add=True)
+    learning_objects = models.ManyToManyField(LearningObject, related_name='activities', blank=True)
+    difficulty = models.CharField(max_length=1, choices = LEVEL_CHOICES, null=True, blank=True)
+    disciplines = models.ManyToManyField(Discipline, blank=True)
+    teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)
+    topics = models.ManyToManyField(Topic, blank=True)
+    tags = TaggableManager(blank=True)
+    labels = models.ManyToManyField(Label, blank=True)
+
+    disabled = models.BooleanField(null=False, blank=True, default=False)
+    secret = models.BooleanField(null=False, blank=True, default=False)
+
+    objects = ActivityManager()
+
+
+    class Meta:
+        verbose_name = "Activity"
+        verbose_name_plural = "Activities"
+
+    def get_all_topics(self):
+        topics = []
+        new_topics = [t for t in self.topics.all()]
+        while new_topics:
+            parents_id = [t.parent for t in new_topics if t.parent]
+            topics = topics + new_topics
+            new_topics = parents_id
+        return list(set(topics))
+
+class Task(models.Model):
+    description_task = models.TextField()
+    student_expectation = models.TextField()
+    teacher_expectation = models.TextField(null=True, blank=True)
+   
+    activity = models.ForeignKey(Activity, related_name='tasks', on_delete=models.CASCADE)
+
 
