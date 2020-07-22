@@ -425,7 +425,7 @@ class DocumentQuestionOnlineModelAdmin(admin.ModelAdmin):
 
 class ActivityModelAdmin(ImportMixin, admin.ModelAdmin):
     raw_id_fields = ('owner', )
-    list_display = ('id', 'owner', 'quantity_task','tasks', 'tag_list', 'create_date', )
+    list_display = ('id', 'owner', 'quantity_task','tasks', 'tag_list', 'create_date', 'disabled', )
     search_fields = ('id', 'tags__name',)
     exclude = ('topics', 'learning_objects', )
 
