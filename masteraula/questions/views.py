@@ -346,7 +346,7 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
 
         params = {}
         if filters:
-            params['object_types__contains'] = filters
+            params['object_types'] = filters
 
         start_offset = (page_no - 1) * 16
 

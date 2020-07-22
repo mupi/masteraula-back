@@ -268,6 +268,7 @@ class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
         owner = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
         labels = query_params.getlist('labels', None)
+        years = query_params.getlist('years', None)
 
         params = {'disabled' : 'false'}
         if disciplines:
@@ -290,6 +291,8 @@ class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
             params['topics_ids'] = topics
         if labels:
             params['labels__in'] = labels
+        if years:
+            params['year__in'] = years
     
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
