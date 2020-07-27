@@ -518,31 +518,6 @@ class Station(models.Model):
     def __str__(self):
         return str(self.description_station)
 
-class ClassPlanManager(models.Manager):
-    topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
-        'parent', 'discipline', 'parent__parent', 'parent__discipline'))
-
-    learning_objects_prefetch = Prefetch(
-        'learning_objects',
-        queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags', 'questions')
-    )
-
-    documents_prefetch = Prefetch(
-        'documents',
-        queryset=Document.objects.all().select_related('owner').prefetch_related('questions')
-    )
-
-    stations_prefetch = Prefetch(
-        'stations',
-        queryset=Station.objects.all().select_related('plan').prefetch_related('question', 'document', 'learning_object')
-    )
-
-    def get_classplan_prefetched(self):
-        qs = self.all().select_related('owner').prefetch_related(
-            'disciplines', 'teaching_levels', 'links', 'teaching_years', self.learning_objects_prefetch, self.topics_prefetch, self.documents_prefetch, self.stations_prefetch
-        )
-        return qs
-
 class ClassPlan(models.Model):
 
     TYPE_PLAN = (
@@ -578,13 +553,8 @@ class ClassPlan(models.Model):
     disabled = models.BooleanField(null=False, blank=True, default=False)
     plan_type = models.CharField(max_length=1, choices = TYPE_PLAN, null=True, blank=True)
 
-    objects = ClassPlanManager()
-
     def __str__(self):
         return str(self.name)
-    
-    class Meta:
-        ordering = ['id']
 
 class Link(models.Model):
     link = models.TextField(max_length=2083, null=False, blank=False)
@@ -842,6 +812,9 @@ class Activity(models.Model):
     class Meta:
         verbose_name = "Activity"
         verbose_name_plural = "Activities"
+    
+    def __str__(self):
+        return str(self.id)
 
     def get_all_topics(self):
         topics = []
@@ -868,3 +841,69 @@ class Bncc(models.Model):
 
     def __str__(self):
         return str(self.name)
+
+class ClassPlanManager(models.Manager):
+    topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline'))
+
+    def get_classplan_prefetched(self):
+        qs = self.all().select_related('owner').prefetch_related(
+            'disciplines', 'teaching_levels', 'teaching_years', self.topics_prefetch
+        )
+        return qs
+
+class ClassPlanPublication(models.Model):
+    TYPE_PLAN = (
+            ('T', _('Traditional')),
+            ('S', _('Station')),
+        )
+
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    create_date = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=200)
+
+    disciplines = models.ManyToManyField(Discipline, blank=True)
+    teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)
+    topics = models.ManyToManyField(Topic, blank=True)
+    tags = TaggableManager(blank=True)
+    bncc = models.ManyToManyField(Bncc, blank=True)
+    teaching_years = models.ManyToManyField(TeachingYear, blank=True)
+    
+    documents = models.ManyToManyField(Document, related_name='class_plans_doc', blank=True)
+    documents_online = models.ManyToManyField(DocumentOnline, related_name='class_plans_doc_online', blank=True)
+    activities = models.ManyToManyField(Activity, related_name='class_plans_act', blank=True)
+    
+    duration = models.PositiveIntegerField(null=True, blank=True)
+    phases = models.TextField()
+    content = models.TextField(null=True, blank=True)
+    guidelines = models.TextField(null=True, blank=True)
+
+    disabled = models.BooleanField(null=False, blank=True, default=False)
+    plan_type = models.CharField(max_length=1, choices = TYPE_PLAN, null=True, blank=True)
+
+    objects = ClassPlanManager()
+
+    def __str__(self):
+        return str(self.name)
+    
+    class Meta:
+        ordering = ['id']
+
+class StationMaterial(models.Model):
+    name = models.CharField(max_length=100, null=False, blank=False)
+    description_station = models.TextField(null=False, blank=False)
+
+    document = models.ForeignKey(Document, related_name='plan_station_doc', null=True, blank=True)
+    document_online = models.ForeignKey(DocumentOnline, related_name='plan_station_doc_online', null=True, blank=True)
+    activity = models.ForeignKey(Activity, related_name='plan_station_activity', null=True, blank=True)
+
+    plan = models.ForeignKey('ClassPlanPublication', related_name='stations', on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.description_station)
+
+class ShareClassPlan(models.Model):
+    link = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL)
+    class_plan = models.ForeignKey(ClassPlanPublication, on_delete=models.CASCADE)
+    share_date = models.DateTimeField(auto_now_add=True)

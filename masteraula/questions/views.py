@@ -26,7 +26,7 @@ from masteraula.users.models import User
 
 from .models import (Question, Document, Alternative, Discipline, TeachingLevel, DocumentQuestion, Header, 
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label, Link, TeachingYear, ClassPlan, Station,FaqCategory, DocumentOnline, DocumentQuestionOnline, Result, Task, Activity, Bncc,)
+                    Synonym, Label, TeachingYear, ClassPlanPublication, FaqCategory, DocumentOnline, DocumentQuestionOnline, Result, Task, Activity, Bncc,)
 
 from .models import DocumentLimitExceedException
 
@@ -783,28 +783,19 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
             'topics': topic_serialzier.data
         })
 
-class StationViewSet(viewsets.ModelViewSet):
-    queryset = Station.objects.all()
-    serializer_class = serializers.StationSerializer
-    permission_classes = (permissions.IsAuthenticated, )
-
-class LinkViewSet(viewsets.ModelViewSet):
-    queryset = Link.objects.all()
-    serializer_class = serializers.LinkSerializer
-    pagination_class = None
-
 class TeachingYearViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TeachingYear.objects.all()
     serializer_class = serializers.TeachingYearSerializer
     pagination_class = None
 
-class ClassPlanViewSet(viewsets.ModelViewSet):
-    serializer_class = serializers.ClassPlanSerializer
+class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.ClassPlanPublicationSerializer
     pagination_class = ClassPlanPagination
-    permission_classes = (permissions.IsAuthenticated, ClassPlanPermission, )
+    # permission_classes = (permissions.IsAuthenticated, ClassPlanPermission, )
 
     def get_queryset(self):
-        queryset = ClassPlan.objects.get_classplan_prefetched().filter(owner=self.request.user, disabled=False)
+        # queryset = ClassPlanPublication.objects.get_classplan_prefetched().filter(owner=self.request.user, disabled=False)
+        queryset = ClassPlanPublication.objects.filter()
         return queryset
 
     def perform_create(self, serializer):
@@ -852,59 +843,59 @@ class ClassPlanViewSet(viewsets.ModelViewSet):
         self.pagination_class = ClassPlanPagination
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = serializers.ClassPlanSerializer(page, many=True)
+            serializer = serializers.ClassPlanPublicationSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        serializer = serializers.ClassPlanSerializer(queryset, many=True)
+        serializer = serializers.ClassPlanPublicationSerializer(queryset, many=True)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    @detail_route(methods=['post'])
-    def copy_plan(self, request, pk=None):
-        obj = self.get_object()
-        disciplines = [dis for dis in obj.disciplines.all()]
-        links = [lin for lin in obj.links.all()]
-        stations = [st for st in obj.stations.all()]
+    # @detail_route(methods=['post'])
+    # def copy_plan(self, request, pk=None):
+    #     obj = self.get_object()
+    #     disciplines = [dis for dis in obj.disciplines.all()]
+    #     links = [lin for lin in obj.links.all()]
+    #     stations = [st for st in obj.stations.all()]
 
-        obj.pk = None
-        obj.name = obj.name + ' (Cópia)'
-        obj.owner = self.request.user
-        obj.save()
+    #     obj.pk = None
+    #     obj.name = obj.name + ' (Cópia)'
+    #     obj.owner = self.request.user
+    #     obj.save()
 
-        for d in obj.documents.all():
-            if d.disabled == False:
-                obj.documents.add(d)
+    #     for d in obj.documents.all():
+    #         if d.disabled == False:
+    #             obj.documents.add(d)
        
-        obj.topics.add(*obj.topics.all())
-        obj.learning_objects.add(*obj.learning_objects.all())
-        obj.teaching_levels.add(*obj.teaching_levels.all())
-        obj.teaching_years.add(*obj.teaching_years.all())
-        obj.disciplines.add(*disciplines)
+    #     obj.topics.add(*obj.topics.all())
+    #     obj.learning_objects.add(*obj.learning_objects.all())
+    #     obj.teaching_levels.add(*obj.teaching_levels.all())
+    #     obj.teaching_years.add(*obj.teaching_years.all())
+    #     obj.disciplines.add(*disciplines)
 
-        new_links = []
-        for lin in links:
-            new_links.append(Link(link=lin.link, description_url=lin.description_url, plan=obj))
-        Link.objects.bulk_create(new_links)  
+    #     new_links = []
+    #     for lin in links:
+    #         new_links.append(Link(link=lin.link, description_url=lin.description_url, plan=obj))
+    #     Link.objects.bulk_create(new_links)  
 
-        new_stations = []
-        for st in stations:
-            learning_object = None
-            if st.learning_object:
-                learning_object = st.learning_object
+    #     new_stations = []
+    #     for st in stations:
+    #         learning_object = None
+    #         if st.learning_object:
+    #             learning_object = st.learning_object
             
-            question = None
-            if st.question:
-                question = st.question
+    #         question = None
+    #         if st.question:
+    #             question = st.question
             
-            document = None
-            if st.document:
-                document = st.document
+    #         document = None
+    #         if st.document:
+    #             document = st.document
 
-            new_stations.append(Station(description_station=st.description_station, learning_object=learning_object, question=question, document=document, plan=obj))
-        Station.objects.bulk_create(new_stations)  
+    #         new_stations.append(Station(description_station=st.description_station, learning_object=learning_object, question=question, document=document, plan=obj))
+    #     Station.objects.bulk_create(new_stations)  
 
-        serializer = serializers.ClassPlanSerializer(obj)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     serializer = serializers.ClassPlanPublicationSerializer(obj)
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class FaqCategoryViewSet(viewsets.ModelViewSet):
     queryset = FaqCategory.objects.all()

@@ -6,8 +6,8 @@ from import_export.formats import base_formats
 
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
                      Alternative, Document, DocumentQuestion, Header, Year, Source,Topic, Search,
-                     DocumentDownload, DocumentPublication, Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, FaqQuestion, DocumentOnline, Result, DocumentQuestionOnline, StudentAnswer,
-                     Task, Activity, Bncc)
+                     DocumentDownload, DocumentPublication, Synonym, Label, TeachingYear,FaqCategory, FaqQuestion, DocumentOnline, Result, DocumentQuestionOnline, StudentAnswer,
+                     Task, Activity, Bncc, ClassPlanPublication, StationMaterial)
 
 class BnccResource(resources.ModelResource):    
     class Meta:
@@ -141,31 +141,39 @@ class ActivityLearningObjectInline(admin.TabularInline):
     raw_id_fields = ('learningobject',)
     extra = 1
 
-class ClassPlanLearningObjectInline(admin.TabularInline):
-    model = LearningObject.plans_obj.through
-    show_change_link = True
-    raw_id_fields = ('learningobject',)
-    extra = 1
-
 class ClassPlanDocumentInline(admin.TabularInline):
-    model = Document.plans_doc.through
+    model = Document.class_plans_doc.through
     show_change_link = True
     raw_id_fields = ('document',)
     extra = 1
 
+class ClassPlanDocumentOnlineInline(admin.TabularInline):
+    model = DocumentOnline.class_plans_doc_online.through
+    show_change_link = True
+    raw_id_fields = ('documentonline',)
+    extra = 1
+
+class ClassPlanActivityInline(admin.TabularInline):
+    model = Activity.class_plans_act.through
+    show_change_link = True
+    raw_id_fields = ('activity',)
+    extra = 1
+
 class ClassPlanTopicsInline(admin.StackedInline):
-    model = ClassPlan.topics.through
+    model = ClassPlanPublication.topics.through
     raw_id_fields=('topic',)
 
     extra = 1
 
-class ClassPlanLinksInline(admin.TabularInline):
-    model = Link
+class ClassPlanBnccInline(admin.StackedInline):
+    model = ClassPlanPublication.bncc.through
+    raw_id_fields=('bncc',)
+
     extra = 1
 
 class ClassPlanStationsInline(admin.TabularInline):
-    model = Station
-    raw_id_fields = ('document', 'question', 'learning_object',)
+    model = StationMaterial
+    raw_id_fields = ('document', 'document_online', 'activity',)
     extra = 1
 
 class TopicChildsInline(admin.StackedInline):
@@ -365,25 +373,13 @@ class TeachingYearModelAdmin(admin.ModelAdmin):
     search_fields = ['id', 'name',]
     list_per_page = 100
 
-class LinkModelAdmin(admin.ModelAdmin):
-    raw_id_fields = ('plan', )
-    list_display = ('id', 'link',)
-    search_fields = ['id',]
-    list_per_page = 100
-
-class StationModelAdmin(admin.ModelAdmin):
-    raw_id_fields = ('plan','document', 'question', 'learning_object',)
-    list_display = ('id', 'description_station',)
-    search_fields = ['id',]
-    list_per_page = 100
-
-class ClassPlanModelAdmin(admin.ModelAdmin):
+class ClassPlanPublicationModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', )
     list_display = ('id', 'name', 'create_date', 'duration', 'disabled')
-    search_fields = ('id', 'name', 'description')
-    exclude = ('topics', 'learning_objects', 'links', 'documents')
+    search_fields = ('id', 'name')
+    exclude = ('topics', 'documents', 'bncc', 'activities', 'documents_online')
 
-    inlines = [ClassPlanStationsInline, ClassPlanDocumentInline, ClassPlanLearningObjectInline, ClassPlanLinksInline, ClassPlanTopicsInline]
+    inlines = [ClassPlanStationsInline, ClassPlanDocumentInline, ClassPlanTopicsInline, ClassPlanBnccInline, ClassPlanActivityInline, ClassPlanDocumentOnlineInline]
 
     list_per_page = 100
 
@@ -472,9 +468,7 @@ admin.site.register(DocumentDownload, DocumentDownloadModelAdmin)
 admin.site.register(DocumentPublication, DocumentPublicationModelAdmin)
 admin.site.register(Synonym, SynonymModelAdmin)
 admin.site.register(TeachingYear, TeachingYearModelAdmin)
-admin.site.register(ClassPlan, ClassPlanModelAdmin)
-admin.site.register(Link, LinkModelAdmin)
-admin.site.register(Station, StationModelAdmin)
+admin.site.register(ClassPlanPublication, ClassPlanPublicationModelAdmin)
 admin.site.register(FaqCategory, FaqCategoryModelAdmin)
 admin.site.register(DocumentOnline, DocumentOnlineModelAdmin)
 admin.site.register(Result, ResultModelAdmin)

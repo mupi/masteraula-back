@@ -25,7 +25,7 @@ from requests.exceptions import HTTPError
 from django.db.models import Count
 
 from .models import User, Profile, City, State, School, Subscription, Contact
-from masteraula.questions.models import Discipline, Question, Document, ClassPlan, DocumentDownload, LearningObject, Topic
+from masteraula.questions.models import Discipline, Question, Document, ClassPlanPublication, DocumentDownload, LearningObject, Topic
 
 class CitySerializer(serializers.ModelSerializer):
     class Meta:
@@ -476,7 +476,7 @@ class DashboardSerializer(serializers.ModelSerializer):
         return downloads
 
     def get_plans(self, obj):
-        plans = ClassPlan.objects.filter(owner=obj).count()
+        plans = ClassPlanPublication.objects.filter(owner=obj).count()
         return plans
 
     def get_total_questions(self, obj):

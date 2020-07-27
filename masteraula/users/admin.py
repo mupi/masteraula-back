@@ -15,7 +15,7 @@ from import_export.formats import base_formats
 
 from django.db.models import Q, Count
 
-from masteraula.questions.models import Question, Document, ClassPlan, DocumentDownload
+from masteraula.questions.models import Question, Document, DocumentDownload
 
 class SchoolInline(admin.TabularInline):
     model = User.schools.through
