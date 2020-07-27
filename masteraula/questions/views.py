@@ -26,7 +26,7 @@ from masteraula.users.models import User
 
 from .models import (Question, Document, Alternative, Discipline, TeachingLevel, DocumentQuestion, Header, 
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label, Link, TeachingYear, ClassPlan, Station,FaqCategory, DocumentOnline, DocumentQuestionOnline, Result, Task, Activity,)
+                    Synonym, Label, Link, TeachingYear, ClassPlan, Station,FaqCategory, DocumentOnline, DocumentQuestionOnline, Result, Task, Activity, Bncc,)
 
 from .models import DocumentLimitExceedException
 
@@ -212,6 +212,11 @@ class YearViewSet(viewsets.ReadOnlyModelViewSet):
 class SourceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Source.objects.all().order_by('name')
     serializer_class = serializers.SourceSerializer
+    pagination_class = None
+
+class BnccViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Bncc.objects.all().order_by('id')
+    serializer_class = serializers.BnccSerializer
     pagination_class = None
 
 class SynonymViewSet(viewsets.ReadOnlyModelViewSet):

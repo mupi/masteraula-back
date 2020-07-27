@@ -7,7 +7,11 @@ from import_export.formats import base_formats
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
                      Alternative, Document, DocumentQuestion, Header, Year, Source,Topic, Search,
                      DocumentDownload, DocumentPublication, Synonym, Label, Link, TeachingYear, ClassPlan, Station, FaqCategory, FaqQuestion, DocumentOnline, Result, DocumentQuestionOnline, StudentAnswer,
-                     Task, Activity)
+                     Task, Activity, Bncc)
+
+class BnccResource(resources.ModelResource):    
+    class Meta:
+        model = Bncc
 
 class SearchResource(resources.ModelResource):
     
@@ -46,7 +50,6 @@ class DocumentResource(resources.ModelResource):
                 'download_date': {'format': '%d/%m/%Y'},
                 }
            
-
     def dehydrate_document(self, documentDownload):
         return documentDownload.document.name
 
@@ -423,7 +426,7 @@ class DocumentQuestionOnlineModelAdmin(admin.ModelAdmin):
     list_display = ('id', 'document', 'score')
     list_per_page = 100
 
-class ActivityModelAdmin(ImportMixin, admin.ModelAdmin):
+class ActivityModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', )
     list_display = ('id', 'owner', 'quantity_task','tasks', 'tag_list', 'create_date', 'disabled', )
     search_fields = ('id', 'tags__name',)
@@ -445,6 +448,12 @@ class ActivityModelAdmin(ImportMixin, admin.ModelAdmin):
             return tasks[0].description_task[:75]
         else:
             return ""
+
+class BnccModelAdmin(ImportMixin, admin.ModelAdmin):
+    resource_class = BnccResource
+    list_display = ('id', 'name',)
+    search_fields = ['id', 'name',]
+    list_per_page = 100
 
 admin.site.register(Discipline, DisciplineModelAdmin)
 admin.site.register(Descriptor, DescriptorModelAdmin)
@@ -470,4 +479,5 @@ admin.site.register(FaqCategory, FaqCategoryModelAdmin)
 admin.site.register(DocumentOnline, DocumentOnlineModelAdmin)
 admin.site.register(Result, ResultModelAdmin)
 admin.site.register(Activity, ActivityModelAdmin)
+admin.site.register(Bncc, BnccModelAdmin)
 # admin.site.register(DocumentQuestionOnline, DocumentQuestionOnlineModelAdmin)

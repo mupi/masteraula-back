@@ -38,6 +38,8 @@ router.register(r'document_online', views.DocumentOnlineViewSet, base_name="docu
 router.register(r'results', views.ResultViewSet, base_name="results")
 router.register(r'activities/search', views.ActivitySearchView, base_name="activities-search")
 router.register(r'activities', views.ActivityViewSet, base_name="activities")
+router.register(r'bncc', views.BnccViewSet, base_name="bncc")
+
 
 urlpatterns = [
     url(r'^', include(router.urls)),

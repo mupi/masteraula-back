@@ -839,7 +839,6 @@ class Activity(models.Model):
 
     objects = ActivityManager()
 
-
     class Meta:
         verbose_name = "Activity"
         verbose_name_plural = "Activities"
@@ -860,4 +859,12 @@ class Task(models.Model):
    
     activity = models.ForeignKey(Activity, related_name='tasks', on_delete=models.CASCADE)
 
+class Bncc(models.Model):
+    name = models.CharField(max_length=100, null=False, blank=False)
+    
+    class Meta:
+        verbose_name = "Bncc"
+        verbose_name_plural = "BNCC"
 
+    def __str__(self):
+        return str(self.name)

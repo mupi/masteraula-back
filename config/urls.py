@@ -24,6 +24,7 @@ urlpatterns = [
     url(r'', include('masteraula.questions.urls', namespace='masteraula.questions')),
     url(r'', include('masteraula.users.urls', namespace='masteraula.users')),
     url(r'^reports/', include('masteraula.reports.urls', namespace='reports')),
+    url(r'^pages/', include('masteraula.pages.urls', namespace='pages')),
 
     # Workaround to deal with some urls https://github.com/Tivix/django-rest-auth/issues/292
     url(r'^auth/registration/account-email-verification-sent/', null_view, name='account_email_verification_sent'),

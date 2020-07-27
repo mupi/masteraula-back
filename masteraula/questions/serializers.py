@@ -27,7 +27,7 @@ from .models import (Discipline, TeachingLevel, LearningObject, Question,
                     Synonym, Label, ClassPlan, TeachingYear, Link, Station, 
                     FaqQuestion, FaqCategory, DocumentOnline,
                     Result, DocumentQuestionOnline, StudentAnswer,
-                    Task, Activity,)
+                    Task, Activity, Bncc)
 
 from django.db.models import Prefetch
 
@@ -1794,3 +1794,11 @@ class ActivityLabelListDetailSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'label' : { 'read_only' : True }
         }
+
+class BnccSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bncc
+        fields = (
+            'id',
+            'name',
+        )
