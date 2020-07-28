@@ -81,6 +81,25 @@ class ModelListSerializer(serializers.ListField):
             raise serializers.ValidationError('{} [{}]'.format(_("Id not presented: "), ', '.join(not_present_ids)))
         return qs
 
+class ModelListValueSerializer(serializers.ListField):
+    
+    def __init__(self, queryset, *args, **kwargs):
+        super().__init__(args, kwargs)
+        self.queryset = queryset
+
+    def to_internal_value(self, data):
+        if type(data) is not list:
+            raise serializers.ValidationError(_("Expected a list of data"))
+       
+        ids_list = list(set(data))
+        try:
+            ids_list = [_id for _id in ids_list]
+        except:
+            raise serializers.ValidationError(_("Expected a list valid primary keys"))
+        
+        qs = self.queryset.filter(link__in=ids_list)
+        return qs
+
 class DisciplineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Discipline
@@ -1437,7 +1456,6 @@ class ActivitySerializer(serializers.ModelSerializer):
             'labels', 
             'disabled',
             'secret',
-
         )
 
         depth = 1
@@ -1566,11 +1584,11 @@ class BnccSerializer(serializers.ModelSerializer):
 class StationMaterialSerializer(serializers.ModelSerializer):
     activity = ActivitySerializer(required=False, read_only= True)
     document = DocumentListInfoSerializer(required=False, read_only= True)
-    # document_online = DocumentOnlineSerializer(required=False, read_only= True)
+    document_online = DocumentOnlineListSerializer(required=False, read_only= True)
 
-    activities_ids = serializers.IntegerField(required=False, allow_null=True)
+    activity_ids = serializers.IntegerField(required=False, allow_null=True)
     document_ids = serializers.IntegerField(required=False, allow_null=True)
-    # document_online_ids = serializers.IntegerField(required=False, allow_null=True)
+    document_online_ids = serializers.UUIDField(required=False, allow_null=True)
    
     class Meta:
         model = StationMaterial
@@ -1579,12 +1597,12 @@ class StationMaterialSerializer(serializers.ModelSerializer):
             'description_station',
             'name',
             'document',
-            # 'document_online',
+            'document_online',
             'activity',
 
             'document_ids',
-            # 'document_online_ids',
-            'activities_ids',
+            'document_online_ids',
+            'activity_ids',
         )
     
 class ClassPlanPublicationSerializer(serializers.ModelSerializer):
@@ -1595,7 +1613,7 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
     tags = TagListSerializer(read_only=False, required=False, allow_null=True) 
  
     documents = DocumentListInfoSerializer(many=True,read_only=True)
-    documents_online = DocumentOnlineSerializer(many=True, read_only=True)
+    documents_online = DocumentOnlineListSerializer(many=True, read_only=True)
     activities = ActivitySerializer(many=True, read_only=True)
 
     topics_ids = ModelListSerializer(write_only=True, many=True, queryset=Topic.objects.all())
@@ -1605,7 +1623,7 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
     teaching_years_ids = ModelListSerializer(write_only=True, many=True, queryset=TeachingYear.objects.all())
 
     documents_ids = ModelListSerializer(write_only=True, many=True, queryset=Document.objects.all())
-    # documents_online_ids = ModelListSerializer(write_only=True, many=True, queryset=DocumentOnline.objects.all())
+    documents_online_ids = ModelListValueSerializer(write_only=True, many=True, queryset=DocumentOnline.objects.all())
     activities_ids = ModelListSerializer(write_only=True, many=True, queryset=Activity.objects.all())
 
     stations = StationMaterialSerializer(many=True)
@@ -1642,7 +1660,7 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
             'disciplines_ids',
             'teaching_levels_ids',
             'documents_ids',
-            # 'documents_online_ids',
+            'documents_online_ids',
             'activities_ids',
             'teaching_years_ids',
             'bncc_ids',           
@@ -1675,12 +1693,6 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
             value = None
         return value
            
-    def validate_stations(self, value):
-        for v in value:
-            if 'description_station' in v and len(v) > 3: 
-                raise serializers.ValidationError(_("Only one material"))
-        return value
-
     def create(self, validated_data):
         stations = validated_data.pop('stations', None)
         tags = validated_data.pop('tags', None)
@@ -1701,63 +1713,57 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
                                 
                 if 'document_ids' in st:
                     es.document_id = st['document_ids']
-                # if 'document_online_ids' in st:
-                #     es.document_online_link = st['document_online_ids']
-                if 'activities_ids' in st:
-                    es.activity_id = st['activities_ids']
-
+                if 'document_online_ids' in st:
+                    es.document_online_id = st['document_online_ids']
+                if 'activity_ids' in st:
+                    es.activity_id = st['activity_ids']
                 es.save()
     
         return ClassPlanPublication.objects.get(id=plan.id)
     
-    # def update(self, instance, validated_data):
-    #     learning_objects_ids = validated_data.pop('learning_objects_ids', None)
-    #     documents_ids = validated_data.pop('documents_ids', None)
-    #     teaching_years_ids = validated_data.pop('teaching_years_ids', None)
+    def update(self, instance, validated_data):
+        documents_ids = validated_data.pop('documents_ids', None)
+        documents_online_ids = validated_data.pop('documents_online_ids', None)
+        activities_ids = validated_data.pop('activities_ids', None)
+        tags = validated_data.pop('tags', None)
+        stations = validated_data.pop('stations', None)
 
-    #     links = validated_data.pop('links', None)
-    #     stations = validated_data.pop('stations', None)
-
-    #     for key in list(validated_data.keys()):
-    #         if key.endswith('_ids'):
-    #             validated_data[key[:-4]] = validated_data.pop(key)
+        for key in list(validated_data.keys()):
+            if key.endswith('_ids'):
+                validated_data[key[:-4]] = validated_data.pop(key)
         
-    #     plan = super().update(instance, validated_data)
+        plan = super().update(instance, validated_data)
 
-    #     if links != None:
-    #         plan.links.all().delete()
-    #         for lin in links:
-    #             Link.objects.create(plan=plan, **lin)
+        if stations != None:
+            plan.stations.all().delete()
+            for st in stations:
+                es = StationMaterial.objects.create(plan=plan, name= st['name'], description_station=st['description_station'] )
+                                
+                if 'document_ids' in st:
+                    es.document_id = st['document_ids']
+                if 'document_online_ids' in st:
+                    es.document_online_id = st['document_online_ids']
+                if 'activity_ids' in st:
+                    es.activity_id = st['activity_ids']
+                es.save()
+
+        plan.documents.clear()
+        if documents_ids != None:
+            for d in documents_ids:
+                plan.documents.add(d)
         
-    #     if stations != None:
-    #         plan.stations.all().delete()
-    #         for st in stations:
-    #             es = Station.objects.create(plan=plan, description_station=st['description_station'])
-                
-    #             if 'question_ids' in st:
-    #                 es.question_id = st['question_ids']
-
-    #             if 'learning_object_ids' in st:
-    #                 es.learning_object_id = st['learning_object_ids']
-                
-    #             if 'document_ids' in st:
-    #                 es.document_id = st['document_ids']
-
-    #             es.save()
-
-    #     plan.learning_objects.clear()
-    #     if learning_objects_ids != None:
-    #         for l in learning_objects_ids:
-    #             plan.learning_objects.add(l)
-
-    #     plan.documents.clear()
-    #     if documents_ids != None:
-    #         for d in documents_ids:
-    #             plan.documents.add(d)
+        plan.documents_online.clear()
+        if documents_online_ids != None:
+            for do in documents_online_ids:
+                plan.documents_online.add(do)
         
-    #     plan.teaching_years.clear()
-    #     if teaching_years_ids != None:
-    #         for t in teaching_years_ids:
-    #             plan.teaching_years.add(t)
-
-    #     return ClassPlan.objects.get(id=plan.id)
+        plan.activities.clear()
+        if activities_ids != None:
+            for d in activities_ids:
+                plan.activities.add(d)
+        
+        if tags != None:
+            tags = [tag for tag in tags if tag.strip() != '']
+            plan.tags.set(*tags, clear=True)
+        
+        return ClassPlanPublication.objects.get(id=plan.id)

@@ -26,7 +26,7 @@ from masteraula.users.models import User
 
 from .models import (Question, Document, Alternative, Discipline, TeachingLevel, DocumentQuestion, Header, 
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label, TeachingYear, ClassPlanPublication, FaqCategory, DocumentOnline, DocumentQuestionOnline, Result, Task, Activity, Bncc,)
+                    Synonym, Label, TeachingYear, ClassPlanPublication, StationMaterial, FaqCategory, DocumentOnline, DocumentQuestionOnline, Result, Task, Activity, Bncc,)
 
 from .models import DocumentLimitExceedException
 
@@ -850,52 +850,64 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    # @detail_route(methods=['post'])
-    # def copy_plan(self, request, pk=None):
-    #     obj = self.get_object()
-    #     disciplines = [dis for dis in obj.disciplines.all()]
-    #     links = [lin for lin in obj.links.all()]
-    #     stations = [st for st in obj.stations.all()]
-
-    #     obj.pk = None
-    #     obj.name = obj.name + ' (Cópia)'
-    #     obj.owner = self.request.user
-    #     obj.save()
-
-    #     for d in obj.documents.all():
-    #         if d.disabled == False:
-    #             obj.documents.add(d)
+    @detail_route(methods=['post'])
+    def copy_plan(self, request, pk=None):
+        obj = self.get_object()
+        disciplines = [dis for dis in obj.disciplines.all()]
+        topics = [t for t in obj.topics.all()]
+        bncc = [b for b in obj.bncc.all()]
+        teaching_levels = [tl for tl in obj.teaching_levels.all()]
+        teaching_years = [ty for ty in obj.teaching_years.all()]
+        tags = [t for t in obj.tags.all()]
        
-    #     obj.topics.add(*obj.topics.all())
-    #     obj.learning_objects.add(*obj.learning_objects.all())
-    #     obj.teaching_levels.add(*obj.teaching_levels.all())
-    #     obj.teaching_years.add(*obj.teaching_years.all())
-    #     obj.disciplines.add(*disciplines)
+        documents = [d for d in obj.documents.all()]
+        documents_online = [d for d in obj.documents_online.all()]
+        activities = [a for a in obj.activities.all()]
+        
+        stations = [st for st in obj.stations.all()]
 
-    #     new_links = []
-    #     for lin in links:
-    #         new_links.append(Link(link=lin.link, description_url=lin.description_url, plan=obj))
-    #     Link.objects.bulk_create(new_links)  
+        obj.pk = None
+        obj.name = obj.name + ' (Cópia)'
+        obj.owner = self.request.user
+        obj.save()
 
-    #     new_stations = []
-    #     for st in stations:
-    #         learning_object = None
-    #         if st.learning_object:
-    #             learning_object = st.learning_object
+        for d in documents:
+            if d.disabled == False:
+                obj.documents.add(d)
+        
+        for do in documents_online:
+            obj.documents_online.add(do)
+        
+        for a in activities:
+            if a.disabled == False:
+                obj.activities.add(a)
+       
+        obj.topics.add(*topics)
+        obj.bncc.add(*bncc)
+        obj.teaching_levels.add(*teaching_levels)
+        obj.teaching_years.add(*teaching_years)
+        obj.disciplines.add(*disciplines)
+        obj.tags.add(*tags)
+
+        new_stations = []
+        for st in stations:
+            document = None
+            if st.document:
+                document = st.document
             
-    #         question = None
-    #         if st.question:
-    #             question = st.question
+            document_online = None
+            if st.document_online:
+                document_online = st.document_online
             
-    #         document = None
-    #         if st.document:
-    #             document = st.document
+            activity = None
+            if st.activity:
+                activity = st.activity
 
-    #         new_stations.append(Station(description_station=st.description_station, learning_object=learning_object, question=question, document=document, plan=obj))
-    #     Station.objects.bulk_create(new_stations)  
+            new_stations.append(StationMaterial(name= st.name, description_station=st.description_station, activity=activity, document_online=document_online, document=document, plan=obj))
+        StationMaterial.objects.bulk_create(new_stations)  
 
-    #     serializer = serializers.ClassPlanPublicationSerializer(obj)
-    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer = serializers.ClassPlanPublicationSerializer(obj)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class FaqCategoryViewSet(viewsets.ModelViewSet):
     queryset = FaqCategory.objects.all()
