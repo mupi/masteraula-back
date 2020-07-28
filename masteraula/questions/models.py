@@ -846,9 +846,24 @@ class ClassPlanManager(models.Manager):
     topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
         'parent', 'discipline', 'parent__parent', 'parent__discipline'))
 
+    documents_prefetch = Prefetch(
+        'documents',
+        queryset=Document.objects.all().select_related('owner').prefetch_related('questions')
+    )
+
+    documents_online_prefetch = Prefetch(
+        'documents_online',
+        queryset=DocumentOnline.objects.all().select_related('owner').prefetch_related('questions')
+    )
+
+    stations_prefetch = Prefetch(
+        'stations',
+        queryset=Station.objects.all().select_related('plan').prefetch_related('activities', 'document', 'documents_online')
+    )
+
     def get_classplan_prefetched(self):
         qs = self.all().select_related('owner').prefetch_related(
-            'disciplines', 'teaching_levels', 'teaching_years', self.topics_prefetch
+            'disciplines', 'teaching_levels', 'tags', 'bncc', 'teaching_years', self.topics_prefetch, self.documents_prefetch, self.stations_prefetch, self.documents_online_prefetch, self.activities_prefetch
         )
         return qs
 
