@@ -853,60 +853,82 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
     @detail_route(methods=['post'])
     def copy_plan(self, request, pk=None):
         obj = self.get_object()
-        disciplines = [dis for dis in obj.disciplines.all()]
-        topics = [t for t in obj.topics.all()]
-        bncc = [b for b in obj.bncc.all()]
-        teaching_levels = [tl for tl in obj.teaching_levels.all()]
-        teaching_years = [ty for ty in obj.teaching_years.all()]
-        tags = [t for t in obj.tags.all()]
-       
-        documents = [d for d in obj.documents.all()]
-        documents_online = [d for d in obj.documents_online.all()]
-        activities = [a for a in obj.activities.all()]
-        
-        stations = [st for st in obj.stations.all()]
+        class_plan = ClassPlanPublication.objects.filter(id=obj.id).values().first()  
+        class_plan.update({'pk': None, 'name': obj.name + ' (Cópia)', 'owner': self.request.user, 'owner_id': self.request.user.id})
+        new_class_plan = ClassPlanPublication.objects.create(**class_plan)
 
-        obj.pk = None
-        obj.name = obj.name + ' (Cópia)'
-        obj.owner = self.request.user
-        obj.save()
+        new_class_plan.topics.add(*obj.topics.all())
+        new_class_plan.bncc.add(*obj.bncc.all())
+        new_class_plan.teaching_levels.add(*obj.teaching_levels.all())
+        new_class_plan.teaching_years.add(*obj.teaching_years.all())
+        new_class_plan.disciplines.add(*obj.disciplines.all())
+        new_class_plan.tags.add(*obj.tags.all())
 
-        for d in documents:
+        for d in obj.documents.all():
             if d.disabled == False:
-                obj.documents.add(d)
+                doc = Document.objects.filter(id=d.id).values().first()  
+                doc.update({'id': None})
+                duplicate = Document.objects.create(**doc)
+                new_class_plan.documents.add(duplicate)
+
+                new_questions = []
+                for count, q in enumerate(obj.documentquestion_set.all().order_by('order')):
+                    if q.disabled == False:
+                        new_questions.append(DocumentQuestion(document=duplicate, question=q, order=count+1))
+                DocumentQuestion.objects.bulk_create(new_questions) 
+
+        for do in obj.documents_online.all():
+            doc_online = DocumentOnline.objects.filter(link=do.link).values().first()  
+            doc_online.update({'link': None})
+            duplicate = DocumentOnline.objects.create(**doc_online)
+            new_class_plan.documents_online.add(duplicate)
+
+            new_questions = []
+            for count, q in enumerate(obj.documentquestiononline_set.all()):
+                if q.disabled == False:
+                    new_questions.append(DocumentQuestionOnline(document=duplicate, question=q.question, order=count+1, score=q.score))
+            DocumentQuestionOnline.objects.bulk_create(new_questions) 
         
-        for do in documents_online:
-            obj.documents_online.add(do)
-        
-        for a in activities:
+        for a in obj.activities.all():
             if a.disabled == False:
-                obj.activities.add(a)
-       
-        obj.topics.add(*topics)
-        obj.bncc.add(*bncc)
-        obj.teaching_levels.add(*teaching_levels)
-        obj.teaching_years.add(*teaching_years)
-        obj.disciplines.add(*disciplines)
-        obj.tags.add(*tags)
+                new_class_plan.activities.add(a)
 
         new_stations = []
-        for st in stations:
+        for st in obj.stations.all():
             document = None
             if st.document:
-                document = st.document
-            
+                doc = Document.objects.filter(id=st.document.id).values().first()  
+                doc.update({'id': None})
+                doc_duplicate = Document.objects.create(**doc)
+                document = doc_duplicate
+
+                new_questions = []
+                for count, q in enumerate(st.document.documentquestion_set.all()):
+                    if not q.question.disabled:
+                        new_questions.append(DocumentQuestion(document=doc_duplicate, question=q.question, order=count+1))
+                DocumentQuestion.objects.bulk_create(new_questions) 
+
             document_online = None
             if st.document_online:
-                document_online = st.document_online
+                doc_online = DocumentOnline.objects.filter(link=st.document_online.link).values().first()  
+                doc_online.update({'link': None})
+                online_duplicate = DocumentOnline.objects.create(**doc_online)
+                document_online = online_duplicate
+
+                new_questions = []
+                for count, q in enumerate(st.document_online.documentquestiononline_set.all()):
+                    if not q.question.disabled:
+                        new_questions.append(DocumentQuestionOnline(document=online_duplicate, question=q.question, order=count+1, score=q.score))
+                DocumentQuestionOnline.objects.bulk_create(new_questions) 
             
             activity = None
             if st.activity:
                 activity = st.activity
 
-            new_stations.append(StationMaterial(name= st.name, description_station=st.description_station, activity=activity, document_online=document_online, document=document, plan=obj))
+            new_stations.append(StationMaterial(name= st.name, description_station=st.description_station, activity=activity, document_online=document_online, document=document, plan=new_class_plan))
         StationMaterial.objects.bulk_create(new_stations)  
 
-        serializer = serializers.ClassPlanPublicationSerializer(obj)
+        serializer = serializers.ClassPlanPublicationSerializer(new_class_plan)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class FaqCategoryViewSet(viewsets.ModelViewSet):
@@ -990,7 +1012,7 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
         obj.name = obj.name + ' (Cópia)'
         obj.owner = self.request.user
         obj.save()
-
+        
         new_questions = []
         for count, q in enumerate(questions):
             if q.disabled == False:
