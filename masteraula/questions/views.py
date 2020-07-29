@@ -783,6 +783,27 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
             'topics': topic_serialzier.data
         })
 
+class AutocompleteSearchBnccViewSet(viewsets.ViewSet):
+
+    index_models = [Bncc]
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def list(self, request, *args, **kwargs):
+        q = request.GET.get('q', None)
+        bncc = self.request.query_params.getlist('bncc', None)
+
+        if not q or len(q) < 3:
+            raise exceptions.ValidationError("'q' parameter required with at least 3 of length")
+            
+        queryset = SearchQuerySet().models(Bncc).autocomplete(term_auto=q).load_all()
+        bncc_qs = []
+
+        for q in queryset[:]:
+            bncc_qs.append(q.object)
+        bncc_serialzier = serializers.BnccSerializer(bncc_qs, many=True)
+
+        return Response(bncc_serialzier.data)
+
 class TeachingYearViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TeachingYear.objects.all()
     serializer_class = serializers.TeachingYearSerializer

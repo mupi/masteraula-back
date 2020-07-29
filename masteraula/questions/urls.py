@@ -37,6 +37,7 @@ router.register(r'results', views.ResultViewSet, base_name="results")
 router.register(r'activities/search', views.ActivitySearchView, base_name="activities-search")
 router.register(r'activities', views.ActivityViewSet, base_name="activities")
 router.register(r'bncc', views.BnccViewSet, base_name="bncc")
+router.register(r'bncc_autocomplete', views.AutocompleteSearchBnccViewSet, base_name='bncc_autocomplete')
 
 
 urlpatterns = [

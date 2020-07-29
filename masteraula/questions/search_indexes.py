@@ -7,7 +7,7 @@ from haystack import indexes
 from haystack.inputs import Clean
 from haystack.query import SearchQuerySet, SQ, AutoQuery
 
-from .models import Question, LearningObject, Synonym, Topic, Activity
+from .models import Question, LearningObject, Synonym, Topic, Activity, Bncc
 from masteraula.questions.templatetags.search_helpers import stripaccents, prepare_document, stripaccents_str
 
 from functools import reduce
@@ -194,6 +194,17 @@ class TopicIndex(indexes.SearchIndex, indexes.Indexable):
 
     def get_model(self):
         return Topic
+
+    def prepare_term_auto(self, obj):
+        return stripaccents_str(obj)
+
+class BnncIndex(indexes.SearchIndex, indexes.Indexable):
+    text = indexes.CharField(document=True, use_template=True)
+    name = indexes.CharField(model_attr='name')
+    term_auto = indexes.EdgeNgramField(model_attr='name')
+
+    def get_model(self):
+        return Bncc
 
     def prepare_term_auto(self, obj):
         return stripaccents_str(obj)
