@@ -842,7 +842,20 @@ class Bncc(models.Model):
     def __str__(self):
         return str(self.name)
 
-class ClassPlanManager(models.Manager):
+class StationMaterial(models.Model):
+    name = models.CharField(max_length=100, null=False, blank=False)
+    description_station = models.TextField(null=False, blank=False)
+
+    document = models.ForeignKey(Document, related_name='plan_station_doc', null=True, blank=True)
+    document_online = models.ForeignKey(DocumentOnline, related_name='plan_station_doc_online', null=True, blank=True)
+    activity = models.ForeignKey(Activity, related_name='plan_station_activity', null=True, blank=True)
+
+    plan = models.ForeignKey('ClassPlanPublication', related_name='stations', on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.description_station)
+
+class ClassPlanPublication(models.Manager):
     topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
         'parent', 'discipline', 'parent__parent', 'parent__discipline'))
 
@@ -853,17 +866,17 @@ class ClassPlanManager(models.Manager):
 
     documents_online_prefetch = Prefetch(
         'documents_online',
-        queryset=DocumentOnline.objects.all().select_related('owner').prefetch_related('questions')
+        queryset=DocumentOnline.objects.all().select_related('owner').prefetch_related('questions_document')
     )
 
     stations_prefetch = Prefetch(
         'stations',
-        queryset=Station.objects.all().select_related('plan').prefetch_related('activities', 'document', 'documents_online')
+        queryset=StationMaterial.objects.all().select_related('plan').prefetch_related('activity', 'document', 'document_online')
     )
 
     def get_classplan_prefetched(self):
         qs = self.all().select_related('owner').prefetch_related(
-            'disciplines', 'teaching_levels', 'tags', 'bncc', 'teaching_years', self.topics_prefetch, self.documents_prefetch, self.stations_prefetch, self.documents_online_prefetch, self.activities_prefetch
+            'disciplines', 'teaching_levels', 'tags', 'bncc', 'teaching_years', self.topics_prefetch, self.documents_prefetch, self.stations_prefetch, self.documents_online_prefetch
         )
         return qs
 
@@ -896,26 +909,13 @@ class ClassPlanPublication(models.Model):
     disabled = models.BooleanField(null=False, blank=True, default=False)
     plan_type = models.CharField(max_length=1, choices = TYPE_PLAN, null=True, blank=True)
 
-    objects = ClassPlanManager()
+    objects = ClassPlanPublication()
 
     def __str__(self):
         return str(self.name)
     
     class Meta:
         ordering = ['id']
-
-class StationMaterial(models.Model):
-    name = models.CharField(max_length=100, null=False, blank=False)
-    description_station = models.TextField(null=False, blank=False)
-
-    document = models.ForeignKey(Document, related_name='plan_station_doc', null=True, blank=True)
-    document_online = models.ForeignKey(DocumentOnline, related_name='plan_station_doc_online', null=True, blank=True)
-    activity = models.ForeignKey(Activity, related_name='plan_station_activity', null=True, blank=True)
-
-    plan = models.ForeignKey('ClassPlanPublication', related_name='stations', on_delete=models.CASCADE, null=True, blank=True)
-
-    def __str__(self):
-        return str(self.description_station)
 
 class ShareClassPlan(models.Model):
     link = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

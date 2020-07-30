@@ -1767,3 +1767,12 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
             plan.tags.set(*tags, clear=True)
         
         return ClassPlanPublication.objects.get(id=plan.id)
+
+class ListClassPlanActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClassPlanPublication
+        fields = (
+            'id',
+            'name',   
+        )
+       

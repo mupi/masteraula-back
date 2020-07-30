@@ -815,8 +815,7 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
     # permission_classes = (permissions.IsAuthenticated, ClassPlanPermission, )
 
     def get_queryset(self):
-        # queryset = ClassPlanPublication.objects.get_classplan_prefetched().filter(owner=self.request.user, disabled=False)
-        queryset = ClassPlanPublication.objects.filter()
+        queryset = ClassPlanPublication.objects.get_classplan_prefetched().filter(owner=self.request.user, disabled=False)
         return queryset
 
     def perform_create(self, serializer):
@@ -1139,7 +1138,13 @@ class ActivityViewSet(viewsets.ModelViewSet):
         activity = get_object_or_404(self.get_queryset(), pk=pk)
         serializer_activity = self.serializer_class(activity, context=self.get_serializer_context())
 
+        class_plans = ClassPlanPublication.objects.get_classplan_prefetched() \
+                .filter(Q(activities=pk)|Q(stations__activity__id=pk)).filter(disabled=False).distinct()
+
+        serializer_class_plans = serializers.ListClassPlanActivitySerializer(class_plans, many = True)
+
         return_data = serializer_activity.data
+        return_data['class_plans'] = serializer_class_plans.data
 
         related_material = RelatedQuestions().similar_questions(activity, activity=True)
         order_questions = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_material[0])])

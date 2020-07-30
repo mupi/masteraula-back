@@ -375,7 +375,7 @@ class TeachingYearModelAdmin(admin.ModelAdmin):
 
 class ClassPlanPublicationModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', )
-    list_display = ('id', 'name', 'create_date', 'duration', 'disabled')
+    list_display = ('id', 'name', 'create_date', 'duration', 'plan_type', 'disabled')
     search_fields = ('id', 'name')
     exclude = ('topics', 'documents', 'bncc', 'activities', 'documents_online')
 
