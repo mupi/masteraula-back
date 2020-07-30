@@ -892,9 +892,9 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
                 new_class_plan.documents.add(duplicate)
 
                 new_questions = []
-                for count, q in enumerate(obj.documentquestion_set.all().order_by('order')):
-                    if q.disabled == False:
-                        new_questions.append(DocumentQuestion(document=duplicate, question=q, order=count+1))
+                for count, q in enumerate(d.documentquestion_set.all().order_by('order')):
+                    if q.question.disabled == False:
+                        new_questions.append(DocumentQuestion(document=duplicate, question=q.question, order=count+1))
                 DocumentQuestion.objects.bulk_create(new_questions) 
 
         for do in obj.documents_online.all():
@@ -904,8 +904,8 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
             new_class_plan.documents_online.add(duplicate)
 
             new_questions = []
-            for count, q in enumerate(obj.documentquestiononline_set.all()):
-                if q.disabled == False:
+            for count, q in enumerate(do.documentquestiononline_set.all()):
+                if q.question.disabled == False:
                     new_questions.append(DocumentQuestionOnline(document=duplicate, question=q.question, order=count+1, score=q.score))
             DocumentQuestionOnline.objects.bulk_create(new_questions) 
         
