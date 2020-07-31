@@ -27,7 +27,8 @@ from .models import (Discipline, TeachingLevel, LearningObject, Question,
                     Synonym, Label, TeachingYear,
                     FaqQuestion, FaqCategory, DocumentOnline,
                     Result, DocumentQuestionOnline, StudentAnswer,
-                    Task, Activity, Bncc, ClassPlanPublication, StationMaterial,)
+                    Task, Activity, Bncc, ClassPlanPublication, StationMaterial, 
+                    ShareClassPlan)
 
 from django.db.models import Prefetch
 
@@ -769,7 +770,7 @@ class DocumentListSerializer(serializers.ModelSerializer):
         }
    
     def get_documents_online(self, obj):
-        document_count = DocumentOnline.objects.filter(document=obj)
+        document_count = DocumentOnline.objects.get_documentonline_prefetch().filter(document=obj)
         return len(document_count)
 
     def get_questions_quantity(self, obj):
@@ -1199,8 +1200,7 @@ class ResultSerializer(serializers.ModelSerializer):
             
             result.student_answer.add(question)
 
-        result.save()
-                
+        result.save()       
         return Result.objects.get_result_prefetch().get(id=result.id)
 
     def update(self, instance, validated_data):
@@ -1217,7 +1217,6 @@ class ResultSerializer(serializers.ModelSerializer):
             question.save()
 
         result.save()
-    
         return Result.objects.get_result_prefetch().get(id=result.id)
 
 class DocumentOnlineSerializer(serializers.ModelSerializer):
@@ -1573,6 +1572,14 @@ class ActivityLabelListDetailSerializer(serializers.ModelSerializer):
             'label' : { 'read_only' : True }
         }
 
+
+class LinkClassPlanSerializer(serializers.ModelSerializer):    
+    class Meta:
+        model = ShareClassPlan
+        fields = (
+            'link',
+        )  
+
 class BnccSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bncc
@@ -1606,6 +1613,7 @@ class StationMaterialSerializer(serializers.ModelSerializer):
         )
     
 class ClassPlanPublicationSerializer(serializers.ModelSerializer):
+    link_class_plan = LinkClassPlanSerializer(read_only=True)
     owner = UserDetailsSerializer(read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
 
@@ -1632,6 +1640,7 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
         model = ClassPlanPublication
         fields = (
             'id',
+            'link_class_plan', 
             'owner',
             'create_date',
             'name',
@@ -1727,6 +1736,7 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
         activities_ids = validated_data.pop('activities_ids', None)
         tags = validated_data.pop('tags', None)
         stations = validated_data.pop('stations', None)
+        bncc_ids = validated_data.pop('bncc_ids', None)
 
         for key in list(validated_data.keys()):
             if key.endswith('_ids'):
@@ -1766,6 +1776,11 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
             tags = [tag for tag in tags if tag.strip() != '']
             plan.tags.set(*tags, clear=True)
         
+        plan.bncc.clear()
+        if bncc_ids != None:
+            for b in bncc_ids:
+                plan.bncc.add(b)
+        
         return ClassPlanPublication.objects.get(id=plan.id)
 
 class ListClassPlanActivitySerializer(serializers.ModelSerializer):
@@ -1775,4 +1790,3 @@ class ListClassPlanActivitySerializer(serializers.ModelSerializer):
             'id',
             'name',   
         )
-       

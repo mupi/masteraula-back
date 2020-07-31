@@ -7,7 +7,8 @@ from import_export.formats import base_formats
 from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Question,
                      Alternative, Document, DocumentQuestion, Header, Year, Source,Topic, Search,
                      DocumentDownload, DocumentPublication, Synonym, Label, TeachingYear,FaqCategory, FaqQuestion, DocumentOnline, Result, DocumentQuestionOnline, StudentAnswer,
-                     Task, Activity, Bncc, ClassPlanPublication, StationMaterial)
+                     Task, Activity, Bncc, ClassPlanPublication, StationMaterial,
+                     ShareClassPlan)
 
 class BnccResource(resources.ModelResource):    
     class Meta:
@@ -174,6 +175,10 @@ class ClassPlanBnccInline(admin.StackedInline):
 class ClassPlanStationsInline(admin.TabularInline):
     model = StationMaterial
     raw_id_fields = ('document', 'document_online', 'activity',)
+    extra = 1
+
+class ClassPlanLinkInline(admin.StackedInline):
+    model = ShareClassPlan
     extra = 1
 
 class TopicChildsInline(admin.StackedInline):
@@ -374,12 +379,12 @@ class TeachingYearModelAdmin(admin.ModelAdmin):
     list_per_page = 100
 
 class ClassPlanPublicationModelAdmin(admin.ModelAdmin):
-    raw_id_fields = ('owner', )
+    raw_id_fields = ('owner',)
     list_display = ('id', 'name', 'create_date', 'duration', 'plan_type', 'disabled')
     search_fields = ('id', 'name')
     exclude = ('topics', 'documents', 'bncc', 'activities', 'documents_online')
 
-    inlines = [ClassPlanStationsInline, ClassPlanDocumentInline, ClassPlanTopicsInline, ClassPlanBnccInline, ClassPlanActivityInline, ClassPlanDocumentOnlineInline]
+    inlines = [ClassPlanLinkInline, ClassPlanStationsInline, ClassPlanDocumentInline, ClassPlanTopicsInline, ClassPlanBnccInline, ClassPlanActivityInline, ClassPlanDocumentOnlineInline]
 
     list_per_page = 100
 

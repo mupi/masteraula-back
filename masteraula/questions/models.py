@@ -764,7 +764,6 @@ class ActivityManager(models.Manager):
         difficulties = query_params.getlist('difficulties', None)
         owner = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
-        labels = query_params.getlist('labels', None)
         years = query_params.get('years', None)
         
         if disciplines:
@@ -778,8 +777,6 @@ class ActivityManager(models.Manager):
         if topics:
             for topic in topics:
                 queryset = queryset.filter(topics__id=topic)
-        if labels:
-            queryset = queryset.filter(labels__in=labels)
         if years:
             queryset = queryset.filter(create_date__year=int(years))
         
@@ -874,9 +871,24 @@ class ClassPlanPublication(models.Manager):
         queryset=StationMaterial.objects.all().select_related('plan').prefetch_related('activity', 'document', 'document_online')
     )
 
+    learning_object_prefetch = Prefetch('learning_objects', queryset=LearningObject.objects.select_related('owner').prefetch_related(
+            'tags', 'questions'
+        ))
+
+    activities_prefetch = Prefetch(
+        'activities',
+        queryset=Activity.objects.all().select_related('owner').prefetch_related('tags', 'disciplines', 'teaching_levels', 'tasks', learning_object_prefetch)
+    )
+
     def get_classplan_prefetched(self):
         qs = self.all().select_related('owner').prefetch_related(
-            'disciplines', 'teaching_levels', 'tags', 'bncc', 'teaching_years', self.topics_prefetch, self.documents_prefetch, self.stations_prefetch, self.documents_online_prefetch
+            'disciplines', 'teaching_levels', 'tags', 'bncc', 'teaching_years', self.topics_prefetch, self.documents_prefetch, self.stations_prefetch, self.documents_online_prefetch, self.activities_prefetch
+        )
+        return qs
+    
+    def get_class_plans_update_index(self, topics=True):
+        qs = self.all().select_related('owner').prefetch_related(
+            'disciplines', 'teaching_levels', 'tags', 'bncc', 'teaching_years', self.topics_prefetch, self.documents_prefetch, self.stations_prefetch, self.documents_online_prefetch, self.activities_prefetch
         )
         return qs
 
@@ -916,9 +928,20 @@ class ClassPlanPublication(models.Model):
     
     class Meta:
         ordering = ['id']
+    
+    def get_all_topics(self):
+        topics = []
+        new_topics = [t for t in self.topics.all()]
+        while new_topics:
+            parents_id = [t.parent for t in new_topics if t.parent]
+            topics = topics + new_topics
+            new_topics = parents_id
+        return list(set(topics))
 
 class ShareClassPlan(models.Model):
     link = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, null=True, blank=False, on_delete=models.SET_NULL)
-    class_plan = models.ForeignKey(ClassPlanPublication, on_delete=models.CASCADE)
+    class_plan = models.ForeignKey(ClassPlanPublication, related_name= "link_class_plan", on_delete=models.CASCADE)
     share_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return str(self.link)

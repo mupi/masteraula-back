@@ -26,7 +26,7 @@ from masteraula.users.models import User
 
 from .models import (Question, Document, Alternative, Discipline, TeachingLevel, DocumentQuestion, Header, 
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label, TeachingYear, ClassPlanPublication, StationMaterial, FaqCategory, DocumentOnline, DocumentQuestionOnline, Result, Task, Activity, Bncc,)
+                    Synonym, Label, TeachingYear, ClassPlanPublication, StationMaterial, FaqCategory, DocumentOnline, DocumentQuestionOnline, Result, Task, Activity, Bncc, ShareClassPlan)
 
 from .models import DocumentLimitExceedException
 
@@ -35,7 +35,7 @@ from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
-from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex, ActivityIndex
+from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex, ActivityIndex, ClassPlanPublicationIndex
 from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission, ClassPlanPermission
 from . import serializers as serializers
 
@@ -827,6 +827,11 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
         plan.save()
         return Response(status = status.HTTP_204_NO_CONTENT)
     
+    @detail_route(methods=['get'])
+    def generate_link(self, request, pk=None):
+        link = ShareClassPlan.objects.create(class_plan_id = pk)
+        return Response({'link' : link.link})
+
     @list_route(methods=['get'])
     def my_plans(self, request):
         order_field = request.query_params.get('order_field', None)
@@ -950,6 +955,40 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
 
         serializer = serializers.ClassPlanPublicationSerializer(new_class_plan)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class ClassPlanPublicationSearchView(viewsets.ReadOnlyModelViewSet):
+    pagination_class = ClassPlanPagination
+    serializer_class = serializers.ClassPlanPublicationSerializer
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def paginate_queryset(self, search_queryset):
+        page = super().paginate_queryset(search_queryset)
+        class_plans_ids = [res.pk for res in page]
+
+        queryset = ClassPlanPublication.objects.get_classplan_prefetched().filter(disabled=False, id__in=class_plans_ids).order_by('id')
+        order = Case(*[When(id=id, then=pos) for pos, id in enumerate(class_plans_ids)])
+        queryset = queryset.order_by(order)
+
+        return queryset
+
+    def get_queryset(self):
+        text = self.request.GET.get('text', None)
+
+        if not text:
+            raise exceptions.ValidationError("Invalid search text")
+        text = prepare_document(text)
+        text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
+        
+        if not text:
+            raise exceptions.ValidationError("Invalid search text")
+
+        search_queryset = ClassPlanPublicationIndex.filter_class_plan_search(text, self.request.query_params)
+
+        disciplines = self.request.query_params.getlist('disciplines', None)
+        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
+        difficulties = self.request.query_params.getlist('difficulties', None)
+        
+        return search_queryset
 
 class FaqCategoryViewSet(viewsets.ModelViewSet):
     queryset = FaqCategory.objects.all()

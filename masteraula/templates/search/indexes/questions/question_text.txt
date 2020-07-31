@@ -1,5 +1,7 @@
 {% load search_helpers %}
 
+{{ object.id }}
+
 {{ object.statement|prepare_document }}
 {{ object.author.name|stripaccents }}
 

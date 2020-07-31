@@ -1,0 +1,40 @@
+{% load search_helpers %}
+
+{{ object.id }}
+{{ object.owner.name|stripaccents }}
+
+{% for tag in object.tags.all %}
+    {{ tag.name|stripaccents }}
+{% endfor %}
+
+{% for topic in object.get_all_topics %}
+    {{ topic.name|stripaccents }}
+    {% for synonym in topic.synonym_set.all %}
+        {{ synonym.term|stripaccents }}
+    {% endfor %}
+{% endfor %}
+
+{% for b in object.bncc.all %}
+    {{ b.name|stripaccents }}
+{% endfor %}
+
+{% for a in object.activities.all %}
+    {% for tag in a.tags.all %}
+        {{ tag.name|stripaccents }}
+    {% endfor %}
+    {% for t in a.get_all_topics %}
+        {{ t.name|stripaccents }}
+    {% endfor %}    
+{% endfor %}
+
+
+{% for a in object.documents.all %}
+    {% for q in a.documentquestion_set.all %}
+        {% for tag in q.tags.all %}
+            {{ tag.name|stripaccents }}
+        {% endfor %}
+        {% for t in q.get_all_topics %}
+            {{ t.name|stripaccents }}
+        {% endfor %}  
+    {% endfor %}   
+{% endfor %}

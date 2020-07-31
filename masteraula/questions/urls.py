@@ -29,6 +29,7 @@ router.register(r'learning_object', views.LearningObjectViewSet, base_name='lear
 router.register(r'document_download', views.DocumentDownloadViewSet, base_name='document_download')
 router.register(r'synonym_topic', views.SynonymViewSet, base_name='synonym_topic')
 router.register(r'synonym_autocomplete', views.AutocompleteSearchViewSet, base_name='synonym_autocomplete')
+router.register(r'class_plans/search', views.ClassPlanPublicationSearchView, base_name="class-plans-search")
 router.register(r'class_plans', views.ClassPlanPublicationViewSet, base_name="class_plans")
 router.register(r'teaching_years', views.TeachingYearViewSet, base_name="teaching_years")
 router.register(r'faq_categories', views.FaqCategoryViewSet, base_name="faq_categories")
