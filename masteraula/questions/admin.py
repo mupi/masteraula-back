@@ -8,7 +8,7 @@ from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Ques
                      Alternative, Document, DocumentQuestion, Header, Year, Source,Topic, Search,
                      DocumentDownload, DocumentPublication, Synonym, Label, TeachingYear,FaqCategory, FaqQuestion, DocumentOnline, Result, DocumentQuestionOnline, StudentAnswer,
                      Task, Activity, Bncc, ClassPlanPublication, StationMaterial,
-                     ShareClassPlan, ShareClassPlan)
+                     ShareClassPlan,)
 
 class BnccResource(resources.ModelResource):    
     class Meta:
