@@ -832,7 +832,7 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
         serializer_class = self.get_serializer_class()(class_plan).data
         link = ShareClassPlan.objects.filter(class_plan=class_plan)
         if link.exists():
-            serializer_class['link_class_plan'] = str(link.link)
+            serializer_class['link_class_plan'] = str(link[0].link)
         else:
             serializer_class['link_class_plan'] = ""
         return Response(serializer_class)
