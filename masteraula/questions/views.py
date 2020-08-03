@@ -830,12 +830,13 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, pk=None):
         class_plan = self.get_object()
         serializer_class = self.get_serializer_class()(class_plan).data
-        link = ShareClassPlan.objects.get(class_plan=class_plan)
-        serializer_class['link_class_plan'] = str(link.link)
+        link = ShareClassPlan.objects.filter(class_plan=class_plan)
+        if link:
+            serializer_class['link_class_plan'] = str(link.link)
+        else:
+            serializer_class['link_class_plan'] = ""
     
         return Response(serializer_class)
-
-
  
     @detail_route(methods=['get'])
     def generate_link(self, request, pk=None):
