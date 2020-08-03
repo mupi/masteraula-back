@@ -1613,7 +1613,6 @@ class StationMaterialSerializer(serializers.ModelSerializer):
         )
     
 class ClassPlanPublicationSerializer(serializers.ModelSerializer):
-    link_class_plan = LinkClassPlanSerializer(read_only=True)
     owner = UserDetailsSerializer(read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
 
@@ -1640,7 +1639,6 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
         model = ClassPlanPublication
         fields = (
             'id',
-            'link_class_plan', 
             'owner',
             'create_date',
             'name',

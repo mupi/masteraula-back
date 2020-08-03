@@ -826,7 +826,17 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
         plan.disabled = True
         plan.save()
         return Response(status = status.HTTP_204_NO_CONTENT)
+
+    def retrieve(self, request, pk=None):
+        class_plan = self.get_object()
+        serializer_class = self.get_serializer_class()(class_plan).data
+        link = ShareClassPlan.objects.get(class_plan=class_plan)
+        serializer_class['link_class_plan'] = str(link.link)
     
+        return Response(serializer_class)
+
+
+ 
     @detail_route(methods=['get'])
     def generate_link(self, request, pk=None):
         link = ShareClassPlan.objects.create(class_plan_id = pk)
