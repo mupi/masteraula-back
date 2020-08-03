@@ -8,7 +8,7 @@ from .models import (Discipline, TeachingLevel, LearningObject, Descriptor, Ques
                      Alternative, Document, DocumentQuestion, Header, Year, Source,Topic, Search,
                      DocumentDownload, DocumentPublication, Synonym, Label, TeachingYear,FaqCategory, FaqQuestion, DocumentOnline, Result, DocumentQuestionOnline, StudentAnswer,
                      Task, Activity, Bncc, ClassPlanPublication, StationMaterial,
-                     ShareClassPlan)
+                     ShareClassPlan, ShareClassPlan)
 
 class BnccResource(resources.ModelResource):    
     class Meta:
@@ -322,6 +322,12 @@ class HeaderModelAdmin(admin.ModelAdmin):
 
     list_per_page = 100
 
+class ShareClassPlanModelAdmin(admin.ModelAdmin):
+    raw_id_fields = ('class_plan',)
+    list_display = ('link',)
+ 
+    list_per_page = 100
+
 class SearchModelAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = SearchResource
     raw_id_fields = ('user',)
@@ -486,4 +492,5 @@ admin.site.register(DocumentOnline, DocumentOnlineModelAdmin)
 admin.site.register(Result, ResultModelAdmin)
 admin.site.register(Activity, ActivityModelAdmin)
 admin.site.register(Bncc, BnccModelAdmin)
+admin.site.register(ShareClassPlan, ShareClassPlanModelAdmin)
 # admin.site.register(DocumentQuestionOnline, DocumentQuestionOnlineModelAdmin)

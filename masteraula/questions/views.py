@@ -831,16 +831,19 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
         class_plan = self.get_object()
         serializer_class = self.get_serializer_class()(class_plan).data
         link = ShareClassPlan.objects.filter(class_plan=class_plan)
-        if link:
+        if link.exists():
             serializer_class['link_class_plan'] = str(link.link)
         else:
             serializer_class['link_class_plan'] = ""
-    
         return Response(serializer_class)
  
     @detail_route(methods=['get'])
     def generate_link(self, request, pk=None):
-        link = ShareClassPlan.objects.create(class_plan_id = pk)
+        link = ShareClassPlan.objects.filter(class_plan_id = pk)
+        if link.exists():
+            link = link.first()
+        else:
+            link = ShareClassPlan.objects.create(class_plan_id = pk)
         return Response({'link' : link.link})
 
     @list_route(methods=['get'])
