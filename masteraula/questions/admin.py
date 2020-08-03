@@ -456,6 +456,13 @@ class BnccModelAdmin(ImportMixin, admin.ModelAdmin):
     search_fields = ['id', 'name',]
     list_per_page = 100
 
+    def get_import_formats(self):
+        formats = (
+                base_formats.CSV,
+                base_formats.JSON,
+        )
+        return [f for f in formats if f().can_export()]
+
 admin.site.register(Discipline, DisciplineModelAdmin)
 admin.site.register(Descriptor, DescriptorModelAdmin)
 admin.site.register(TeachingLevel, TeachingLeveltModelAdmin)
