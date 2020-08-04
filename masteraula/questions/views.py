@@ -36,7 +36,7 @@ from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
 from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex, ActivityIndex, ClassPlanPublicationIndex
-from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission, ClassPlanPermission
+from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission, ClassPlanPermission, ShareClassPlanPermission
 from . import serializers as serializers
 
 current_milli_time = lambda: int(round(time.time() * 1000))
@@ -837,7 +837,7 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
             serializer_class['link_class_plan'] = ""
         return Response(serializer_class)
  
-    @detail_route(methods=['get'])
+    @detail_route(methods=['get'], permission_classes=(ShareClassPlanPermission,))
     def generate_link(self, request, pk=None):
         link = ShareClassPlan.objects.filter(class_plan_id = pk)
         if link.exists():
@@ -1003,6 +1003,30 @@ class ClassPlanPublicationSearchView(viewsets.ReadOnlyModelViewSet):
         difficulties = self.request.query_params.getlist('difficulties', None)
         
         return search_queryset
+
+class ShareClassPlanPublicationViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    def get_queryset(self):
+        return ShareClassPlan.objects.filter(class_plan__disabled=False)
+
+    def get_serializer_class(self):
+        return serializers.ShareClassPlanSerializer
+
+    def retrieve(self, request, pk=None):
+        publication = self.get_object()
+        class_plan = ClassPlanPublication.objects.get(id=publication.class_plan_id)
+        class_plan_data = self.get_serializer_class()(class_plan).data
+    
+        return Response(class_plan_data)
+
+    @detail_route(methods=['get'])
+    def share(self, request, pk=None):
+        """
+        Generate a docx file containing all the list.
+        """
+        publication = self.get_object()
+        document = Document.objects.get_questions_prefetched().get(id=publication.document_id)
+
+        return TemplateResponse(request, 'questions/share_publication.html', {'document' : document, 'slug': publication.id }) 
 
 class FaqCategoryViewSet(viewsets.ModelViewSet):
     queryset = FaqCategory.objects.all()

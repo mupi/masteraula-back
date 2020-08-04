@@ -31,6 +31,7 @@ router.register(r'synonym_topic', views.SynonymViewSet, base_name='synonym_topic
 router.register(r'synonym_autocomplete', views.AutocompleteSearchViewSet, base_name='synonym_autocomplete')
 router.register(r'class_plans/search', views.ClassPlanPublicationSearchView, base_name="class-plans-search")
 router.register(r'class_plans', views.ClassPlanPublicationViewSet, base_name="class_plans")
+router.register(r'class_plan_publication', views.ShareClassPlanPublicationViewSet, base_name='class_plan_publication')
 router.register(r'teaching_years', views.TeachingYearViewSet, base_name="teaching_years")
 router.register(r'faq_categories', views.FaqCategoryViewSet, base_name="faq_categories")
 router.register(r'document_online', views.DocumentOnlineViewSet, base_name="document_online")

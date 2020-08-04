@@ -2,7 +2,7 @@ from rest_framework import permissions
 from django.db.models import Q
 
 from masteraula.users.models import Subscription
-from masteraula.questions.models import DocumentDownload
+from masteraula.questions.models import DocumentDownload, ShareClassPlan
 
 import datetime
 
@@ -78,3 +78,13 @@ class ClassPlanPermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         # Write permissions are only allowed to the owner of the snippet.
         return obj.owner == request.user
+
+class ShareClassPlanPermission(permissions.BasePermission):
+    message = "Free users has limit of 3 links"
+
+    def has_permission(self, request, view):
+        if request.user.premium():
+            return True
+        if ShareClassPlan.objects.filter(class_plan__owner = request.user).count() < 3:
+            return True
+        return False

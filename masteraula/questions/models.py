@@ -853,8 +853,9 @@ class StationMaterial(models.Model):
         return str(self.description_station)
 
 class ClassPlanPublication(models.Manager):
-    topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
-        'parent', 'discipline', 'parent__parent', 'parent__discipline'))
+    topics_prefetch = Prefetch('topics', queryset=Topic.objects.prefetch_related('synonym_set').select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')
+    )
 
     documents_prefetch = Prefetch(
         'documents',
@@ -871,13 +872,9 @@ class ClassPlanPublication(models.Manager):
         queryset=StationMaterial.objects.all().select_related('plan').prefetch_related('activity', 'document', 'document_online')
     )
 
-    learning_object_prefetch = Prefetch('learning_objects', queryset=LearningObject.objects.select_related('owner').prefetch_related(
-            'tags', 'questions'
-        ))
-
     activities_prefetch = Prefetch(
         'activities',
-        queryset=Activity.objects.all().select_related('owner').prefetch_related('tags', 'disciplines', 'teaching_levels', 'tasks', learning_object_prefetch)
+        queryset=Activity.objects.all().select_related('owner').prefetch_related('tags', 'disciplines', 'teaching_levels', 'tasks', 'learning_objects')
     )
 
     def get_classplan_prefetched(self):

@@ -1788,3 +1788,47 @@ class ListClassPlanActivitySerializer(serializers.ModelSerializer):
             'id',
             'name',   
         )
+
+class StationMaterialSerializer(serializers.ModelSerializer):
+    activity = ActivitySerializer(required=False, read_only= True)
+    document = DocumentListInfoSerializer(required=False, read_only= True)
+    document_online = DocumentOnlineListSerializer(required=False, read_only= True)
+
+    activity_ids = serializers.IntegerField(required=False, allow_null=True)
+    document_ids = serializers.IntegerField(required=False, allow_null=True)
+    document_online_ids = serializers.UUIDField(required=False, allow_null=True)
+   
+    class Meta:
+        model = StationMaterial
+        fields = (
+            'id',
+            'description_station',
+            'name',
+            'document',
+            'document_online',
+            'activity',
+
+            'document_ids',
+            'document_online_ids',
+            'activity_ids',
+        )
+
+class ShareClassPlanSerializer(serializers.ModelSerializer):
+        documents_online = DocumentOnlineListSerializer(many=True, read_only=True)
+        activities = ActivitySerializer(many=True, read_only=True)
+        stations = StationMaterialSerializer(many=True)
+
+        class Meta:
+            model = ClassPlanPublication
+            fields = (
+                'name',
+                'documents_online',
+                'activities',          
+
+                'guidelines',
+
+                'disabled',
+                'plan_type',
+                'stations',  
+            )
+            depth = 1
