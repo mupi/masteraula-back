@@ -1219,6 +1219,46 @@ class ResultSerializer(serializers.ModelSerializer):
         result.save()
         return Result.objects.get_result_prefetch().get(id=result.id)
 
+class DocumentOnlineListInfoSerializer(serializers.ModelSerializer):
+    questions_quantity = serializers.SerializerMethodField()
+    questions_topics = serializers.SerializerMethodField('questions_topics_serializer')
+    def questions_topics_serializer(self, obj):
+        questions = obj.questions_document.prefetch_related(Prefetch('topics', queryset=Topic.objects.select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')))
+        topic = []
+        for q in questions:
+            topic += q.get_all_topics()
+        topic = list(set(topic))
+        return TopicSimpleSerializer(topic, many=True).data
+
+    questions_disciplines = serializers.SerializerMethodField('questions_disciplines_serializer')
+    def questions_disciplines_serializer(self, obj):
+        questions = obj.questions_document.prefetch_related('disciplines')
+        discipline = []
+        for q in questions:
+            discipline += q.disciplines.all()
+        discipline = list(set(discipline))
+        return DisciplineSerializer(discipline, many=True).data
+
+    class Meta:
+        model = DocumentOnline
+        fields = (
+            'link',
+            'name',
+            'owner',
+            'questions_quantity',
+            'questions_topics',
+            'questions_disciplines',
+        )
+        extra_kwargs = {
+            'owner' : { 'read_only' : True },
+            'create_date' : { 'read_only' : True },
+            'secret' : { 'required' : True }
+        }
+
+    def get_questions_quantity(self, obj):
+        return obj.questions_document.count()
+
 class DocumentOnlineSerializer(serializers.ModelSerializer):
     owner = UserDetailsSerializer(read_only=True)   
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)

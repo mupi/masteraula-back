@@ -1048,6 +1048,19 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user, document=document)
     
     @list_route(methods=['get'])
+    def my_documents_online_cards(self, request):       
+        queryset = self.get_queryset().filter(owner=self.request.user)
+        self.pagination_class = DocumentCardPagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = serializers.DocumentOnlineListInfoSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = serializers.DocumentOnlineListInfoSerializer(queryset, many=True)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+    @list_route(methods=['get'])
     def my_documents_online(self, request):
         order_field = request.query_params.get('order_field', None)
         order_type = request.query_params.get('order', None)
