@@ -1251,9 +1251,7 @@ class DocumentOnlineListInfoSerializer(serializers.ModelSerializer):
             'questions_disciplines',
         )
         extra_kwargs = {
-            'owner' : { 'read_only' : True },
-            'create_date' : { 'read_only' : True },
-            'secret' : { 'required' : True }
+            'owner' : { 'read_only' : True }
         }
 
     def get_questions_quantity(self, obj):
