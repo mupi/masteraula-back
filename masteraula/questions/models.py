@@ -840,7 +840,7 @@ class Bncc(models.Model):
         return str(self.name)
 
 class StationMaterial(models.Model):
-    name = models.CharField(max_length=100, null=False, blank=False)
+    name_station = models.CharField(max_length=100, null=False, blank=False)
     description_station = models.TextField(null=False, blank=False)
 
     document = models.ForeignKey(Document, related_name='plan_station_doc', null=True, blank=True)

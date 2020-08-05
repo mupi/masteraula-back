@@ -833,8 +833,6 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
         link = ShareClassPlan.objects.filter(class_plan=class_plan)
         if link.exists():
             serializer_class['link_class_plan'] = str(link[0].link)
-        else:
-            serializer_class['link_class_plan'] = ""
         return Response(serializer_class)
  
     @detail_route(methods=['get'], permission_classes=(ShareClassPlanPermission,))
@@ -964,7 +962,7 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
             if st.activity:
                 activity = st.activity
 
-            new_stations.append(StationMaterial(name= st.name, description_station=st.description_station, activity=activity, document_online=document_online, document=document, plan=new_class_plan))
+            new_stations.append(StationMaterial(name_station= st.name_station, description_station=st.description_station, activity=activity, document_online=document_online, document=document, plan=new_class_plan))
         StationMaterial.objects.bulk_create(new_stations)  
 
         serializer = serializers.ClassPlanPublicationSerializer(new_class_plan)

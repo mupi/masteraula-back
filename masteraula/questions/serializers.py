@@ -1602,7 +1602,7 @@ class StationMaterialSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'description_station',
-            'name',
+            'name_station',
             'document',
             'document_online',
             'activity',
@@ -1611,7 +1611,7 @@ class StationMaterialSerializer(serializers.ModelSerializer):
             'document_online_ids',
             'activity_ids',
         )
-    
+         
 class ClassPlanPublicationSerializer(serializers.ModelSerializer):
     owner = UserDetailsSerializer(read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
@@ -1716,7 +1716,7 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
         
         if stations != None:
             for st in stations:
-                es = StationMaterial.objects.create(plan=plan, name= st['name'], description_station=st['description_station'] )
+                es = StationMaterial.objects.create(plan=plan, name_station= st['name_station'], description_station=st['description_station'] )
                                 
                 if 'document_ids' in st:
                     es.document_id = st['document_ids']
@@ -1745,7 +1745,7 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
         if stations != None:
             plan.stations.all().delete()
             for st in stations:
-                es = StationMaterial.objects.create(plan=plan, name= st['name'], description_station=st['description_station'] )
+                es = StationMaterial.objects.create(plan=plan, name_station= st['name_station'], description_station=st['description_station'] )
                                 
                 if 'document_ids' in st:
                     es.document_id = st['document_ids']
@@ -1787,30 +1787,6 @@ class ListClassPlanActivitySerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',   
-        )
-
-class StationMaterialSerializer(serializers.ModelSerializer):
-    activity = ActivitySerializer(required=False, read_only= True)
-    document = DocumentListInfoSerializer(required=False, read_only= True)
-    document_online = DocumentOnlineListSerializer(required=False, read_only= True)
-
-    activity_ids = serializers.IntegerField(required=False, allow_null=True)
-    document_ids = serializers.IntegerField(required=False, allow_null=True)
-    document_online_ids = serializers.UUIDField(required=False, allow_null=True)
-   
-    class Meta:
-        model = StationMaterial
-        fields = (
-            'id',
-            'description_station',
-            'name',
-            'document',
-            'document_online',
-            'activity',
-
-            'document_ids',
-            'document_online_ids',
-            'activity_ids',
         )
 
 class ShareClassPlanSerializer(serializers.ModelSerializer):
