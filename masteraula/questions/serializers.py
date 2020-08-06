@@ -1629,7 +1629,7 @@ class BnccSerializer(serializers.ModelSerializer):
 class StationMaterialSerializer(serializers.ModelSerializer):
     activity = ActivitySerializer(required=False, read_only= True)
     document = DocumentListInfoSerializer(required=False, read_only= True)
-    document_online = DocumentOnlineListSerializer(required=False, read_only= True)
+    document_online = DocumentOnlineListInfoSerializer(required=False, read_only= True)
 
     activity_ids = serializers.IntegerField(required=False, allow_null=True)
     document_ids = serializers.IntegerField(required=False, allow_null=True)
@@ -1658,7 +1658,7 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
     tags = TagListSerializer(read_only=False, required=False, allow_null=True) 
  
     documents = DocumentListInfoSerializer(many=True,read_only=True)
-    documents_online = DocumentOnlineListSerializer(many=True, read_only=True)
+    documents_online = DocumentOnlineListInfoSerializer(many=True, read_only=True)
     activities = ActivitySerializer(many=True, read_only=True)
 
     topics_ids = ModelListSerializer(write_only=True, many=True, queryset=Topic.objects.all())
@@ -1747,7 +1747,7 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
                 validated_data[key[:-4]] = validated_data.pop(key)
         
         plan = super().create(validated_data)
-
+       
         if tags != None:
             for t in [tag for tag in tags if tag != '']:
                 plan.tags.add(t)
