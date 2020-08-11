@@ -83,8 +83,9 @@ class ShareClassPlanPermission(permissions.BasePermission):
     message = "Free users has limit of 3 links"
 
     def has_permission(self, request, view):
-        if request.user.premium():
-            return True
-        if ShareClassPlan.objects.filter(class_plan__owner = request.user).count() < 3:
-            return True
+        if request.user.is_authenticated:
+            if request.user.premium():
+                return True
+            if ShareClassPlan.objects.filter(class_plan__owner = request.user).count() < 3:
+                return True
         return False
