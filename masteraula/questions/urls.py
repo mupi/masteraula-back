@@ -40,7 +40,7 @@ router.register(r'activities/search', views.ActivitySearchView, base_name="activ
 router.register(r'activities', views.ActivityViewSet, base_name="activities")
 router.register(r'bncc', views.BnccViewSet, base_name="bncc")
 router.register(r'bncc_autocomplete', views.AutocompleteSearchBnccViewSet, base_name='bncc_autocomplete')
-
+router.register(r'generate_link', views.GenerateLinkViewSet, base_name='generat_link')
 
 urlpatterns = [
     url(r'^', include(router.urls)),

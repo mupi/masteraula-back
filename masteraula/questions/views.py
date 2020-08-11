@@ -661,6 +661,22 @@ class DocumentDownloadViewSet(viewsets.ModelViewSet):
             pass
         return response
 
+class GenerateLinkViewSet(viewsets.ModelViewSet):
+    def get_queryset(self): 
+        return ShareClassPlan.objects.filter(class_plan__owner = self.request.user)
+
+    def get_serializer_class(self):
+        return serializers.LinkClassPlanSerializer
+    
+    def list(self, request, *args, **kwargs):
+        response = super(GenerateLinkViewSet, self).list(request, *args, **kwargs)
+        try:
+            total = self.get_queryset().count()
+            response.data['total_links'] = total
+        except:
+            pass
+        return response
+
 class DocumentPublicationViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
     def get_queryset(self):
