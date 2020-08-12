@@ -888,6 +888,31 @@ class ClassPlanPublication(models.Manager):
             'disciplines', 'teaching_levels', 'tags', 'bncc', 'teaching_years', self.topics_prefetch, self.documents_prefetch, self.stations_prefetch, self.documents_online_prefetch, self.activities_prefetch
         )
         return qs
+    
+    def filter_class_plans_request(self, query_params):
+        queryset = self.get_classplan_prefetched()
+        
+        disciplines = query_params.getlist('disciplines', None)
+        teaching_levels = query_params.getlist('teaching_levels', None)
+        owner = query_params.get('author', None)
+        topics = query_params.getlist('topics', None)
+        years = query_params.get('years', None)
+        
+        if disciplines:
+            queryset = queryset.filter(disciplines__in=disciplines)
+        if teaching_levels:
+            queryset = queryset.filter(teaching_levels__in=teaching_levels)
+        if owner:
+            queryset = queryset.filter(owner__id=owner)
+        if topics:
+            for topic in topics:
+                queryset = queryset.filter(topics__id=topic)
+        if years:
+            queryset = queryset.filter(create_date__year=int(years))
+        
+        queryset = queryset.distinct()
+        return queryset
+   
 
 class ClassPlanPublication(models.Model):
     TYPE_PLAN = (
@@ -923,8 +948,8 @@ class ClassPlanPublication(models.Model):
     def __str__(self):
         return str(self.name)
     
-    class Meta:
-        ordering = ['id']
+    # class Meta:
+    #     ordering = ['id']
     
     def get_all_topics(self):
         topics = []

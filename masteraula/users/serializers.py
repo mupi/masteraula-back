@@ -109,6 +109,7 @@ class UserSerializer(serializers.ModelSerializer):
             'id',
             'username',
             'name',
+            'nickname',
             'email',
             'about',
             'city',

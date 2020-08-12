@@ -2,6 +2,8 @@
 
 {{ object.id }}
 {{ object.owner.name|stripaccents }}
+{{ object.phases|prepare_document }}
+{{ object.content|prepare_document }}
 
 {% for tag in object.tags.all %}
     {{ tag.name|stripaccents }}

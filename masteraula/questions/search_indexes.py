@@ -385,25 +385,15 @@ class ClassPlanPublicationIndex(indexes.SearchIndex, indexes.Indexable):
     def filter_class_plan_search(text, query_params):
         disciplines = query_params.getlist('disciplines', None)
         teaching_levels = query_params.getlist('teaching_levels', None)
-        difficulties = query_params.getlist('difficulties', None)
         owner = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
         bncc = query_params.getlist('bncc', None)
 
         params = {'disabled' : 'false'}
         if disciplines:
-            params['disciplines__id__in'] = disciplines
+            params['disciplines__in'] = disciplines
         if teaching_levels:
             params['teaching_levels__in'] = teaching_levels
-        if difficulties:
-            difficulties_texts = []
-            if 'E' in difficulties:
-                difficulties_texts.append('Facil')
-            if 'M' in difficulties:
-                difficulties_texts.append('Medio')
-            if 'H' in difficulties:
-                difficulties_texts.append('Dificil')
-            params['difficulty__in'] = difficulties_texts
         
         if owner:
             params['owner_id'] = owner
@@ -420,11 +410,11 @@ class ClassPlanPublicationIndex(indexes.SearchIndex, indexes.Indexable):
         queries = [SQ(topics=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         for item in queries:
             query |= item
-        queries = [SQ(statement=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        queries = [SQ(phases=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         for item in queries:
             query |= item
 
-        search_queryset = SearchQuerySet().models(Activity).filter_and(**params)
+        search_queryset = SearchQuerySet().models(ClassPlanPublication).filter_and(**params)
         search_queryset = search_queryset.filter(SQ(content=Clean(text)) | (
             SQ(content=Clean(text)) & query
         ))

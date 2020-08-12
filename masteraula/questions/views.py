@@ -86,6 +86,11 @@ class ClassPlanPagination(pagination.PageNumberPagination):
     page_size = 10
     max_page_size = 80
 
+class ClassPlanListPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 16
+    max_page_size = 64
+
 class QuestionSearchView(viewsets.ReadOnlyModelViewSet):   
     pagination_class = QuestionPagination
     serializer_class = serializers.QuestionSerializer
@@ -259,7 +264,8 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
         text = request.query_params.get('text', None)
         topics = request.query_params.getlist('topics', [])
         activities = request.query_params.getlist('activities', None)
-       
+        class_plans = request.query_params.getlist('classPlans', None)
+
         if text:
             text = prepare_document(text)
             text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
@@ -273,8 +279,15 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
                 questions = Activity.objects.prefetch_related(
                     Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
                 ).filter(id__in=questions_ids)
+            
+            if class_plans:
+                search_queryset = ClassPlanPublicationIndex.filter_class_plan_search(text, request.query_params)
+                questions_ids = [q.pk for q in search_queryset[:]]
+                questions = ClassPlanPublication.objects.prefetch_related(
+                    Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
+                ).filter(id__in=questions_ids)
 
-            else:
+            if not activities and not class_plans:
                 search_queryset = QuestionIndex.filter_question_search(text, request.query_params)
                 questions_ids = [q.pk for q in search_queryset[:]]
                 
@@ -299,7 +312,9 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
         else:
             if activities:
                 questions = Activity.objects.filter_activities_request(self.request.query_params).filter(disabled=False)
-            else:
+            if class_plans:
+                questions = ClassPlanPublication.objects.filter_class_plans_request(self.request.query_params).filter(disabled=False)
+            if not activities and not class_plans:
                 questions = Question.objects.filter_questions_request(self.request.query_params).filter(disabled=False)
 
             questions = questions.filter(topics=OuterRef('pk')).values('topics')
@@ -827,12 +842,17 @@ class TeachingYearViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ClassPlanPublicationSerializer
-    pagination_class = ClassPlanPagination
-    # permission_classes = (permissions.IsAuthenticated, ClassPlanPermission, )
+    pagination_class = ClassPlanListPagination
+    permission_classes = (ClassPlanPermission, )
 
     def get_queryset(self):
-        queryset = ClassPlanPublication.objects.get_classplan_prefetched().filter(owner=self.request.user, disabled=False)
-        return queryset
+        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+            return ClassPlanPublication.objects.all()
+
+        queryset = ClassPlanPublication.objects.filter_class_plans_request(self.request.query_params)
+        if self.action == 'list':
+            queryset = queryset.filter(disabled=False).order_by('id')
+        return queryset.order_by('id')
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -865,7 +885,7 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
         order_field = request.query_params.get('order_field', None)
         order_type = request.query_params.get('order', None)
 
-        queryset = self.get_queryset()
+        queryset = self.get_queryset().filter(owner=self.request.user)
         if order_field == 'create_date':
             if order_type == 'desc':
                 queryset = queryset.order_by('-create_date')
