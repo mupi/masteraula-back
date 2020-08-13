@@ -11,8 +11,8 @@ class RelatedQuestions():
 
     def similar_questions(self, question, activity=False):
         list_question = []
-        questions = Question.objects.filter(topics__in=question.get_all_topics(), disabled=False).order_by('?')
-        disciplines = Question.objects.filter(disciplines__in=question.disciplines.all(), disabled=False).exclude(id__in=questions).order_by('?')
+        questions = Question.objects.filter(topics__in=question.get_all_topics(), disabled=False, secret=False).order_by('?')
+        disciplines = Question.objects.filter(disciplines__in=question.disciplines.all(), disabled=False, secret=False).exclude(id__in=questions).order_by('?')
 
         if activity == False:
             questions = questions.exclude(id=question.id)

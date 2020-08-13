@@ -100,7 +100,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         page = super().paginate_queryset(search_queryset)
         questions_ids = [res.pk for res in page]
 
-        queryset = Question.objects.get_questions_prefetched().filter(disabled=False, id__in=questions_ids).order_by('id')
+        queryset = Question.objects.get_questions_prefetched().filter(disabled=False, secret=False, id__in=questions_ids).order_by('id')
         order = Case(*[When(id=id, then=pos) for pos, id in enumerate(questions_ids)])
         queryset = queryset.order_by(order)
 
@@ -150,7 +150,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
         queryset = Question.objects.filter_questions_request(self.request.query_params)
         if self.action == 'list':
-            queryset = queryset.filter(disabled=False).order_by('id')
+            queryset = queryset.filter(disabled=False, secret=False).order_by('id')
 
         return queryset.order_by('id')
 
@@ -311,11 +311,11 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
 
         else:
             if activities:
-                questions = Activity.objects.filter_activities_request(self.request.query_params).filter(disabled=False)
+                questions = Activity.objects.filter_activities_request(self.request.query_params).filter(disabled=False, secret=False)
             if class_plans:
-                questions = ClassPlanPublication.objects.filter_class_plans_request(self.request.query_params).filter(disabled=False)
+                questions = ClassPlanPublication.objects.filter_class_plans_request(self.request.query_params).filter(disabled=False, secret=False)
             if not activities and not class_plans:
-                questions = Question.objects.filter_questions_request(self.request.query_params).filter(disabled=False)
+                questions = Question.objects.filter_questions_request(self.request.query_params).filter(disabled=False, secret=False)
 
             questions = questions.filter(topics=OuterRef('pk')).values('topics')
             total_question = questions.annotate(cnt=Count('pk')).values('cnt')
@@ -851,7 +851,7 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
 
         queryset = ClassPlanPublication.objects.filter_class_plans_request(self.request.query_params)
         if self.action == 'list':
-            queryset = queryset.filter(disabled=False).order_by('id')
+            queryset = queryset.filter(disabled=False, secret=False).order_by('id')
         return queryset.order_by('id')
 
     def perform_create(self, serializer):
@@ -1013,7 +1013,7 @@ class ClassPlanPublicationSearchView(viewsets.ReadOnlyModelViewSet):
         page = super().paginate_queryset(search_queryset)
         class_plans_ids = [res.pk for res in page]
 
-        queryset = ClassPlanPublication.objects.get_classplan_prefetched().filter(disabled=False, id__in=class_plans_ids).order_by('id')
+        queryset = ClassPlanPublication.objects.get_classplan_prefetched().filter(disabled=False, secret=False, id__in=class_plans_ids).order_by('id')
         order = Case(*[When(id=id, then=pos) for pos, id in enumerate(class_plans_ids)])
         queryset = queryset.order_by(order)
 
@@ -1255,7 +1255,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
 
         queryset = Activity.objects.filter_activities_request(self.request.query_params)
         if self.action == 'list':
-            queryset = queryset.filter(disabled=False).order_by('id')
+            queryset = queryset.filter(disabled=False, secret=False).order_by('id')
         return queryset.order_by('id')
     
     def retrieve(self, request, pk=None):
@@ -1300,7 +1300,7 @@ class ActivitySearchView(viewsets.ReadOnlyModelViewSet):
         page = super().paginate_queryset(search_queryset)
         activities_ids = [res.pk for res in page]
 
-        queryset = Activity.objects.get_activities_prefetched().filter(disabled=False, id__in=activities_ids).order_by('id')
+        queryset = Activity.objects.get_activities_prefetched().filter(disabled=False, secret=False, id__in=activities_ids).order_by('id')
         order = Case(*[When(id=id, then=pos) for pos, id in enumerate(activities_ids)])
         queryset = queryset.order_by(order)
 
