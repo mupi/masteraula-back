@@ -672,7 +672,7 @@ class DocumentOnlineManager(models.Manager):
        
 class DocumentOnline(models.Model):
     link = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    document = models.ForeignKey(Document, on_delete=models.CASCADE)
+    document = models.ForeignKey(Document, related_name='document_document_online', on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     create_date = models.DateTimeField(auto_now_add=True)
@@ -967,3 +967,6 @@ class ShareClassPlan(models.Model):
 
     def __str__(self):
         return str(self.link)
+
+    class Meta:   
+        ordering = ['link']

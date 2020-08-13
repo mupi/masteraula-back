@@ -741,14 +741,23 @@ class DocumentQuestionListDetailSerializer(serializers.ModelSerializer):
             'order' : { 'required' : False }
         }
 
+class DocumentOnlineSimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentOnline
+        fields = (
+            'link',
+            'name',
+        )
  
-        
 class DocumentListSerializer(serializers.ModelSerializer):
-    questions = DocumentQuestionSerializer(many=True, source='documentquestion_set', read_only=True)
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
     questions_quantity = serializers.SerializerMethodField()
     plans_quantity = serializers.SerializerMethodField()
-    documents_online = serializers.SerializerMethodField()
+    documents_online = serializers.SerializerMethodField('documents_online_serializer')
+
+    def documents_online_serializer(self, obj):
+        documents_online = obj.document_document_online.prefetch_related('questions_document')
+        return DocumentOnlineSimpleSerializer(documents_online, many=True).data
 
     class Meta:
         model = Document
@@ -756,9 +765,7 @@ class DocumentListSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'owner',
-            'questions',
             'create_date',
-            'secret',
             'questions_quantity',
             'plans_quantity',
             'documents_online',
@@ -768,10 +775,6 @@ class DocumentListSerializer(serializers.ModelSerializer):
             'create_date' : { 'read_only' : True },
             'secret' : { 'required' : True }
         }
-   
-    def get_documents_online(self, obj):
-        document_count = DocumentOnline.objects.get_documentonline_prefetch().filter(document=obj)
-        return len(document_count)
 
     def get_questions_quantity(self, obj):
         try:
@@ -781,8 +784,8 @@ class DocumentListSerializer(serializers.ModelSerializer):
             return obj.questions.count()
     
     def get_plans_quantity(self, obj):
-        plans = ClassPlanPublication.objects.filter(documents__id=obj.id, disabled=False).count()
-        return plans
+        plans = ClassPlanPublication.objects.filter(documents__id=obj.id, disabled=False)
+        return len(plans)
 
 class DocumentListInfoSerializer(serializers.ModelSerializer):
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
