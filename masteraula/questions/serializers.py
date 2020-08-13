@@ -385,6 +385,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             # 'credit_cost',
             'tags',   
             'disabled',
+            'secret',
             'documents_quantity',
             'users_quantity',
             'type_question' 
@@ -756,8 +757,7 @@ class DocumentListSerializer(serializers.ModelSerializer):
     documents_online = serializers.SerializerMethodField('documents_online_serializer')
 
     def documents_online_serializer(self, obj):
-        documents_online = obj.document_document_online.prefetch_related('questions_document')
-        return DocumentOnlineSimpleSerializer(documents_online, many=True).data
+        return DocumentOnlineSimpleSerializer(obj.document_document_online, many=True).data
 
     class Meta:
         model = Document
@@ -784,8 +784,7 @@ class DocumentListSerializer(serializers.ModelSerializer):
             return obj.questions.count()
     
     def get_plans_quantity(self, obj):
-        plans = ClassPlanPublication.objects.filter(documents__id=obj.id, disabled=False)
-        return len(plans)
+        return len(obj.class_plans_doc.filter(disabled=False))
 
 class DocumentListInfoSerializer(serializers.ModelSerializer):
     create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
@@ -1293,7 +1292,8 @@ class DocumentOnlineSerializer(serializers.ModelSerializer):
             'application',
             'document_finish',
             'status',
-            'review_score_doc'
+            'review_score_doc',
+            'disabled'
         )
     def get_review_score_doc(self, obj):
         results = Result.objects.filter(results=obj, student_answer__answer_text__isnull=False, student_answer__score_answer__isnull=True)
@@ -1701,6 +1701,7 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
             'guidelines',
 
             'disabled',
+            'secret',
             'plan_type',
             'stations',
 

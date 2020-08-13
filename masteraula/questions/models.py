@@ -219,6 +219,8 @@ class Question(models.Model):
 
     tags = TaggableManager(blank=True)
     disabled = models.BooleanField(null=False, blank=True, default=False)
+    secret = models.BooleanField(null=False, blank=True, default=False)
+
     objects = QuestionManager()
 
     def __str__(self):
@@ -680,6 +682,7 @@ class DocumentOnline(models.Model):
     finish_date = models.DateTimeField()
     duration = models.PositiveIntegerField(null=True, blank=True)
     questions_document = models.ManyToManyField(Question, through='DocumentQuestionOnline', related_name='questions_document')
+    disabled = models.BooleanField(null=False, blank=True, default=False)
 
     objects = DocumentOnlineManager()
 
@@ -942,6 +945,7 @@ class ClassPlanPublication(models.Model):
 
     disabled = models.BooleanField(null=False, blank=True, default=False)
     plan_type = models.CharField(max_length=1, choices = TYPE_PLAN, null=True, blank=True)
+    secret = models.BooleanField(null=False, blank=True, default=False)
 
     objects = ClassPlanPublication()
 
