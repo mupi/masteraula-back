@@ -100,7 +100,7 @@ class QuestionSearchView(viewsets.ReadOnlyModelViewSet):
         page = super().paginate_queryset(search_queryset)
         questions_ids = [res.pk for res in page]
 
-        queryset = Question.objects.get_questions_prefetched().filter(disabled=False, secret=False, id__in=questions_ids).order_by('id')
+        queryset = Question.objects.get_questions_prefetched().filter(disabled=False, id__in=questions_ids).order_by('id')
         order = Case(*[When(id=id, then=pos) for pos, id in enumerate(questions_ids)])
         queryset = queryset.order_by(order)
 
@@ -145,12 +145,12 @@ class QuestionViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, QuestionPermission)
 
     def get_queryset(self):
-        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+        if self.action == 'retrieve' or self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
             return Question.objects.all()
 
         queryset = Question.objects.filter_questions_request(self.request.query_params)
         if self.action == 'list':
-            queryset = queryset.filter(disabled=False, secret=False).order_by('id')
+            queryset = queryset.filter(disabled=False).order_by('id')
 
         return queryset.order_by('id')
 
@@ -463,8 +463,8 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
         learning_object = get_object_or_404(self.get_queryset(), pk=pk)
         serializer_learningobject = self.serializer_class(learning_object, context=self.get_serializer_context())
 
-        questions_object = Question.objects.get_questions_prefetched().filter(learning_objects__id=pk).filter(disabled=False).order_by('-create_date').order_by('?')
-        activities_object = Activity.objects.get_activities_prefetched().filter(learning_objects__id=pk).filter(disabled=False).order_by('-create_date').order_by('?')
+        questions_object = Question.objects.get_questions_prefetched().filter(learning_objects__id=pk).filter(disabled=False, secret=False).order_by('-create_date').order_by('?')
+        activities_object = Activity.objects.get_activities_prefetched().filter(learning_objects__id=pk).filter(disabled=False, secret=False).order_by('-create_date').order_by('?')
 
         if len(questions_object) >= 4 and len(activities_object) >= 4:
             questions_object = questions_object[:4]
@@ -852,12 +852,12 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
     permission_classes = (ClassPlanPermission, )
 
     def get_queryset(self):
-        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+        if self.action == 'retrieve' or self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
             return ClassPlanPublication.objects.all()
 
         queryset = ClassPlanPublication.objects.filter_class_plans_request(self.request.query_params)
         if self.action == 'list':
-            queryset = queryset.filter(disabled=False, secret=False).order_by('id')
+            queryset = queryset.filter(disabled=False).order_by('id')
         return queryset.order_by('id')
 
     def perform_create(self, serializer):
@@ -1019,7 +1019,7 @@ class ClassPlanPublicationSearchView(viewsets.ReadOnlyModelViewSet):
         page = super().paginate_queryset(search_queryset)
         class_plans_ids = [res.pk for res in page]
 
-        queryset = ClassPlanPublication.objects.get_classplan_prefetched().filter(disabled=False, secret=False, id__in=class_plans_ids).order_by('id')
+        queryset = ClassPlanPublication.objects.get_classplan_prefetched().filter(disabled=False, id__in=class_plans_ids).order_by('id')
         order = Case(*[When(id=id, then=pos) for pos, id in enumerate(class_plans_ids)])
         queryset = queryset.order_by(order)
 
@@ -1082,7 +1082,7 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
         queryset = DocumentOnline.objects.get_documentonline_prefetch()
 
         if self.action == 'list':
-            queryset = queryset.filter(document=self.request.query_params['id']).filter(disabled=False, secret=False)
+            queryset = queryset.filter(document=self.request.query_params['id']).filter(disabled=False)
         return queryset.order_by('name')
 
     def perform_create(self, serializer):
@@ -1262,12 +1262,12 @@ class ActivityViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     def get_queryset(self):
-        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+        if self.action == 'retrieve' or self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
             return Activity.objects.all()
 
         queryset = Activity.objects.filter_activities_request(self.request.query_params)
         if self.action == 'list':
-            queryset = queryset.filter(disabled=False, secret=False).order_by('id')
+            queryset = queryset.filter(disabled=False).order_by('id')
         return queryset.order_by('id')
     
     def retrieve(self, request, pk=None):
@@ -1312,7 +1312,7 @@ class ActivitySearchView(viewsets.ReadOnlyModelViewSet):
         page = super().paginate_queryset(search_queryset)
         activities_ids = [res.pk for res in page]
 
-        queryset = Activity.objects.get_activities_prefetched().filter(disabled=False, secret=False, id__in=activities_ids).order_by('id')
+        queryset = Activity.objects.get_activities_prefetched().filter(disabled=False, id__in=activities_ids).order_by('id')
         order = Case(*[When(id=id, then=pos) for pos, id in enumerate(activities_ids)])
         queryset = queryset.order_by(order)
 
@@ -1330,9 +1330,4 @@ class ActivitySearchView(viewsets.ReadOnlyModelViewSet):
             raise exceptions.ValidationError("Invalid search text")
 
         search_queryset = ActivityIndex.filter_activity_search(text, self.request.query_params)
-
-        disciplines = self.request.query_params.getlist('disciplines', None)
-        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
-        difficulties = self.request.query_params.getlist('difficulties', None)
-        
         return search_queryset

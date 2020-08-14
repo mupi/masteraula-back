@@ -34,6 +34,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     author_id = indexes.IntegerField()
     authorship = indexes.CharField()
     disabled = indexes.BooleanField(model_attr='disabled')
+    secret = indexes.BooleanField(model_attr='secret')
 
     def get_model(self):
         return Question
@@ -90,6 +91,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         author = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
         labels = query_params.getlist('labels', None)
+        has_author = False
 
         params = {'disabled' : 'false'}
         if disciplines:
@@ -111,10 +113,14 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
             params['source__in'] = sources
         if author:
             params['author_id'] = author
+            has_author = True
         if topics:
             params['topics_ids'] = topics
         if labels:
             params['labels__in'] = labels
+
+        if not has_author:
+            params = {'secret' : 'false'}
     
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
@@ -225,6 +231,7 @@ class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
     owner = indexes.CharField(model_attr='owner')
     owner_id = indexes.IntegerField()
     disabled = indexes.BooleanField(model_attr='disabled')
+    secret = indexes.BooleanField(model_attr='secret')
 
     def get_model(self):
         return Activity
@@ -279,6 +286,7 @@ class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
         owner = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
         years = query_params.getlist('years', None)
+        has_owner = False
 
         params = {'disabled' : 'false'}
         if disciplines:
@@ -297,10 +305,14 @@ class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
         
         if owner:
             params['owner_id'] = owner
+            has_owner = True
         if topics:
             params['topics_ids'] = topics
         if years:
             params['year__in'] = years
+        
+        if not has_owner:
+            params = {'secret' : 'false'}
     
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
@@ -338,6 +350,7 @@ class ClassPlanPublicationIndex(indexes.SearchIndex, indexes.Indexable):
     owner = indexes.CharField(model_attr='owner')
     owner_id = indexes.IntegerField()
     disabled = indexes.BooleanField(model_attr='disabled')
+    secret = indexes.BooleanField(model_attr='secret')
 
     def get_model(self):
         return ClassPlanPublication
@@ -388,6 +401,7 @@ class ClassPlanPublicationIndex(indexes.SearchIndex, indexes.Indexable):
         owner = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
         bncc = query_params.getlist('bncc', None)
+        has_owner = False
 
         params = {'disabled' : 'false'}
         if disciplines:
@@ -397,10 +411,14 @@ class ClassPlanPublicationIndex(indexes.SearchIndex, indexes.Indexable):
         
         if owner:
             params['owner_id'] = owner
+            has_owner = True
         if topics:
             params['topics_ids'] = topics
         if bncc:
             params['bncc__in'] = bncc
+        
+        if not has_owner:
+            params = {'secret' : 'false'}
     
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
