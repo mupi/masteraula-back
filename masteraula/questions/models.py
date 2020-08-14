@@ -179,7 +179,7 @@ class QuestionManager(models.Manager):
             query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             queryset = queryset.filter(query)
         if author:
-            queryset = queryset.filter(author__id=author)
+            queryset = queryset.filter(author__id=author, secret=False)
         if topics:
             for topic in topics:
                 queryset = queryset.filter(topics__id=topic)
@@ -776,7 +776,7 @@ class ActivityManager(models.Manager):
         if difficulties:
             queryset = queryset.filter(difficulty__in=difficulties)
         if owner:
-            queryset = queryset.filter(owner__id=owner)
+            queryset = queryset.filter(owner__id=owner, secret=False)
         if topics:
             for topic in topics:
                 queryset = queryset.filter(topics__id=topic)
@@ -906,7 +906,7 @@ class ClassPlanPublication(models.Manager):
         if teaching_levels:
             queryset = queryset.filter(teaching_levels__in=teaching_levels)
         if owner:
-            queryset = queryset.filter(owner__id=owner)
+            queryset = queryset.filter(owner__id=owner, secret=False)
         if topics:
             for topic in topics:
                 queryset = queryset.filter(topics__id=topic)
