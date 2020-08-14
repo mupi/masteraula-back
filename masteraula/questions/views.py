@@ -36,7 +36,7 @@ from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
 from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex, ActivityIndex, ClassPlanPublicationIndex
-from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission, ClassPlanPermission, ShareClassPlanPermission, ClassPlanCopyPermission
+from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission, ClassPlanPermission, ShareClassPlanPermission, ClassPlanCopyPermission, ActivityPermission
 from . import serializers as serializers
 
 current_milli_time = lambda: int(round(time.time() * 1000))
@@ -1256,7 +1256,7 @@ class ResultViewSet(viewsets.ModelViewSet):
 class ActivityViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ActivitySerializer
     pagination_class = ActivityPagination
-    permission_classes = (permissions.IsAuthenticated, QuestionPermission)
+    permission_classes = (permissions.IsAuthenticated, ActivityPermission)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
