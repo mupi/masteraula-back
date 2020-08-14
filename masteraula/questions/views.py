@@ -36,7 +36,7 @@ from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
 from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex, ActivityIndex, ClassPlanPublicationIndex
-from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission, ClassPlanPermission, ShareClassPlanPermission
+from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission, ClassPlanPermission, ShareClassPlanPermission, ClassPlanCopyPermission
 from . import serializers as serializers
 
 current_milli_time = lambda: int(round(time.time() * 1000))
@@ -929,7 +929,7 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    @detail_route(methods=['post'])
+    @detail_route(methods=['post'], permission_classes=(ClassPlanCopyPermission,))
     def copy_plan(self, request, pk=None):
         obj = self.get_object()
         class_plan = ClassPlanPublication.objects.filter(id=obj.id).values().first()  

@@ -82,9 +82,15 @@ class ClassPlanPermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.user.is_superuser:
             return True
-        if obj.author == request.user:
+        if obj.owner == request.user:
             return True
         if request.method in permissions.SAFE_METHODS:
+            return True
+
+class ClassPlanCopyPermission(permissions.BasePermission):
+    """Só poderá editar o objeto se o usuário for autenticado"""
+    def has_permission(self, request, view):
+        if request.user.is_authenticated:
             return True
 
 class ShareClassPlanPermission(permissions.BasePermission):
