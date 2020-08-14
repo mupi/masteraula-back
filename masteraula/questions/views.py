@@ -492,6 +492,12 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(object_types__contains=filters)
             
         return queryset.filter()
+    
+    def destroy(self, request, pk=None):
+        learning_object = self.get_object()
+        learning_object.disabled = True
+        learning_object.save()
+        return Response(status = status.HTTP_204_NO_CONTENT)
 
 class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = (DocumentsPermission, )
@@ -1076,16 +1082,22 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
         queryset = DocumentOnline.objects.get_documentonline_prefetch()
 
         if self.action == 'list':
-            queryset = queryset.filter(document=self.request.query_params['id'])
+            queryset = queryset.filter(document=self.request.query_params['id']).filter(disabled=False, secret=False)
         return queryset.order_by('name')
 
     def perform_create(self, serializer):
         document = Document.objects.get(id=self.request.query_params['id'])
         serializer.save(owner=self.request.user, document=document)
     
+    def destroy(self, request, pk=None):
+        document = self.get_object()
+        document.disabled = True
+        document.save()
+        return Response(status = status.HTTP_204_NO_CONTENT)
+
     @list_route(methods=['get'])
     def my_documents_online_cards(self, request):       
-        queryset = self.get_queryset().filter(owner=self.request.user)
+        queryset = self.get_queryset().filter(owner=self.request.user, disabled=False)
         self.pagination_class = DocumentCardPagination
         page = self.paginate_queryset(queryset)
         if page is not None:

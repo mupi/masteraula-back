@@ -150,6 +150,7 @@ class LearningObjectSerializer(serializers.ModelSerializer):
             'tags',
             'object_types',
             'questions_quantity',
+            'disabled',
         )
 
         extra_kwargs = {
@@ -757,7 +758,7 @@ class DocumentListSerializer(serializers.ModelSerializer):
     documents_online = serializers.SerializerMethodField('documents_online_serializer')
 
     def documents_online_serializer(self, obj):
-        return DocumentOnlineSimpleSerializer(obj.document_document_online, many=True).data
+        return DocumentOnlineSimpleSerializer(obj.document_document_online.filter(disabled=False), many=True).data
 
     class Meta:
         model = Document

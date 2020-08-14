@@ -33,8 +33,8 @@ class RelatedQuestions():
                 questions += disciplines[:8]
 
         # Get activities similar
-        activities = Activity.objects.filter(topics__in=question.get_all_topics(), disabled=False).order_by('?')
-        disciplines_act = Activity.objects.filter(disciplines__in=question.disciplines.all(), disabled=False).exclude(id__in=activities).order_by('?')
+        activities = Activity.objects.filter(topics__in=question.get_all_topics(), disabled=False, secret=False).order_by('?')
+        disciplines_act = Activity.objects.filter(disciplines__in=question.disciplines.all(), disabled=False, secret=False).exclude(id__in=activities).order_by('?')
         list_activity = []
 
         if activity == True:
