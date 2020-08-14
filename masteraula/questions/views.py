@@ -944,9 +944,9 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
         new_class_plan.tags.add(*obj.tags.all())
 
         for d in obj.documents.all():
-            if d.disabled == False:
+            if d.disabled == False and d.owner != self.request.user:
                 doc = Document.objects.filter(id=d.id).values().first()  
-                doc.update({'id': None})
+                doc.update({'id': None, 'owner': self.request.user, 'owner_id': self.request.user.id})
                 duplicate = Document.objects.create(**doc)
                 new_class_plan.documents.add(duplicate)
 
@@ -957,16 +957,17 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
                 DocumentQuestion.objects.bulk_create(new_questions) 
 
         for do in obj.documents_online.all():
-            doc_online = DocumentOnline.objects.filter(link=do.link).values().first()  
-            doc_online.update({'link': None})
-            duplicate = DocumentOnline.objects.create(**doc_online)
-            new_class_plan.documents_online.add(duplicate)
+            if do.disabled == False and do.owner != self.request.user:
+                doc_online = DocumentOnline.objects.filter(link=do.link).values().first()  
+                doc_online.update({'link': None, 'owner': self.request.user, 'owner_id': self.request.user.id})
+                duplicate = DocumentOnline.objects.create(**doc_online)
+                new_class_plan.documents_online.add(duplicate)
 
-            new_questions = []
-            for count, q in enumerate(do.documentquestiononline_set.all()):
-                if q.question.disabled == False:
-                    new_questions.append(DocumentQuestionOnline(document=duplicate, question=q.question, order=count+1, score=q.score))
-            DocumentQuestionOnline.objects.bulk_create(new_questions) 
+                new_questions = []
+                for count, q in enumerate(do.documentquestiononline_set.all()):
+                    if q.question.disabled == False:
+                        new_questions.append(DocumentQuestionOnline(document=duplicate, question=q.question, order=count+1, score=q.score))
+                DocumentQuestionOnline.objects.bulk_create(new_questions) 
         
         for a in obj.activities.all():
             if a.disabled == False:
@@ -975,9 +976,9 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
         new_stations = []
         for st in obj.stations.all():
             document = None
-            if st.document:
+            if st.document and st.document.disabled == False and st.document.owner != self.request.user:
                 doc = Document.objects.filter(id=st.document.id).values().first()  
-                doc.update({'id': None})
+                doc.update({'id': None, 'owner': self.request.user, 'owner_id': self.request.user.id})
                 doc_duplicate = Document.objects.create(**doc)
                 document = doc_duplicate
 
@@ -988,9 +989,9 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
                 DocumentQuestion.objects.bulk_create(new_questions) 
 
             document_online = None
-            if st.document_online:
+            if st.document_online and st.document_online.disabled == False and st.document_online.owner != self.request.user:
                 doc_online = DocumentOnline.objects.filter(link=st.document_online.link).values().first()  
-                doc_online.update({'link': None})
+                doc_online.update({'link': None, 'owner': self.request.user, 'owner_id': self.request.user.id})
                 online_duplicate = DocumentOnline.objects.create(**doc_online)
                 document_online = online_duplicate
 
@@ -1001,7 +1002,7 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
                 DocumentQuestionOnline.objects.bulk_create(new_questions) 
             
             activity = None
-            if st.activity:
+            if st.activity and st.activity.disabled == False:
                 activity = st.activity
 
             new_stations.append(StationMaterial(name_station= st.name_station, description_station=st.description_station, activity=activity, document_online=document_online, document=document, plan=new_class_plan))
