@@ -165,6 +165,10 @@ class QuestionViewSet(viewsets.ModelViewSet):
     
     def retrieve(self, request, pk=None):
         question = get_object_or_404(self.get_queryset(), pk=pk)
+
+        if question.secret and question.author != request.user:
+            raise exceptions.ValidationError("You don't have permissions to access!")
+
         serializer_question = self.serializer_class(question, context=self.get_serializer_context())
 
         documents = Document.objects.filter(questions__id=pk, owner=request.user, disabled=False).order_by('create_date')
@@ -875,6 +879,10 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         class_plan = self.get_object()
+
+        if class_plan.secret and class_plan.owner != request.user:
+            raise exceptions.ValidationError("You don't have permissions to access!")
+
         serializer_class = self.get_serializer_class()(class_plan).data
         link = ShareClassPlan.objects.filter(class_plan=class_plan)
         if link.exists():
@@ -1277,6 +1285,9 @@ class ActivityViewSet(viewsets.ModelViewSet):
     
     def retrieve(self, request, pk=None):
         activity = get_object_or_404(self.get_queryset(), pk=pk)
+        if activity.secret and activity.owner != request.user:
+            raise exceptions.ValidationError("You don't have permissions to access!")
+
         serializer_activity = self.serializer_class(activity, context=self.get_serializer_context())
 
         class_plans = ClassPlanPublication.objects.get_classplan_prefetched() \
