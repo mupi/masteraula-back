@@ -1006,7 +1006,7 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
                         new_questions.append(DocumentQuestion(document=doc_duplicate, question=q.question, order=count+1))
                 DocumentQuestion.objects.bulk_create(new_questions) 
             else:
-                if st.document.disabled == False:
+                if st.document and st.document.disabled == False:
                     document = st.document
 
             document_online = None
@@ -1022,7 +1022,7 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
                         new_questions.append(DocumentQuestionOnline(document=online_duplicate, question=q.question, order=count+1, score=q.score))
                 DocumentQuestionOnline.objects.bulk_create(new_questions) 
             else:
-                if st.document_online.disabled == False:
+                if st.document_online and st.document_online.disabled == False:
                     document_online =st.document_online
     
             activity = None
