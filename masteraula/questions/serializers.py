@@ -1824,6 +1824,36 @@ class ClassPlanPublicationSerializer(serializers.ModelSerializer):
         
         return ClassPlanPublication.objects.get(id=plan.id)
 
+class ClassPlanPublicationSimpleSerializer(serializers.ModelSerializer):
+    owner = UserDetailsSerializer(read_only=True)
+    create_date = serializers.DateTimeField(format="%Y/%m/%d", required=False, read_only=True)
+    topics = TopicSimpleSerializer(read_only=True, many=True)
+    tags = TagListSerializer(read_only=False, required=False, allow_null=True) 
+  
+    class Meta:
+        model = ClassPlanPublication
+        fields = (
+            'id',
+            'owner',
+            'create_date',
+            'name',
+
+            'disciplines',
+            'teaching_levels',
+            'topics',
+            'tags',
+
+            'duration', 
+            'phases',
+            'content',
+            'guidelines',
+
+            'disabled',
+            'secret',
+            'plan_type',
+        )
+        depth = 1
+
 class ListClassPlanActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassPlanPublication

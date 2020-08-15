@@ -514,7 +514,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if self.action == 'my_documents_cards':
             queryset = Document.objects.filter(owner=self.request.user, disabled=False, questions__isnull=False).distinct()
         if self.action == 'retrieve':
-            queryset = Document.objects.get_questions_prefetched().filter(owner=self.request.user)
+            queryset = Document.objects.get_questions_prefetched()
         return queryset
 
     def get_serializer_class(self):
@@ -847,7 +847,6 @@ class TeachingYearViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
 
 class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
-    serializer_class = serializers.ClassPlanPublicationSerializer
     pagination_class = ClassPlanListPagination
     permission_classes = (ClassPlanPermission, )
 
@@ -859,6 +858,11 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
         if self.action == 'list':
             queryset = queryset.filter(disabled=False).order_by('id')
         return queryset.order_by('id')
+    
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return serializers.ClassPlanPublicationSimpleSerializer
+        return serializers.ClassPlanPublicationSerializer   
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -922,10 +926,10 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
         self.pagination_class = ClassPlanPagination
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = serializers.ClassPlanPublicationSerializer(page, many=True)
+            serializer = serializers.ClassPlanPublicationSimpleSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        serializer = serializers.ClassPlanPublicationSerializer(queryset, many=True)
+        serializer = serializers.ClassPlanPublicationSimpleSerializer(queryset, many=True)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -1013,7 +1017,7 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
 
 class ClassPlanPublicationSearchView(viewsets.ReadOnlyModelViewSet):
     pagination_class = ClassPlanPagination
-    serializer_class = serializers.ClassPlanPublicationSerializer
+    serializer_class = serializers.ClassPlanPublicationSimpleSerializer
     permission_classes = (permissions.IsAuthenticated, )
 
     def paginate_queryset(self, search_queryset):

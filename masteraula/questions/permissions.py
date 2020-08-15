@@ -56,8 +56,10 @@ class DocumentsPermission(permissions.BasePermission):
             return True
         if request.user.is_superuser:
            return True
+        if request.method in permissions.SAFE_METHODS:
+            return True
         return obj.owner == request.user
-
+       
 class HeaderPermission(permissions.BasePermission):
     """Regras: 
     - Qualquer usuário logado pode criar um cabeçalho;
