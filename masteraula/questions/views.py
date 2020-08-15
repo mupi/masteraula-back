@@ -967,6 +967,9 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
                     if q.question.disabled == False:
                         new_questions.append(DocumentQuestion(document=duplicate, question=q.question, order=count+1))
                 DocumentQuestion.objects.bulk_create(new_questions) 
+            else:
+                if d.disabled == False:
+                    new_class_plan.documents.add(d)
 
         for do in obj.documents_online.all():
             if do.disabled == False and do.owner != self.request.user:
@@ -980,6 +983,9 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
                     if q.question.disabled == False:
                         new_questions.append(DocumentQuestionOnline(document=duplicate, question=q.question, order=count+1, score=q.score))
                 DocumentQuestionOnline.objects.bulk_create(new_questions) 
+            else:
+                if do.disabled == False:
+                    new_class_plan.documents_online.add(do)
         
         for a in obj.activities.all():
             if a.disabled == False:
@@ -999,6 +1005,9 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
                     if not q.question.disabled:
                         new_questions.append(DocumentQuestion(document=doc_duplicate, question=q.question, order=count+1))
                 DocumentQuestion.objects.bulk_create(new_questions) 
+            else:
+                if st.document.disabled == False:
+                    document = st.document
 
             document_online = None
             if st.document_online and st.document_online.disabled == False and st.document_online.owner != self.request.user:
@@ -1012,7 +1021,10 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
                     if not q.question.disabled:
                         new_questions.append(DocumentQuestionOnline(document=online_duplicate, question=q.question, order=count+1, score=q.score))
                 DocumentQuestionOnline.objects.bulk_create(new_questions) 
-            
+            else:
+                if st.document_online.disabled == False:
+                    document_online =st.document_online
+    
             activity = None
             if st.activity and st.activity.disabled == False:
                 activity = st.activity
