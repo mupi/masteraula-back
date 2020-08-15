@@ -145,7 +145,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, QuestionPermission)
 
     def get_queryset(self):
-        if self.action == 'retrieve' or self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+        if self.action == 'destroy' or self.action == 'retrieve' or self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
             return Question.objects.all()
 
         queryset = Question.objects.filter_questions_request(self.request.query_params)
@@ -855,7 +855,7 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
     permission_classes = (ClassPlanPermission, )
 
     def get_queryset(self):
-        if self.action == 'retrieve' or self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+        if self.action == 'destroy' or self.action == 'retrieve' or self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
             return ClassPlanPublication.objects.all()
 
         queryset = ClassPlanPublication.objects.filter_class_plans_request(self.request.query_params)
@@ -903,7 +903,7 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
         order_field = request.query_params.get('order_field', None)
         order_type = request.query_params.get('order', None)
 
-        queryset = self.get_queryset().filter(owner=self.request.user)
+        queryset = self.get_queryset().filter(owner=self.request.user, disabled=False)
         if order_field == 'create_date':
             if order_type == 'desc':
                 queryset = queryset.order_by('-create_date')
@@ -1275,7 +1275,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
     def get_queryset(self):
-        if self.action == 'retrieve' or self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+        if self.action == 'destroy' or self.action == 'retrieve' or self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
             return Activity.objects.all()
 
         queryset = Activity.objects.filter_activities_request(self.request.query_params)
