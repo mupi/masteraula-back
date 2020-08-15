@@ -315,11 +315,11 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
 
         else:
             if activities:
-                questions = Activity.objects.filter_activities_request(self.request.query_params).filter(disabled=False, secret=False)
+                questions = Activity.objects.filter_activities_request(request.query_params).filter(disabled=False)
             if class_plans:
-                questions = ClassPlanPublication.objects.filter_class_plans_request(self.request.query_params).filter(disabled=False, secret=False)
+                questions = ClassPlanPublication.objects.filter_class_plans_request(request.query_params).filter(disabled=False)
             if not activities and not class_plans:
-                questions = Question.objects.filter_questions_request(self.request.query_params).filter(disabled=False, secret=False)
+                questions = Question.objects.filter_questions_request(request.query_params).filter(disabled=False)
 
             questions = questions.filter(topics=OuterRef('pk')).values('topics')
             total_question = questions.annotate(cnt=Count('pk')).values('cnt')
@@ -855,8 +855,11 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
     permission_classes = (ClassPlanPermission, )
 
     def get_queryset(self):
-        if self.action == 'destroy' or self.action == 'retrieve' or self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+        if self.action == 'copy_plan' or self.action == 'destroy' or self.action == 'retrieve' or self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
             return ClassPlanPublication.objects.all()
+        
+        if self.action == 'my_plans':
+            return ClassPlanPublication.objects.get_classplan_prefetched()
 
         queryset = ClassPlanPublication.objects.filter_class_plans_request(self.request.query_params)
         if self.action == 'list':
