@@ -91,9 +91,11 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         author = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
         labels = query_params.getlist('labels', None)
-        has_author = False
 
         params = {'disabled' : 'false'}
+        if not author:
+            params['secret'] = False
+
         if disciplines:
             params['disciplines__id__in'] = disciplines
         if teaching_levels:
@@ -113,14 +115,11 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
             params['source__in'] = sources
         if author:
             params['author_id'] = author
-            has_author = True
         if topics:
             params['topics_ids'] = topics
         if labels:
             params['labels__in'] = labels
 
-        if not has_author:
-            params = {'secret' : 'false'}
     
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
@@ -286,9 +285,11 @@ class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
         owner = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
         years = query_params.getlist('years', None)
-        has_owner = False
 
         params = {'disabled' : 'false'}
+        if not owner:
+            params['secret'] = False
+
         if disciplines:
             params['disciplines__id__in'] = disciplines
         if teaching_levels:
@@ -305,15 +306,11 @@ class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
         
         if owner:
             params['owner_id'] = owner
-            has_owner = True
         if topics:
             params['topics_ids'] = topics
         if years:
             params['year__in'] = years
         
-        if not has_owner:
-            params = {'secret' : 'false'}
-    
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         query = queries.pop()
@@ -401,9 +398,11 @@ class ClassPlanPublicationIndex(indexes.SearchIndex, indexes.Indexable):
         owner = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
         bncc = query_params.getlist('bncc', None)
-        has_owner = False
 
         params = {'disabled' : 'false'}
+        if not owner:
+            params['secret'] = False
+
         if disciplines:
             params['disciplines__in'] = disciplines
         if teaching_levels:
@@ -411,15 +410,11 @@ class ClassPlanPublicationIndex(indexes.SearchIndex, indexes.Indexable):
         
         if owner:
             params['owner_id'] = owner
-            has_owner = True
         if topics:
             params['topics_ids'] = topics
         if bncc:
             params['bncc__in'] = bncc
-        
-        if not has_owner:
-            params = {'secret' : 'false'}
-    
+
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         query = queries.pop()

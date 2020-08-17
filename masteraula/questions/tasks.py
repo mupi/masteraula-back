@@ -2,8 +2,8 @@ from __future__ import absolute_import, unicode_literals
 from whoosh.index import LockError
 from celery import shared_task
 
-from .search_indexes import QuestionIndex, LearningObjectIndex, ActivityIndex
-from .models import Question, LearningObject, Activity
+from .search_indexes import QuestionIndex, LearningObjectIndex, ActivityIndex, ClassPlanPublicationIndex
+from .models import Question, LearningObject, Activity, ClassPlanPublication
 from django.db import connection
 
 def update_or_remove_question(question):
@@ -63,3 +63,26 @@ def update_activities_topic(topic):
     activities = Activity.objects.get_activities_update_index().filter(topics__id=topic)
     for activity in activities:
         update_or_remove_activity(activity)
+    
+def update_or_remove_class_plan(class_plan):
+    if class_plan.disabled:
+        ClassPlanPublicationIndex().remove_object(instance=class_plan)
+    else:
+       ClassPlanPublicationIndex().update_object(instance=class_plan)
+
+@shared_task(name="update_class_plan_index", autoretry_for=(LockError,),
+    retry_kwargs={'max_retries': 8}, retry_backoff=True)
+def update_class_plan_index(class_plan):
+    try:
+        class_plan = ClassPlanPublication.objects.get_class_plans_update_index().get(id=class_plan)
+        
+    except:
+        return
+    update_or_remove_class_plan(class_plan)
+
+@shared_task(name="update_class_plan_topic", autoretry_for=(LockError,),
+    retry_kwargs={'max_retries': 8}, retry_backoff=True)
+def update_class_plan_topic(topic):
+    class_plans = ClassPlanPublication.objects.get_class_plans_update_index().filter(topics__id=topic)
+    for class_plan in class_plans:
+        update_or_remove_class_plan(class_plan) 

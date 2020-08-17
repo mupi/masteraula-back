@@ -1,6 +1,8 @@
 {% load search_helpers %}
 
 {{ object.id }}
+{{ object.secret }}
+
 {{ object.owner.name|stripaccents }}
 {{ object.phases|prepare_document }}
 {{ object.content|prepare_document }}

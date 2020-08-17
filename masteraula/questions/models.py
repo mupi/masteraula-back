@@ -156,7 +156,6 @@ class QuestionManager(models.Manager):
         return qs
 
     def filter_questions_request(self, query_params):
-        has_author = False
         queryset = self.get_questions_prefetched()
         
         disciplines = query_params.getlist('disciplines', None)
@@ -180,7 +179,6 @@ class QuestionManager(models.Manager):
             query = reduce(operator.or_, (Q(source__contains = source) for source in sources))
             queryset = queryset.filter(query)
         if author:
-            has_author = True
             queryset = queryset.filter(author__id=author)
         if topics:
             for topic in topics:
@@ -188,7 +186,7 @@ class QuestionManager(models.Manager):
         if labels:
             queryset = queryset.filter(labels__in=labels)
         
-        if not has_author:
+        if not author:
             queryset = queryset.filter(secret=False)
         
         queryset = queryset.distinct()
@@ -765,7 +763,6 @@ class ActivityManager(models.Manager):
         return qs
     
     def filter_activities_request(self, query_params):
-        has_owner = False
         queryset = self.get_activities_prefetched()
         
         disciplines = query_params.getlist('disciplines', None)
@@ -782,7 +779,6 @@ class ActivityManager(models.Manager):
         if difficulties:
             queryset = queryset.filter(difficulty__in=difficulties)
         if owner:
-            has_owner = True
             queryset = queryset.filter(owner__id=owner)
         if topics:
             for topic in topics:
@@ -790,7 +786,7 @@ class ActivityManager(models.Manager):
         if years:
             queryset = queryset.filter(create_date__year=int(years))
         
-        if not has_owner:
+        if not owner:
             queryset = queryset.filter(secret=False)
         queryset = queryset.distinct()
         return queryset
@@ -902,7 +898,6 @@ class ClassPlanPublication(models.Manager):
         return qs
     
     def filter_class_plans_request(self, query_params):
-        has_owner = False
         queryset = self.get_classplan_prefetched()
         
         disciplines = query_params.getlist('disciplines', None)
@@ -916,14 +911,13 @@ class ClassPlanPublication(models.Manager):
         if teaching_levels:
             queryset = queryset.filter(teaching_levels__in=teaching_levels)
         if owner:
-            has_owner = True
             queryset = queryset.filter(owner__id=owner)
         if topics:
             for topic in topics:
                 queryset = queryset.filter(topics__id=topic)
         if years:
             queryset = queryset.filter(create_date__year=int(years))
-        if not has_owner:
+        if not owner:
             queryset = queryset.filter(secret=False)
         
         queryset = queryset.distinct()

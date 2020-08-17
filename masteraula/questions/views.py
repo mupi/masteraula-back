@@ -209,7 +209,7 @@ class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
     
 class TeachingLevelViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = TeachingLevel.objects.all().order_by('id')
+    queryset = TeachingLevel.objects.all().order_by('name')
     serializer_class = serializers.TeachingLevelSerializer
     pagination_class = None
 
