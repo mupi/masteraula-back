@@ -1039,7 +1039,7 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class ClassPlanPublicationSearchView(viewsets.ReadOnlyModelViewSet):
-    pagination_class = ClassPlanPagination
+    pagination_class = ClassPlanListPagination
     serializer_class = serializers.ClassPlanPublicationSimpleSerializer
     permission_classes = (permissions.IsAuthenticated, )
 

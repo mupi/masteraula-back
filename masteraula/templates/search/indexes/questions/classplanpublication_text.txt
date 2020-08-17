@@ -31,13 +31,33 @@
     {% endfor %}    
 {% endfor %}
 
+{% for a in object.stations.all %}
+    {% if a.activity %}
+        {% for tag in a.activity.tags.all %}
+            {{ tag.name|stripaccents }}
+        {% endfor %}
+        {% for t in a.activity.get_all_topics %}
+            {{ t.name|stripaccents }}
+        {% endfor %}    
+    {% endif %}
+    {% if a.document %}
+        {% for q in a.document.documentquestion_set.all %}
+            {% for tag in q.question.tags.all %}
+                {{ tag.name|stripaccents }}
+            {% endfor %}
+            {% for t in q.question.get_all_topics %}
+                {{ t.name|stripaccents }}
+            {% endfor %}  
+        {% endfor %}   
+    {% endif %}
+{% endfor %}
 
 {% for a in object.documents.all %}
     {% for q in a.documentquestion_set.all %}
-        {% for tag in q.tags.all %}
+        {% for tag in q.question.tags.all %}
             {{ tag.name|stripaccents }}
         {% endfor %}
-        {% for t in q.get_all_topics %}
+        {% for t in q.question.get_all_topics %}
             {{ t.name|stripaccents }}
         {% endfor %}  
     {% endfor %}   

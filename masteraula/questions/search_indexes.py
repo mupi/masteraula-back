@@ -337,6 +337,8 @@ class ClassPlanPublicationIndex(indexes.SearchIndex, indexes.Indexable):
     topics = indexes.CharField(boost=1000)
     topics_ids = indexes.MultiValueField()
 
+    year = indexes.CharField(null=True)
+
     tags = indexes.CharField(boost=100)
     bncc = indexes.CharField(boost=100)
 
@@ -372,6 +374,9 @@ class ClassPlanPublicationIndex(indexes.SearchIndex, indexes.Indexable):
     
     def prepare_topics_ids(self, obj):
         return [ topic.pk for topic in obj.get_all_topics() ]
+    
+    def prepare_year(self, obj):
+        return str(obj.create_date.year)
 
     def prepare_tags(self, obj):
         return ' '.join([ stripaccents(tag.name) for tag in obj.tags.all() ])
@@ -398,6 +403,7 @@ class ClassPlanPublicationIndex(indexes.SearchIndex, indexes.Indexable):
         owner = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
         bncc = query_params.getlist('bncc', None)
+        years = query_params.getlist('years', None)
 
         params = {'disabled' : 'false'}
         if not owner:
@@ -414,6 +420,8 @@ class ClassPlanPublicationIndex(indexes.SearchIndex, indexes.Indexable):
             params['topics_ids'] = topics
         if bncc:
             params['bncc__in'] = bncc
+        if years:
+            params['year__in'] = years
 
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
@@ -421,6 +429,9 @@ class ClassPlanPublicationIndex(indexes.SearchIndex, indexes.Indexable):
         for item in queries:
             query |= item
         queries = [SQ(topics=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        for item in queries:
+            query |= item
+        queries = [SQ(bncc=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         for item in queries:
             query |= item
         queries = [SQ(phases=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
