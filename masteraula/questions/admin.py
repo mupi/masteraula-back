@@ -324,7 +324,9 @@ class HeaderModelAdmin(admin.ModelAdmin):
 
 class ShareClassPlanModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('class_plan',)
-    list_display = ('link',)
+    
+    list_display = ('class_plan', 'link',)
+    search_fields = ['class_plan__owner__name', 'class_plan__owner__id', 'link',]
  
     list_per_page = 100
 
@@ -387,7 +389,7 @@ class TeachingYearModelAdmin(admin.ModelAdmin):
 class ClassPlanPublicationModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner',)
     list_display = ('id', 'name', 'create_date', 'duration', 'plan_type', 'disabled')
-    search_fields = ('id', 'name')
+    search_fields = ('id', 'name', 'owner__name', 'owner__id')
     exclude = ('topics', 'documents', 'bncc', 'activities', 'documents_online')
 
     inlines = [ClassPlanLinkInline, ClassPlanStationsInline, ClassPlanDocumentInline, ClassPlanTopicsInline, ClassPlanBnccInline, ClassPlanActivityInline, ClassPlanDocumentOnlineInline]
