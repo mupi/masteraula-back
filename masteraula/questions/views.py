@@ -878,6 +878,10 @@ class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
         plan = self.get_object()
         plan.disabled = True
         plan.save()
+
+        link = ShareClassPlan.objects.filter(class_plan_id = pk)
+        if link.exists():
+            link.first().delete()
         return Response(status = status.HTTP_204_NO_CONTENT)
 
     def retrieve(self, request, pk=None):
