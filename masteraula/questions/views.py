@@ -192,6 +192,27 @@ class QuestionViewSet(viewsets.ModelViewSet):
     
         return Response(return_data)
 
+    @detail_route(methods=['post'], permission_classes=(permissions.IsAuthenticated,))
+    def copy_question(self, request, pk=None):
+        obj = self.get_object()
+        question = Question.objects.filter(id=obj.id).values().first()  
+        question.update({'pk': None, 'author': self.request.user, 'author_id': self.request.user.id})
+        new_question = Question.objects.create(**question)
+
+        new_question.topics.add(*obj.topics.all())
+        new_question.teaching_levels.add(*obj.teaching_levels.all())
+        new_question.disciplines.add(*obj.disciplines.all())
+        new_question.tags.add(*obj.tags.all())
+
+        for lo in obj.learning_objects.all():
+            new_question.learning_objects.add(lo)
+        
+        for alt in obj.alternatives.all():
+                Alternative.objects.create(question=new_question, text=alt.text, is_correct=alt.is_correct)
+
+        serializer = serializers.QuestionSerializer(new_question)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     @detail_route(methods=['put'], permission_classes=(permissions.IsAuthenticated, permissions.DjangoModelPermissions))
     def tag_question(self, request, pk=None):
         question = get_object_or_404(self.get_queryset(), pk=pk)
