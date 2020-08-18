@@ -241,7 +241,7 @@ class TopicModelAdmin(admin.ModelAdmin):
 class LabelModelAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', )
     list_display = ('id', 'owner_id', 'name', 'num_questions')
-    search_fields = ['id', 'name', 'owner__id',]
+    search_fields = ['id', 'name', 'owner__id', 'owner__name']
 
     inlines = [LabelQuestionInline, ]
     list_per_page = 100
@@ -276,7 +276,7 @@ class QuestionModelAdmin(ImportMixin, admin.ModelAdmin):
     resource_class = QuestionResource
     raw_id_fields = ('author', )
     list_display = ('id', 'statement', 'year', 'source', 'tag_list', 'disabled',)
-    exclude = ('topics', 'learning_objects')
+    exclude = ('topics', 'learning_objects', 'labels')
     search_fields = ('id', 'year', 'source', 'statement', 'tags__name')
 
     inlines = [QuestionLearningObjectInline, AlternativesInline, TopicsInline, LabelInline]
