@@ -58,6 +58,7 @@ class User(AbstractUser):
     schools = models.ManyToManyField(School, blank=True, related_name="teachers")
     disciplines = models.ManyToManyField('questions.Discipline', related_name="users_discipline")
     profile_pic = models.ImageField(null=True, upload_to='profile_pics', validators=[validate_image])
+    nickname = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.username

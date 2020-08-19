@@ -12,7 +12,7 @@ from django.utils.decorators import method_decorator
 
 from django.contrib.auth.mixins import UserPassesTestMixin
 
-from masteraula.questions.models import Question, Discipline, Document, LearningObject, User, Alternative, DocumentDownload, Topic, ClassPlan
+from masteraula.questions.models import Question, Discipline, Document, LearningObject, User, Alternative, DocumentDownload, Topic, ClassPlanPublication
 from masteraula.users.models import School
 
 from .serializers import QuestionStatementEditSerializer, LearningObjectEditSerializer, AlternativeEditSerializer
@@ -140,13 +140,13 @@ class DataUsersView(SuperuserMixin, TemplateView):
                 documents = Document.objects.prefetch_related('questions').filter(owner=user, create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
                 doc_downloads = DocumentDownload.objects.filter(user=user, download_date__year=int(date.split('-')[0]), download_date__month=int(date.split('-')[1]))
                 questions = Question.objects.filter(author=user, create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
-                plans = ClassPlan.objects.filter(owner=user, create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
+                plans = ClassPlanPublication.objects.filter(owner=user, create_date__year=int(date.split('-')[0]), create_date__month=int(date.split('-')[1]))
     
             else:
                 documents = Document.objects.filter(owner=user).prefetch_related('questions')
                 doc_downloads = DocumentDownload.objects.filter(user=user)
                 questions = Question.objects.filter(author=user)
-                plans = ClassPlan.objects.filter(owner=user)
+                plans = ClassPlanPublication.objects.filter(owner=user)
 
             q_downloads = 0
             check_doc = []

@@ -26,7 +26,7 @@ from masteraula.users.models import User
 
 from .models import (Question, Document, Alternative, Discipline, TeachingLevel, DocumentQuestion, Header, 
                     Year, Source, Topic, LearningObject, Search, DocumentDownload, DocumentPublication, 
-                    Synonym, Label, Link, TeachingYear, ClassPlan, Station,FaqCategory, DocumentOnline, DocumentQuestionOnline, Result, Task, Activity,)
+                    Synonym, Label, TeachingYear, ClassPlanPublication, StationMaterial, FaqCategory, DocumentOnline, DocumentQuestionOnline, Result, Task, Activity, Bncc, ShareClassPlan)
 
 from .models import DocumentLimitExceedException
 
@@ -35,8 +35,8 @@ from .docx_parsers import Question_Parser
 from .docx_generator import Docx_Generator
 from .docx_generator_aws import DocxGeneratorAWS
 from .similarity import RelatedQuestions
-from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex, ActivityIndex
-from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission, ClassPlanPermission
+from .search_indexes import SynonymIndex, TopicIndex, QuestionIndex, ActivityIndex, ClassPlanPublicationIndex
+from .permissions import QuestionPermission, LearningObjectPermission, DocumentsPermission, HeaderPermission, DocumentDownloadPermission, LabelPermission, ClassPlanPermission, ShareClassPlanPermission, ClassPlanCopyPermission, ActivityPermission
 from . import serializers as serializers
 
 current_milli_time = lambda: int(round(time.time() * 1000))
@@ -85,6 +85,11 @@ class ClassPlanPagination(pagination.PageNumberPagination):
     page_size_query_param = 'limit'
     page_size = 10
     max_page_size = 80
+
+class ClassPlanListPagination(pagination.PageNumberPagination):
+    page_size_query_param = 'limit'
+    page_size = 16
+    max_page_size = 64
 
 class QuestionSearchView(viewsets.ReadOnlyModelViewSet):   
     pagination_class = QuestionPagination
@@ -140,7 +145,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated, QuestionPermission)
 
     def get_queryset(self):
-        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+        if self.action == 'destroy' or self.action == 'retrieve' or self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
             return Question.objects.all()
 
         queryset = Question.objects.filter_questions_request(self.request.query_params)
@@ -160,6 +165,10 @@ class QuestionViewSet(viewsets.ModelViewSet):
     
     def retrieve(self, request, pk=None):
         question = get_object_or_404(self.get_queryset(), pk=pk)
+
+        if question.secret and question.author != request.user:
+            raise exceptions.ValidationError("You don't have permissions to access!")
+
         serializer_question = self.serializer_class(question, context=self.get_serializer_context())
 
         documents = Document.objects.filter(questions__id=pk, owner=request.user, disabled=False).order_by('create_date')
@@ -183,6 +192,27 @@ class QuestionViewSet(viewsets.ModelViewSet):
     
         return Response(return_data)
 
+    @detail_route(methods=['post'], permission_classes=(permissions.IsAuthenticated,))
+    def copy_question(self, request, pk=None):
+        obj = self.get_object()
+        question = Question.objects.filter(id=obj.id).values().first()  
+        question.update({'pk': None, 'author': self.request.user, 'author_id': self.request.user.id})
+        new_question = Question.objects.create(**question)
+
+        new_question.topics.add(*obj.topics.all())
+        new_question.teaching_levels.add(*obj.teaching_levels.all())
+        new_question.disciplines.add(*obj.disciplines.all())
+        new_question.tags.add(*obj.tags.all())
+
+        for lo in obj.learning_objects.all():
+            new_question.learning_objects.add(lo)
+        
+        for alt in obj.alternatives.all():
+                Alternative.objects.create(question=new_question, text=alt.text, is_correct=alt.is_correct)
+
+        serializer = serializers.QuestionSerializer(new_question)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     @detail_route(methods=['put'], permission_classes=(permissions.IsAuthenticated, permissions.DjangoModelPermissions))
     def tag_question(self, request, pk=None):
         question = get_object_or_404(self.get_queryset(), pk=pk)
@@ -200,7 +230,7 @@ class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
     
 class TeachingLevelViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = TeachingLevel.objects.all().order_by('id')
+    queryset = TeachingLevel.objects.all().order_by('name')
     serializer_class = serializers.TeachingLevelSerializer
     pagination_class = None
 
@@ -212,6 +242,11 @@ class YearViewSet(viewsets.ReadOnlyModelViewSet):
 class SourceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Source.objects.all().order_by('name')
     serializer_class = serializers.SourceSerializer
+    pagination_class = None
+
+class BnccViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Bncc.objects.all().order_by('id')
+    serializer_class = serializers.BnccSerializer
     pagination_class = None
 
 class SynonymViewSet(viewsets.ReadOnlyModelViewSet):
@@ -254,7 +289,8 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
         text = request.query_params.get('text', None)
         topics = request.query_params.getlist('topics', [])
         activities = request.query_params.getlist('activities', None)
-       
+        class_plans = request.query_params.getlist('classPlans', None)
+
         if text:
             text = prepare_document(text)
             text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
@@ -268,8 +304,15 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
                 questions = Activity.objects.prefetch_related(
                     Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
                 ).filter(id__in=questions_ids)
+            
+            if class_plans:
+                search_queryset = ClassPlanPublicationIndex.filter_class_plan_search(text, request.query_params)
+                questions_ids = [q.pk for q in search_queryset[:]]
+                questions = ClassPlanPublication.objects.prefetch_related(
+                    Prefetch('topics', queryset=Topic.objects.only('id', 'name'))
+                ).filter(id__in=questions_ids)
 
-            else:
+            if not activities and not class_plans:
                 search_queryset = QuestionIndex.filter_question_search(text, request.query_params)
                 questions_ids = [q.pk for q in search_queryset[:]]
                 
@@ -293,9 +336,11 @@ class TopicViewSet(viewsets.ReadOnlyModelViewSet):
 
         else:
             if activities:
-                questions = Activity.objects.filter_activities_request(self.request.query_params).filter(disabled=False)
-            else:
-                questions = Question.objects.filter_questions_request(self.request.query_params).filter(disabled=False)
+                questions = Activity.objects.filter_activities_request(request.query_params).filter(disabled=False)
+            if class_plans:
+                questions = ClassPlanPublication.objects.filter_class_plans_request(request.query_params).filter(disabled=False)
+            if not activities and not class_plans:
+                questions = Question.objects.filter_questions_request(request.query_params).filter(disabled=False)
 
             questions = questions.filter(topics=OuterRef('pk')).values('topics')
             total_question = questions.annotate(cnt=Count('pk')).values('cnt')
@@ -443,8 +488,8 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
         learning_object = get_object_or_404(self.get_queryset(), pk=pk)
         serializer_learningobject = self.serializer_class(learning_object, context=self.get_serializer_context())
 
-        questions_object = Question.objects.get_questions_prefetched().filter(learning_objects__id=pk).filter(disabled=False).order_by('-create_date').order_by('?')
-        activities_object = Activity.objects.get_activities_prefetched().filter(learning_objects__id=pk).filter(disabled=False).order_by('-create_date').order_by('?')
+        questions_object = Question.objects.get_questions_prefetched().filter(learning_objects__id=pk).filter(disabled=False, secret=False).order_by('-create_date').order_by('?')
+        activities_object = Activity.objects.get_activities_prefetched().filter(learning_objects__id=pk).filter(disabled=False, secret=False).order_by('-create_date').order_by('?')
 
         if len(questions_object) >= 4 and len(activities_object) >= 4:
             questions_object = questions_object[:4]
@@ -472,6 +517,12 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(object_types__contains=filters)
             
         return queryset.filter()
+    
+    def destroy(self, request, pk=None):
+        learning_object = self.get_object()
+        learning_object.disabled = True
+        learning_object.save()
+        return Response(status = status.HTTP_204_NO_CONTENT)
 
 class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = (DocumentsPermission, )
@@ -488,7 +539,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if self.action == 'my_documents_cards':
             queryset = Document.objects.filter(owner=self.request.user, disabled=False, questions__isnull=False).distinct()
         if self.action == 'retrieve':
-            queryset = Document.objects.get_questions_prefetched().filter(owner=self.request.user)
+            queryset = Document.objects.get_questions_prefetched()
         return queryset
 
     def get_serializer_class(self):
@@ -656,6 +707,22 @@ class DocumentDownloadViewSet(viewsets.ModelViewSet):
             pass
         return response
 
+class GenerateLinkViewSet(viewsets.ModelViewSet):
+    def get_queryset(self): 
+        return ShareClassPlan.objects.filter(class_plan__owner = self.request.user)
+
+    def get_serializer_class(self):
+        return serializers.LinkClassPlanSerializer
+    
+    def list(self, request, *args, **kwargs):
+        response = super(GenerateLinkViewSet, self).list(request, *args, **kwargs)
+        try:
+            total = self.get_queryset().count()
+            response.data['total_links'] = total
+        except:
+            pass
+        return response
+
 class DocumentPublicationViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
     def get_queryset(self):
@@ -778,29 +845,52 @@ class AutocompleteSearchViewSet(viewsets.ViewSet):
             'topics': topic_serialzier.data
         })
 
-class StationViewSet(viewsets.ModelViewSet):
-    queryset = Station.objects.all()
-    serializer_class = serializers.StationSerializer
+class AutocompleteSearchBnccViewSet(viewsets.ViewSet):
+
+    index_models = [Bncc]
     permission_classes = (permissions.IsAuthenticated, )
 
-class LinkViewSet(viewsets.ModelViewSet):
-    queryset = Link.objects.all()
-    serializer_class = serializers.LinkSerializer
-    pagination_class = None
+    def list(self, request, *args, **kwargs):
+        q = request.GET.get('q', None)
+        bncc = self.request.query_params.getlist('bncc', None)
+
+        if not q or len(q) < 3:
+            raise exceptions.ValidationError("'q' parameter required with at least 3 of length")
+            
+        queryset = SearchQuerySet().models(Bncc).autocomplete(term_auto=q).load_all()
+        bncc_qs = []
+
+        for q in queryset[:]:
+            bncc_qs.append(q.object)
+        bncc_serialzier = serializers.BnccSerializer(bncc_qs, many=True)
+
+        return Response(bncc_serialzier.data)
 
 class TeachingYearViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TeachingYear.objects.all()
     serializer_class = serializers.TeachingYearSerializer
     pagination_class = None
 
-class ClassPlanViewSet(viewsets.ModelViewSet):
-    serializer_class = serializers.ClassPlanSerializer
-    pagination_class = ClassPlanPagination
-    permission_classes = (permissions.IsAuthenticated, ClassPlanPermission, )
+class ClassPlanPublicationViewSet(viewsets.ModelViewSet):
+    pagination_class = ClassPlanListPagination
+    permission_classes = (ClassPlanPermission, )
 
     def get_queryset(self):
-        queryset = ClassPlan.objects.get_classplan_prefetched().filter(owner=self.request.user, disabled=False)
-        return queryset
+        if self.action == 'copy_plan' or self.action == 'destroy' or self.action == 'retrieve' or self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+            return ClassPlanPublication.objects.all()
+        
+        if self.action == 'my_plans':
+            return ClassPlanPublication.objects.get_classplan_prefetched()
+
+        queryset = ClassPlanPublication.objects.filter_class_plans_request(self.request.query_params)
+        if self.action == 'list':
+            queryset = queryset.filter(disabled=False).order_by('id')
+        return queryset.order_by('id')
+    
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return serializers.ClassPlanPublicationSimpleSerializer
+        return serializers.ClassPlanPublicationSerializer   
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -809,14 +899,39 @@ class ClassPlanViewSet(viewsets.ModelViewSet):
         plan = self.get_object()
         plan.disabled = True
         plan.save()
+
+        link = ShareClassPlan.objects.filter(class_plan_id = pk)
+        if link.exists():
+            link.first().delete()
         return Response(status = status.HTTP_204_NO_CONTENT)
-    
+
+    def retrieve(self, request, pk=None):
+        class_plan = self.get_object()
+
+        if class_plan.secret and class_plan.owner != request.user:
+            raise exceptions.ValidationError("You don't have permissions to access!")
+
+        serializer_class = self.get_serializer_class()(class_plan).data
+        link = ShareClassPlan.objects.filter(class_plan=class_plan)
+        if link.exists():
+            serializer_class['link_class_plan'] = str(link[0].link)
+        return Response(serializer_class)
+ 
+    @detail_route(methods=['get'], permission_classes=(ShareClassPlanPermission,))
+    def generate_link(self, request, pk=None):
+        link = ShareClassPlan.objects.filter(class_plan_id = pk)
+        if link.exists():
+            link = link.first()
+        else:
+            link = ShareClassPlan.objects.create(class_plan_id = pk)
+        return Response({'link' : link.link})
+
     @list_route(methods=['get'])
     def my_plans(self, request):
         order_field = request.query_params.get('order_field', None)
         order_type = request.query_params.get('order', None)
 
-        queryset = self.get_queryset()
+        queryset = self.get_queryset().filter(owner=self.request.user, disabled=False)
         if order_field == 'create_date':
             if order_type == 'desc':
                 queryset = queryset.order_by('-create_date')
@@ -847,59 +962,164 @@ class ClassPlanViewSet(viewsets.ModelViewSet):
         self.pagination_class = ClassPlanPagination
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = serializers.ClassPlanSerializer(page, many=True)
+            serializer = serializers.ClassPlanPublicationSimpleSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        serializer = serializers.ClassPlanSerializer(queryset, many=True)
+        serializer = serializers.ClassPlanPublicationSimpleSerializer(queryset, many=True)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    @detail_route(methods=['post'])
+    @detail_route(methods=['post'], permission_classes=(ClassPlanCopyPermission,))
     def copy_plan(self, request, pk=None):
         obj = self.get_object()
-        disciplines = [dis for dis in obj.disciplines.all()]
-        links = [lin for lin in obj.links.all()]
-        stations = [st for st in obj.stations.all()]
+        class_plan = ClassPlanPublication.objects.filter(id=obj.id).values().first()  
+        class_plan.update({'pk': None, 'name': obj.name + ' (Cópia)', 'owner': self.request.user, 'owner_id': self.request.user.id})
+        new_class_plan = ClassPlanPublication.objects.create(**class_plan)
 
-        obj.pk = None
-        obj.name = obj.name + ' (Cópia)'
-        obj.owner = self.request.user
-        obj.save()
+        new_class_plan.topics.add(*obj.topics.all())
+        new_class_plan.bncc.add(*obj.bncc.all())
+        new_class_plan.teaching_levels.add(*obj.teaching_levels.all())
+        new_class_plan.teaching_years.add(*obj.teaching_years.all())
+        new_class_plan.disciplines.add(*obj.disciplines.all())
+        new_class_plan.tags.add(*obj.tags.all())
 
         for d in obj.documents.all():
-            if d.disabled == False:
-                obj.documents.add(d)
-       
-        obj.topics.add(*obj.topics.all())
-        obj.learning_objects.add(*obj.learning_objects.all())
-        obj.teaching_levels.add(*obj.teaching_levels.all())
-        obj.teaching_years.add(*obj.teaching_years.all())
-        obj.disciplines.add(*disciplines)
+            if d.disabled == False and d.owner != self.request.user:
+                doc = Document.objects.filter(id=d.id).values().first()  
+                doc.update({'id': None, 'owner': self.request.user, 'owner_id': self.request.user.id})
+                duplicate = Document.objects.create(**doc)
+                new_class_plan.documents.add(duplicate)
 
-        new_links = []
-        for lin in links:
-            new_links.append(Link(link=lin.link, description_url=lin.description_url, plan=obj))
-        Link.objects.bulk_create(new_links)  
+                new_questions = []
+                for count, q in enumerate(d.documentquestion_set.all().order_by('order')):
+                    if q.question.disabled == False:
+                        new_questions.append(DocumentQuestion(document=duplicate, question=q.question, order=count+1))
+                DocumentQuestion.objects.bulk_create(new_questions) 
+            else:
+                if d.disabled == False:
+                    new_class_plan.documents.add(d)
+
+        for do in obj.documents_online.all():
+            if do.disabled == False and do.owner != self.request.user:
+                doc_online = DocumentOnline.objects.filter(link=do.link).values().first()  
+                doc_online.update({'link': None, 'owner': self.request.user, 'owner_id': self.request.user.id})
+                duplicate = DocumentOnline.objects.create(**doc_online)
+                new_class_plan.documents_online.add(duplicate)
+
+                new_questions = []
+                for count, q in enumerate(do.documentquestiononline_set.all()):
+                    if q.question.disabled == False:
+                        new_questions.append(DocumentQuestionOnline(document=duplicate, question=q.question, order=count+1, score=q.score))
+                DocumentQuestionOnline.objects.bulk_create(new_questions) 
+            else:
+                if do.disabled == False:
+                    new_class_plan.documents_online.add(do)
+        
+        for a in obj.activities.all():
+            if a.disabled == False:
+                new_class_plan.activities.add(a)
 
         new_stations = []
-        for st in stations:
-            learning_object = None
-            if st.learning_object:
-                learning_object = st.learning_object
-            
-            question = None
-            if st.question:
-                question = st.question
-            
+        for st in obj.stations.all():
             document = None
-            if st.document:
-                document = st.document
+            if st.document and st.document.disabled == False and st.document.owner != self.request.user:
+                doc = Document.objects.filter(id=st.document.id).values().first()  
+                doc.update({'id': None, 'owner': self.request.user, 'owner_id': self.request.user.id})
+                doc_duplicate = Document.objects.create(**doc)
+                document = doc_duplicate
 
-            new_stations.append(Station(description_station=st.description_station, learning_object=learning_object, question=question, document=document, plan=obj))
-        Station.objects.bulk_create(new_stations)  
+                new_questions = []
+                for count, q in enumerate(st.document.documentquestion_set.all()):
+                    if not q.question.disabled:
+                        new_questions.append(DocumentQuestion(document=doc_duplicate, question=q.question, order=count+1))
+                DocumentQuestion.objects.bulk_create(new_questions) 
+            else:
+                if st.document and st.document.disabled == False:
+                    document = st.document
 
-        serializer = serializers.ClassPlanSerializer(obj)
+            document_online = None
+            if st.document_online and st.document_online.disabled == False and st.document_online.owner != self.request.user:
+                doc_online = DocumentOnline.objects.filter(link=st.document_online.link).values().first()  
+                doc_online.update({'link': None, 'owner': self.request.user, 'owner_id': self.request.user.id})
+                online_duplicate = DocumentOnline.objects.create(**doc_online)
+                document_online = online_duplicate
+
+                new_questions = []
+                for count, q in enumerate(st.document_online.documentquestiononline_set.all()):
+                    if not q.question.disabled:
+                        new_questions.append(DocumentQuestionOnline(document=online_duplicate, question=q.question, order=count+1, score=q.score))
+                DocumentQuestionOnline.objects.bulk_create(new_questions) 
+            else:
+                if st.document_online and st.document_online.disabled == False:
+                    document_online =st.document_online
+    
+            activity = None
+            if st.activity and st.activity.disabled == False:
+                activity = st.activity
+
+            new_stations.append(StationMaterial(name_station= st.name_station, description_station=st.description_station, activity=activity, document_online=document_online, document=document, plan=new_class_plan))
+        StationMaterial.objects.bulk_create(new_stations)  
+
+        serializer = serializers.ClassPlanPublicationSerializer(new_class_plan)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class ClassPlanPublicationSearchView(viewsets.ReadOnlyModelViewSet):
+    pagination_class = ClassPlanListPagination
+    serializer_class = serializers.ClassPlanPublicationSimpleSerializer
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def paginate_queryset(self, search_queryset):
+        page = super().paginate_queryset(search_queryset)
+        class_plans_ids = [res.pk for res in page]
+
+        queryset = ClassPlanPublication.objects.get_classplan_prefetched().filter(disabled=False, id__in=class_plans_ids).order_by('id')
+        order = Case(*[When(id=id, then=pos) for pos, id in enumerate(class_plans_ids)])
+        queryset = queryset.order_by(order)
+
+        return queryset
+
+    def get_queryset(self):
+        text = self.request.GET.get('text', None)
+
+        if not text:
+            raise exceptions.ValidationError("Invalid search text")
+        text = prepare_document(text)
+        text = ' '.join([value for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3])
+        
+        if not text:
+            raise exceptions.ValidationError("Invalid search text")
+
+        search_queryset = ClassPlanPublicationIndex.filter_class_plan_search(text, self.request.query_params)
+
+        disciplines = self.request.query_params.getlist('disciplines', None)
+        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
+        difficulties = self.request.query_params.getlist('difficulties', None)
+        
+        return search_queryset
+
+class ShareClassPlanPublicationViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    def get_queryset(self):
+        return ShareClassPlan.objects.filter(class_plan__disabled=False)
+
+    def get_serializer_class(self):
+        return serializers.ShareClassPlanSerializer
+
+    def retrieve(self, request, pk=None):
+        publication = self.get_object()
+        class_plan = ClassPlanPublication.objects.get(id=publication.class_plan_id)
+        class_plan_data = self.get_serializer_class()(class_plan).data
+    
+        return Response(class_plan_data)
+
+    @detail_route(methods=['get'])
+    def share(self, request, pk=None):
+        """
+        Generate a docx file containing all the list.
+        """
+        publication = self.get_object()
+        document = Document.objects.get_questions_prefetched().get(id=publication.document_id)
+
+        return TemplateResponse(request, 'questions/share_publication.html', {'document' : document, 'slug': publication.id }) 
 
 class FaqCategoryViewSet(viewsets.ModelViewSet):
     queryset = FaqCategory.objects.all()
@@ -915,12 +1135,31 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
         queryset = DocumentOnline.objects.get_documentonline_prefetch()
 
         if self.action == 'list':
-            queryset = queryset.filter(document=self.request.query_params['id'])
+            queryset = queryset.filter(document=self.request.query_params['id']).filter(disabled=False)
         return queryset.order_by('name')
 
     def perform_create(self, serializer):
         document = Document.objects.get(id=self.request.query_params['id'])
         serializer.save(owner=self.request.user, document=document)
+    
+    def destroy(self, request, pk=None):
+        document = self.get_object()
+        document.disabled = True
+        document.save()
+        return Response(status = status.HTTP_204_NO_CONTENT)
+
+    @list_route(methods=['get'])
+    def my_documents_online_cards(self, request):       
+        queryset = self.get_queryset().filter(owner=self.request.user, disabled=False)
+        self.pagination_class = DocumentCardPagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = serializers.DocumentOnlineListInfoSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = serializers.DocumentOnlineListInfoSerializer(queryset, many=True)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
     @list_route(methods=['get'])
     def my_documents_online(self, request):
@@ -982,7 +1221,7 @@ class DocumentOnlineViewSet(viewsets.ModelViewSet):
         obj.name = obj.name + ' (Cópia)'
         obj.owner = self.request.user
         obj.save()
-
+        
         new_questions = []
         for count, q in enumerate(questions):
             if q.disabled == False:
@@ -1070,13 +1309,13 @@ class ResultViewSet(viewsets.ModelViewSet):
 class ActivityViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ActivitySerializer
     pagination_class = ActivityPagination
-    permission_classes = (permissions.IsAuthenticated, QuestionPermission)
+    permission_classes = (permissions.IsAuthenticated, ActivityPermission)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
     def get_queryset(self):
-        if self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
+        if self.action == 'destroy' or self.action == 'retrieve' or self.action == 'create' or self.action == 'update' or self.action == 'partial_update':
             return Activity.objects.all()
 
         queryset = Activity.objects.filter_activities_request(self.request.query_params)
@@ -1086,9 +1325,18 @@ class ActivityViewSet(viewsets.ModelViewSet):
     
     def retrieve(self, request, pk=None):
         activity = get_object_or_404(self.get_queryset(), pk=pk)
+        if activity.secret and activity.owner != request.user:
+            raise exceptions.ValidationError("You don't have permissions to access!")
+
         serializer_activity = self.serializer_class(activity, context=self.get_serializer_context())
 
+        class_plans = ClassPlanPublication.objects.get_classplan_prefetched() \
+                .filter(Q(activities=pk)|Q(stations__activity__id=pk)).filter(disabled=False).distinct()
+
+        serializer_class_plans = serializers.ListClassPlanActivitySerializer(class_plans, many = True)
+
         return_data = serializer_activity.data
+        return_data['class_plans'] = serializer_class_plans.data
 
         related_material = RelatedQuestions().similar_questions(activity, activity=True)
         order_questions = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(related_material[0])])
@@ -1138,9 +1386,4 @@ class ActivitySearchView(viewsets.ReadOnlyModelViewSet):
             raise exceptions.ValidationError("Invalid search text")
 
         search_queryset = ActivityIndex.filter_activity_search(text, self.request.query_params)
-
-        disciplines = self.request.query_params.getlist('disciplines', None)
-        teaching_levels = self.request.query_params.getlist('teaching_levels', None)
-        difficulties = self.request.query_params.getlist('difficulties', None)
-        
         return search_queryset

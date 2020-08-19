@@ -25,7 +25,7 @@ from requests.exceptions import HTTPError
 from django.db.models import Count
 
 from .models import User, Profile, City, State, School, Subscription, Contact
-from masteraula.questions.models import Discipline, Question, Document, ClassPlan, DocumentDownload, LearningObject, Topic
+from masteraula.questions.models import Discipline, Question, Document, ClassPlanPublication, DocumentDownload, LearningObject, Topic, Activity
 
 class CitySerializer(serializers.ModelSerializer):
     class Meta:
@@ -109,6 +109,7 @@ class UserSerializer(serializers.ModelSerializer):
             'id',
             'username',
             'name',
+            'nickname',
             'email',
             'about',
             'city',
@@ -420,6 +421,10 @@ class DashboardSerializer(serializers.ModelSerializer):
     documents_questions = serializers.SerializerMethodField()
     downloads = serializers.SerializerMethodField()
     plans = serializers.SerializerMethodField()
+    activities = serializers.SerializerMethodField()
+    learning_objects = serializers.SerializerMethodField()
+    total_activities = serializers.SerializerMethodField()
+    total_plans = serializers.SerializerMethodField()
     total_questions = serializers.SerializerMethodField()
     total_objects = serializers.SerializerMethodField()
     total_topics = serializers.SerializerMethodField()
@@ -441,19 +446,31 @@ class DashboardSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'questions',
+            'activities',
             'documents', 
             'documents_questions', 
             'downloads',
             'plans',
+            'learning_objects',
             'total_questions', 
             'total_objects', 
             'total_topics', 
+            'total_activities',
+            'total_plans', 
             'topics_questions',
             )
     
     def get_questions(self, obj):
         question = Question.objects.filter(author=obj, disabled=False).count()
         return question
+
+    def get_activities(self, obj):
+        activities = Activity.objects.filter(owner=obj, disabled=False).count()
+        return activities
+    
+    def get_learning_objects(self, obj):
+        learning_objects = LearningObject.objects.filter(owner=obj, disabled=False).count()
+        return learning_objects
 
     def get_documents(self, obj):
         documents = Document.objects.filter(owner=obj, disabled=False).count()
@@ -476,12 +493,20 @@ class DashboardSerializer(serializers.ModelSerializer):
         return downloads
 
     def get_plans(self, obj):
-        plans = ClassPlan.objects.filter(owner=obj).count()
+        plans = ClassPlanPublication.objects.filter(owner=obj).count()
         return plans
 
     def get_total_questions(self, obj):
         questions = Question.objects.filter(disabled=False).count()
         return questions
+    
+    def get_total_activities(self, obj):
+        activities = Activity.objects.filter(disabled=False).count()
+        return activities
+    
+    def get_total_plans(self, obj):
+        plans = ClassPlanPublication.objects.filter(disabled=False).count()
+        return plans
 
     def get_total_objects(self, obj):
         objects = LearningObject.objects.all().count()

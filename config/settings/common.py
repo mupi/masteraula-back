@@ -67,6 +67,7 @@ LOCAL_APPS = (
     # Your stuff: custom apps go here
     'masteraula.questions.apps.QuestionsConfig',
     'masteraula.reports.apps.ReportsConfig',
+    'masteraula.pages.apps.PagesConfig',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

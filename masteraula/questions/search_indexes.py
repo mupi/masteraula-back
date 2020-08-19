@@ -7,7 +7,7 @@ from haystack import indexes
 from haystack.inputs import Clean
 from haystack.query import SearchQuerySet, SQ, AutoQuery
 
-from .models import Question, LearningObject, Synonym, Topic, Activity
+from .models import Question, LearningObject, Synonym, Topic, Activity, Bncc, ClassPlanPublication
 from masteraula.questions.templatetags.search_helpers import stripaccents, prepare_document, stripaccents_str
 
 from functools import reduce
@@ -34,6 +34,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
     author_id = indexes.IntegerField()
     authorship = indexes.CharField()
     disabled = indexes.BooleanField(model_attr='disabled')
+    secret = indexes.BooleanField(model_attr='secret')
 
     def get_model(self):
         return Question
@@ -92,6 +93,9 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
         labels = query_params.getlist('labels', None)
 
         params = {'disabled' : 'false'}
+        if not author:
+            params['secret'] = False
+
         if disciplines:
             params['disciplines__id__in'] = disciplines
         if teaching_levels:
@@ -115,6 +119,7 @@ class QuestionIndex(indexes.SearchIndex, indexes.Indexable):
             params['topics_ids'] = topics
         if labels:
             params['labels__in'] = labels
+
     
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
@@ -198,6 +203,17 @@ class TopicIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_term_auto(self, obj):
         return stripaccents_str(obj)
 
+class BnncIndex(indexes.SearchIndex, indexes.Indexable):
+    text = indexes.CharField(document=True, use_template=True)
+    name = indexes.CharField(model_attr='name')
+    term_auto = indexes.EdgeNgramField(model_attr='name')
+
+    def get_model(self):
+        return Bncc
+
+    def prepare_term_auto(self, obj):
+        return stripaccents_str(obj)
+
 class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True, boost=0.01)
     
@@ -214,6 +230,7 @@ class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
     owner = indexes.CharField(model_attr='owner')
     owner_id = indexes.IntegerField()
     disabled = indexes.BooleanField(model_attr='disabled')
+    secret = indexes.BooleanField(model_attr='secret')
 
     def get_model(self):
         return Activity
@@ -267,10 +284,12 @@ class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
         difficulties = query_params.getlist('difficulties', None)
         owner = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
-        labels = query_params.getlist('labels', None)
         years = query_params.getlist('years', None)
 
         params = {'disabled' : 'false'}
+        if not owner:
+            params['secret'] = False
+
         if disciplines:
             params['disciplines__id__in'] = disciplines
         if teaching_levels:
@@ -289,11 +308,9 @@ class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
             params['owner_id'] = owner
         if topics:
             params['topics_ids'] = topics
-        if labels:
-            params['labels__in'] = labels
         if years:
             params['year__in'] = years
-    
+        
         # The following queries are to apply the weights of haystack boost
         queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         query = queries.pop()
@@ -302,11 +319,126 @@ class ActivityIndex(indexes.SearchIndex, indexes.Indexable):
         queries = [SQ(topics=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         for item in queries:
             query |= item
-        queries = [SQ(statement=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+
+        search_queryset = SearchQuerySet().models(Activity).filter_and(**params)
+        search_queryset = search_queryset.filter(SQ(content=Clean(text)) | (
+            SQ(content=Clean(text)) & query
+        ))
+
+        return search_queryset
+
+class ClassPlanPublicationIndex(indexes.SearchIndex, indexes.Indexable):
+    text = indexes.CharField(document=True, use_template=True, boost=0.01)
+    name = indexes.CharField(model_attr='name')
+
+    phases = indexes.CharField()
+    content = indexes.CharField()
+    
+    topics = indexes.CharField(boost=1000)
+    topics_ids = indexes.MultiValueField()
+
+    year = indexes.CharField(null=True)
+
+    tags = indexes.CharField(boost=100)
+    bncc = indexes.CharField(boost=100)
+
+    disciplines = indexes.MultiValueField()
+    teaching_levels = indexes.MultiValueField()
+    teaching_years = indexes.MultiValueField()
+
+    owner = indexes.CharField(model_attr='owner')
+    owner_id = indexes.IntegerField()
+    disabled = indexes.BooleanField(model_attr='disabled')
+    secret = indexes.BooleanField(model_attr='secret')
+
+    def get_model(self):
+        return ClassPlanPublication
+    
+    def index_queryset(self, using=None):
+        return ClassPlanPublication.objects.get_class_plans_update_index().filter(disabled=False)
+
+    def prepare_phases(self, obj):
+        return prepare_document(obj.phases)
+
+    def prepare_content(self, obj):
+        return prepare_document(obj.content)
+
+    def prepare_topics(self, obj):
+        topics = obj.get_all_topics()
+        res = [ topic.name for topic in topics ]
+
+        for topic in topics:
+            res += [ synonym.term for synonym in topic.synonym_set.all() ]
+
+        return ' '.join(stripaccents(t) for t in res)
+    
+    def prepare_topics_ids(self, obj):
+        return [ topic.pk for topic in obj.get_all_topics() ]
+    
+    def prepare_year(self, obj):
+        return str(obj.create_date.year)
+
+    def prepare_tags(self, obj):
+        return ' '.join([ stripaccents(tag.name) for tag in obj.tags.all() ])
+
+    def prepare_bncc(self, obj):
+        return ' '.join([ stripaccents(b.name) for b in obj.bncc.all() ])
+
+    def prepare_disciplines(self, obj):
+        return [ discipline.pk for discipline in obj.disciplines.all() ]
+
+    def prepare_teaching_levels(self, obj):
+        return [ teaching_level.pk for teaching_level in obj.teaching_levels.all() ]
+    
+    def prepare_teaching_years(self, obj):
+        return [ teaching_year.pk for teaching_year in obj.teaching_years.all() ]
+        
+    def prepare_owner_id(self, obj):
+        return obj.owner.id
+
+    @staticmethod
+    def filter_class_plan_search(text, query_params):
+        disciplines = query_params.getlist('disciplines', None)
+        teaching_levels = query_params.getlist('teaching_levels', None)
+        owner = query_params.get('author', None)
+        topics = query_params.getlist('topics', None)
+        bncc = query_params.getlist('bncc', None)
+        years = query_params.getlist('years', None)
+
+        params = {'disabled' : 'false'}
+        if not owner:
+            params['secret'] = False
+
+        if disciplines:
+            params['disciplines__in'] = disciplines
+        if teaching_levels:
+            params['teaching_levels__in'] = teaching_levels
+        
+        if owner:
+            params['owner_id'] = owner
+        if topics:
+            params['topics_ids'] = topics
+        if bncc:
+            params['bncc__in'] = bncc
+        if years:
+            params['year__in'] = years
+
+        # The following queries are to apply the weights of haystack boost
+        queries = [SQ(tags=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        query = queries.pop()
+        for item in queries:
+            query |= item
+        queries = [SQ(topics=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        for item in queries:
+            query |= item
+        queries = [SQ(bncc=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
+        for item in queries:
+            query |= item
+        queries = [SQ(phases=Clean(value)) for value in text.split(' ') if value.strip() != '' and len(value.strip()) >= 3]
         for item in queries:
             query |= item
 
-        search_queryset = SearchQuerySet().models(Activity).filter_and(**params)
+        search_queryset = SearchQuerySet().models(ClassPlanPublication).filter_and(**params)
         search_queryset = search_queryset.filter(SQ(content=Clean(text)) | (
             SQ(content=Clean(text)) & query
         ))

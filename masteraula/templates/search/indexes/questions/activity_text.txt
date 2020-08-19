@@ -1,5 +1,8 @@
 {% load search_helpers %}
 
+{{ object.id }}
+{{ object.secret }}
+
 {{ object.owner.name|stripaccents }}
 
 {% for tag in object.tags.all %}
@@ -25,4 +28,10 @@
     {{ lo.description_task|stripaccents }}
     {{ lo.student_expectation|stripaccents }}
     {{ lo.teacher_expectation|stripaccents }}    
+{% endfor %}
+
+{% for cp in object.class_plans_act.all %}
+    {% for b in cp.bncc.all %}
+        {{ b.name|stripaccents }}
+    {% endfor %}  
 {% endfor %}

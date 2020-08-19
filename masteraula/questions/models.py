@@ -186,6 +186,9 @@ class QuestionManager(models.Manager):
         if labels:
             queryset = queryset.filter(labels__in=labels)
         
+        if not author:
+            queryset = queryset.filter(secret=False)
+        
         queryset = queryset.distinct()
         return queryset
 
@@ -219,6 +222,8 @@ class Question(models.Model):
 
     tags = TaggableManager(blank=True)
     disabled = models.BooleanField(null=False, blank=True, default=False)
+    secret = models.BooleanField(null=False, blank=True, default=False)
+
     objects = QuestionManager()
 
     def __str__(self):
@@ -518,31 +523,6 @@ class Station(models.Model):
     def __str__(self):
         return str(self.description_station)
 
-class ClassPlanManager(models.Manager):
-    topics_prefetch = Prefetch('topics', queryset=Topic.objects.select_related(
-        'parent', 'discipline', 'parent__parent', 'parent__discipline'))
-
-    learning_objects_prefetch = Prefetch(
-        'learning_objects',
-        queryset=LearningObject.objects.all().select_related('owner').prefetch_related('tags', 'questions')
-    )
-
-    documents_prefetch = Prefetch(
-        'documents',
-        queryset=Document.objects.all().select_related('owner').prefetch_related('questions')
-    )
-
-    stations_prefetch = Prefetch(
-        'stations',
-        queryset=Station.objects.all().select_related('plan').prefetch_related('question', 'document', 'learning_object')
-    )
-
-    def get_classplan_prefetched(self):
-        qs = self.all().select_related('owner').prefetch_related(
-            'disciplines', 'teaching_levels', 'links', 'teaching_years', self.learning_objects_prefetch, self.topics_prefetch, self.documents_prefetch, self.stations_prefetch
-        )
-        return qs
-
 class ClassPlan(models.Model):
 
     TYPE_PLAN = (
@@ -578,13 +558,8 @@ class ClassPlan(models.Model):
     disabled = models.BooleanField(null=False, blank=True, default=False)
     plan_type = models.CharField(max_length=1, choices = TYPE_PLAN, null=True, blank=True)
 
-    objects = ClassPlanManager()
-
     def __str__(self):
         return str(self.name)
-    
-    class Meta:
-        ordering = ['id']
 
 class Link(models.Model):
     link = models.TextField(max_length=2083, null=False, blank=False)
@@ -702,7 +677,7 @@ class DocumentOnlineManager(models.Manager):
        
 class DocumentOnline(models.Model):
     link = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    document = models.ForeignKey(Document, on_delete=models.CASCADE)
+    document = models.ForeignKey(Document, related_name='document_document_online', on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     create_date = models.DateTimeField(auto_now_add=True)
@@ -710,6 +685,7 @@ class DocumentOnline(models.Model):
     finish_date = models.DateTimeField()
     duration = models.PositiveIntegerField(null=True, blank=True)
     questions_document = models.ManyToManyField(Question, through='DocumentQuestionOnline', related_name='questions_document')
+    disabled = models.BooleanField(null=False, blank=True, default=False)
 
     objects = DocumentOnlineManager()
 
@@ -794,7 +770,6 @@ class ActivityManager(models.Manager):
         difficulties = query_params.getlist('difficulties', None)
         owner = query_params.get('author', None)
         topics = query_params.getlist('topics', None)
-        labels = query_params.getlist('labels', None)
         years = query_params.get('years', None)
         
         if disciplines:
@@ -808,11 +783,11 @@ class ActivityManager(models.Manager):
         if topics:
             for topic in topics:
                 queryset = queryset.filter(topics__id=topic)
-        if labels:
-            queryset = queryset.filter(labels__in=labels)
         if years:
             queryset = queryset.filter(create_date__year=int(years))
         
+        if not owner:
+            queryset = queryset.filter(secret=False)
         queryset = queryset.distinct()
         return queryset
 
@@ -839,10 +814,12 @@ class Activity(models.Model):
 
     objects = ActivityManager()
 
-
     class Meta:
         verbose_name = "Activity"
         verbose_name_plural = "Activities"
+    
+    def __str__(self):
+        return str(self.id)
 
     def get_all_topics(self):
         topics = []
@@ -860,4 +837,147 @@ class Task(models.Model):
    
     activity = models.ForeignKey(Activity, related_name='tasks', on_delete=models.CASCADE)
 
+class Bncc(models.Model):
+    name = models.CharField(max_length=100, null=False, blank=False)
+    
+    class Meta:
+        verbose_name = "Bncc"
+        verbose_name_plural = "BNCC"
 
+    def __str__(self):
+        return str(self.name)
+
+class StationMaterial(models.Model):
+    name_station = models.CharField(max_length=100, null=False, blank=False)
+    description_station = models.TextField(null=False, blank=False)
+
+    document = models.ForeignKey(Document, related_name='plan_station_doc', null=True, blank=True)
+    document_online = models.ForeignKey(DocumentOnline, related_name='plan_station_doc_online', null=True, blank=True)
+    activity = models.ForeignKey(Activity, related_name='plan_station_activity', null=True, blank=True)
+
+    plan = models.ForeignKey('ClassPlanPublication', related_name='stations', on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.description_station)
+
+class ClassPlanPublication(models.Manager):
+    topics_prefetch = Prefetch('topics', queryset=Topic.objects.prefetch_related('synonym_set').select_related(
+        'parent', 'discipline', 'parent__parent', 'parent__discipline')
+    )
+
+    documents_prefetch = Prefetch(
+        'documents',
+        queryset=Document.objects.all().select_related('owner').prefetch_related('questions')
+    )
+
+    documents_online_prefetch = Prefetch(
+        'documents_online',
+        queryset=DocumentOnline.objects.all().select_related('owner').prefetch_related('questions_document')
+    )
+
+    stations_prefetch = Prefetch(
+        'stations',
+        queryset=StationMaterial.objects.all().select_related('plan').prefetch_related('activity', 'document', 'document_online')
+    )
+
+    activities_prefetch = Prefetch(
+        'activities',
+        queryset=Activity.objects.all().select_related('owner').prefetch_related('tags', 'disciplines', 'teaching_levels', 'tasks', 'learning_objects')
+    )
+
+    def get_classplan_prefetched(self):
+        qs = self.all().select_related('owner').prefetch_related(
+            'disciplines', 'teaching_levels', 'tags', 'bncc', 'teaching_years', self.topics_prefetch, self.documents_prefetch, self.stations_prefetch, self.documents_online_prefetch, self.activities_prefetch
+        )
+        return qs
+    
+    def get_class_plans_update_index(self, topics=True):
+        qs = self.all().select_related('owner').prefetch_related(
+            'disciplines', 'teaching_levels', 'tags', 'bncc', 'teaching_years', self.topics_prefetch, self.documents_prefetch, self.stations_prefetch, self.documents_online_prefetch, self.activities_prefetch
+        )
+        return qs
+    
+    def filter_class_plans_request(self, query_params):
+        queryset = self.get_classplan_prefetched()
+        
+        disciplines = query_params.getlist('disciplines', None)
+        teaching_levels = query_params.getlist('teaching_levels', None)
+        owner = query_params.get('author', None)
+        topics = query_params.getlist('topics', None)
+        years = query_params.get('years', None)
+        
+        if disciplines:
+            queryset = queryset.filter(disciplines__in=disciplines)
+        if teaching_levels:
+            queryset = queryset.filter(teaching_levels__in=teaching_levels)
+        if owner:
+            queryset = queryset.filter(owner__id=owner)
+        if topics:
+            for topic in topics:
+                queryset = queryset.filter(topics__id=topic)
+        if years:
+            queryset = queryset.filter(create_date__year=int(years))
+        if not owner:
+            queryset = queryset.filter(secret=False)
+        
+        queryset = queryset.distinct()
+        return queryset
+   
+
+class ClassPlanPublication(models.Model):
+    TYPE_PLAN = (
+            ('T', _('Traditional')),
+            ('S', _('Station')),
+        )
+
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    create_date = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=200)
+
+    disciplines = models.ManyToManyField(Discipline, blank=True)
+    teaching_levels = models.ManyToManyField(TeachingLevel, blank=True)
+    topics = models.ManyToManyField(Topic, blank=True)
+    tags = TaggableManager(blank=True)
+    bncc = models.ManyToManyField(Bncc, blank=True)
+    teaching_years = models.ManyToManyField(TeachingYear, blank=True)
+    
+    documents = models.ManyToManyField(Document, related_name='class_plans_doc', blank=True)
+    documents_online = models.ManyToManyField(DocumentOnline, related_name='class_plans_doc_online', blank=True)
+    activities = models.ManyToManyField(Activity, related_name='class_plans_act', blank=True)
+    
+    duration = models.PositiveIntegerField(null=True, blank=True)
+    phases = models.TextField()
+    content = models.TextField(null=True, blank=True)
+    guidelines = models.TextField(null=True, blank=True)
+
+    disabled = models.BooleanField(null=False, blank=True, default=False)
+    plan_type = models.CharField(max_length=1, choices = TYPE_PLAN, null=True, blank=True)
+    secret = models.BooleanField(null=False, blank=True, default=False)
+
+    objects = ClassPlanPublication()
+
+    def __str__(self):
+        return str(self.name)
+    
+    # class Meta:
+    #     ordering = ['id']
+    
+    def get_all_topics(self):
+        topics = []
+        new_topics = [t for t in self.topics.all()]
+        while new_topics:
+            parents_id = [t.parent for t in new_topics if t.parent]
+            topics = topics + new_topics
+            new_topics = parents_id
+        return list(set(topics))
+
+class ShareClassPlan(models.Model):
+    link = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    class_plan = models.ForeignKey(ClassPlanPublication, related_name= "link_class_plan", on_delete=models.CASCADE)
+    share_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return str(self.link)
+
+    class Meta:   
+        ordering = ['link']
