@@ -119,6 +119,7 @@ class UserSerializer(serializers.ModelSerializer):
             'groups',
             'socialaccounts',
             'subscription',
+            'anonymous',
         )
         read_only_fields = ('username', 'email', 'groups'),
         extra_kwargs = {
