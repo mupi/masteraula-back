@@ -148,12 +148,13 @@ class LearningObjectIndex(indexes.SearchIndex, indexes.Indexable):
     is_image = indexes.BooleanField()
     is_text = indexes.BooleanField()
     object_types = indexes.MultiValueField()
+    disabled = indexes.BooleanField(model_attr='disabled')
 
     def get_model(self):
         return LearningObject
 
     def index_queryset(self, using=None):
-        return LearningObject.objects.get_objects_update_index()
+        return LearningObject.objects.get_objects_update_index().filter(disabled=False)
 
     def prepare_source(self, obj):
         return prepare_document(obj.source)

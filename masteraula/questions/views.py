@@ -389,7 +389,7 @@ class LearningObjectSearchView(viewsets.ReadOnlyModelViewSet):
         if not text:
             raise exceptions.ValidationError("Invalid search text")
 
-        params = {}
+        params = {'disabled' : 'false'}
         if filters:
             params['object_types'] = filters
 
@@ -515,6 +515,9 @@ class LearningObjectViewSet(viewsets.ModelViewSet):
        
         if filters:
             queryset = queryset.filter(object_types__contains=filters)
+
+        if self.action == 'list':
+            queryset = queryset.filter(disabled=False)
             
         return queryset.filter()
     
