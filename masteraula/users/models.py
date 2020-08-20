@@ -59,6 +59,7 @@ class User(AbstractUser):
     disciplines = models.ManyToManyField('questions.Discipline', related_name="users_discipline")
     profile_pic = models.ImageField(null=True, upload_to='profile_pics', validators=[validate_image])
     nickname = models.CharField(max_length=255, null=True, blank=True)
+    anonymous = models.BooleanField(null=False, blank=True, default=False)
 
     def __str__(self):
         return self.username

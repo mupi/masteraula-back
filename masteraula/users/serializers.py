@@ -119,6 +119,7 @@ class UserSerializer(serializers.ModelSerializer):
             'groups',
             'socialaccounts',
             'subscription',
+            'anonymous',
         )
         read_only_fields = ('username', 'email', 'groups'),
         extra_kwargs = {
@@ -319,7 +320,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = User
-        fields = ('pk', 'username', 'email', 'name',)
+        fields = ('pk', 'username', 'email', 'name', 'nickname', 'anonymous')
         read_only_fields = ('username', 'email')
 
 class JWTSerializer(serializers.Serializer):

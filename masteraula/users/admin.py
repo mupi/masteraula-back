@@ -108,7 +108,7 @@ class MyUserAdmin(ExportMixin, AuthUserAdmin):
     add_form = MyUserCreationForm
     raw_id_fields = ('city', 'schools')
     fieldsets = (
-            ('User Profile', {'fields': ('name', 'city', 'schools', 'disciplines',)}),
+            ('User Profile', {'fields': ('name', 'city', 'schools', 'disciplines', 'nickname', 'anonymous')}),
     ) + AuthUserAdmin.fieldsets
     list_display = ('id', 'username', 'name', 'questions', 'documents', 'documentdownload', 'plans', 'is_superuser', 'date_joined')
     search_fields = ['id', 'name', 'email', 'date_joined']
