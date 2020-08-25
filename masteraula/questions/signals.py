@@ -6,7 +6,7 @@ from ..users.models import User
 from django.db.models.signals import post_save, m2m_changed, post_delete, pre_save
 
 from django.dispatch import receiver
-from .search_indexes import QuestionIndex, LearningObjectIndex, ActivityIndex, ClassPlanPublicationIndex
+from .search_indexes import QuestionIndex, LearningObjectIndex, ActivityIndex, ClassPlanPublicationIndex, TopicIndex
 from .tasks import update_question_index, update_learning_object_index, update_questions_topic, update_activities_topic, update_activity_index, update_class_plan_topic, update_class_plan_index
 
 @receiver(pre_save, sender=User)
@@ -54,6 +54,14 @@ def topic_post_save(sender, instance, **kwargs):
     update_questions_topic.apply_async((instance.id,), countdown=5)
     update_activities_topic.apply_async((instance.id,), countdown=5)
     update_class_plan_topic.apply_async((instance.id,), countdown=5)
+
+@receiver(post_save, sender=Topic)
+def topic_post_save(sender, instance, **kwargs):
+    TopicIndex().update_object(instance)
+
+@receiver(post_delete, sender=Topic)
+def topic_post_delete(sender, instance, **kwargs):
+   TopicIndex().remove_object(instance)
 
 @receiver(post_save, sender=Activity)
 def activity_post_save(sender, instance, **kwargs):
